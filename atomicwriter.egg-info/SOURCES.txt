@@ -5,6 +5,7 @@ setup.py
 atomicwriter/__init__.py
 atomicwriter/core.py
 atomicwriter/plugins.py
+atomicwriter/progress.py
 atomicwriter/utils.py
 atomicwriter.egg-info/PKG-INFO
 atomicwriter.egg-info/SOURCES.txt
@@ -12,4 +13,5 @@ atomicwriter.egg-info/dependency_links.txt
 atomicwriter.egg-info/requires.txt
 atomicwriter.egg-info/top_level.txt
 tests/test_core.py
+tests/test_performance_logging.py
 tests/test_plugins.py

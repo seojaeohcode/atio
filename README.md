@@ -12,6 +12,93 @@ Pandas, Polars, NumPy 등 데이터 객체 저장 시 **파일 손상 없이**, 
 - 📍 `_SUCCESS` 플래그 파일 생성 — 저장 완료 여부 표시  
 - 🛠 실패 시 **원본 파일 보존**, 임시 파일 자동 정리  
 - 🧩 플러그인 아키텍처로 **확장성 좋음**
+- 🔍 **성능 진단 로깅** — 각 단계별 실행 시간 측정 및 병목점 분석
+
+---
+
+## 🔍 성능 진단 로깅 (NEW!)
+
+AtomicWriter는 이제 **성능 진단 로깅** 기능을 제공합니다. `verbose=True` 옵션을 사용하면 각 단계별 실행 시간을 측정하여 병목점을 정확히 파악할 수 있습니다.
+
+### 기본 사용법 (간단한 정보만):
+```python
+import atomicwriter as aw
+import pandas as pd
+
+df = pd.DataFrame({"a": [1, 2, 3]})
+
+# 기본 사용법 - 간단한 성공/실패 정보만
+aw.write(df, "output.parquet", format="parquet")
+```
+
+**출력 예시:**
+```
+[INFO] 임시 디렉토리 생성: /tmp/tmp_xxx
+[INFO] 임시 파일 경로: /tmp/tmp_xxx/output.parquet
+[INFO] 사용할 writer: to_parquet (format: parquet)
+[INFO] 데이터 임시 파일에 저장 완료: /tmp/tmp_xxx/output.parquet
+[INFO] 원자적 교체 완료: /tmp/tmp_xxx/output.parquet -> output.parquet
+[INFO] _SUCCESS 플래그 파일 생성: output.parquet._SUCCESS
+[INFO] Atomic write completed successfully (took 0.2359s)
+```
+
+### 상세 진단 모드 (verbose=True):
+```python
+# 상세한 성능 진단 정보 출력
+aw.write(df, "output.parquet", format="parquet", verbose=True)
+```
+
+**출력 예시:**
+```
+[INFO] 임시 디렉토리 생성: /tmp/tmp_xxx
+[INFO] 임시 파일 경로: /tmp/tmp_xxx/output.parquet
+[INFO] 사용할 writer: to_parquet (format: parquet)
+[INFO] 데이터 임시 파일에 저장 완료: /tmp/tmp_xxx/output.parquet
+[INFO] 원자적 교체 완료: /tmp/tmp_xxx/output.parquet -> output.parquet
+[INFO] _SUCCESS 플래그 파일 생성: output.parquet._SUCCESS
+[DEBUG] Atomic write step timings (SUCCESS): setup=0.0012s, write_call=0.2345s, replace=0.0001s, success_flag=0.0001s, total=0.2359s
+```
+
+### 오류 발생 시 (기본 사용법):
+```
+[INFO] 임시 디렉토리 생성: /tmp/tmp_xxx
+[INFO] 임시 파일 경로: /tmp/tmp_xxx/output.parquet
+[INFO] 사용할 writer: to_parquet (format: parquet)
+[ERROR] 임시 파일 저장 중 예외 발생: [Errno 28] No space left on device
+[INFO] Atomic write failed during write stage (took 0.1246s, error: OSError)
+```
+
+### 오류 발생 시 (verbose=True):
+```
+[INFO] 임시 디렉토리 생성: /tmp/tmp_xxx
+[INFO] 임시 파일 경로: /tmp/tmp_xxx/output.parquet
+[INFO] 사용할 writer: to_parquet (format: parquet)
+[ERROR] 임시 파일 저장 중 예외 발생: [Errno 28] No space left on device
+[DEBUG] Atomic write step timings (ERROR during write): setup=0.0012s, write_call=0.1234s (실패), replace=N/A, success_flag=N/A, total=0.1246s, error_type=OSError
+```
+
+**측정되는 단계:**
+- `setup`: 임시 폴더 생성 및 초기 설정
+- `write_call`: 실제 데이터 쓰기 함수 호출 (대부분의 시간 소요)
+- `replace`: 원자적 파일 교체
+- `success_flag`: _SUCCESS 플래그 파일 생성
+- `total`: 전체 작업 시간
+
+**지원하는 오류 상황:**
+- ✅ **KeyboardInterrupt**: 인터럽트 발생 시점과 소요 시간 표시
+- ✅ **권한 오류**: 파일 시스템 권한 문제 진단
+- ✅ **디스크 공간 부족**: 저장 공간 부족 상황 진단
+- ✅ **메모리 부족**: 메모리 압박 상황 진단
+- ✅ **네트워크 오류**: 네트워크 드라이브 접근 문제 진단
+- ✅ **지원하지 않는 형식**: 잘못된 파일 형식 지정 시 진단
+- ✅ **동시 접근 오류**: 멀티스레딩 환경에서의 충돌 진단
+
+**장점:**
+- 🎯 **정확한 병목점 파악**: AtomicWriter 오버헤드 vs 실제 쓰기 작업 시간 구분
+- 🔧 **성능 최적화 가이드**: 어느 단계에서 시간이 많이 소요되는지 명확히 표시
+- 🐛 **디버깅 시간 단축**: 문제의 원인을 빠르게 파악 가능
+- 📊 **성능 모니터링**: 대용량 데이터 처리 시 성능 추적
+- 🚨 **오류 진단**: 실패 상황에서도 정확한 원인과 발생 시점 파악
 
 ---
 
@@ -43,9 +130,25 @@ import atomicwriter as aw
 import pandas as pd
 
 df = pd.DataFrame({"a": [1, 2, 3]})
+
+# 기본 사용법
 aw.write(df, "output.parquet", format="parquet")
 # │→ 임시 파일 작성 → 원자적 교체 → _SUCCESS 생성
 # │→ 실패 시 원본 보존, 임시 파일 자동 정리
+
+# 상세 성능 진단 로깅 활성화
+aw.write(df, "output_verbose.parquet", format="parquet", verbose=True)
+# │→ 각 단계별 실행 시간 측정 및 로그 출력
+
+# 진행도 표시와 함께 사용
+aw.write(df, "output_progress.parquet", format="parquet", show_progress=True)
+# │→ 실시간 진행도 표시
+
+# 모든 옵션 조합
+aw.write(df, "output_full.parquet", format="parquet", 
+         verbose=True, show_progress=True)
+# │→ 성능 진단 + 진행도 표시
+```
 
 ## 💡 빅데이터 워크플로우에서 활용 시나리오
 
