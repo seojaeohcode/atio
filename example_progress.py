@@ -1,15 +1,16 @@
 import pandas as pd
 import numpy as np
-from atomicwriter.core import write
+import src.atomicwriter as aw
+
 
 # 대용량 더미 데이터 생성
 print("Creating a large dummy DataFrame...")
-size_mb = 2048
+size_mb = 200
 df = pd.DataFrame(np.random.rand(int(size_mb * 131072), 1), columns=['value'])
 print(f"Dummy DataFrame created (approx. {size_mb}MB in memory).")
 
 # 새로운 기능 테스트
-write(
+aw.write(
     df,
     "./tests/output_data/large_data.parquet",
     format="parquet",

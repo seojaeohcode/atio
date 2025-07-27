@@ -1,5 +1,5 @@
 import pytest
-from atomicwriter.plugins import register_writer, get_writer
+from src.atomicwriter.plugins import register_writer, get_writer
 
 
 def dummy_writer(obj, path, **kwargs):

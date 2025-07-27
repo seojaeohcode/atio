@@ -38,7 +38,7 @@ def print_file_status(path):
 
 import os
 import pandas as pd
-from atomicwriter.core import write
+from src.atomicwriter.core import write
 
 def print_file_status(path):
     print(f"[파일 상태] {path}: {'존재함' if os.path.exists(path) else '없음'}")

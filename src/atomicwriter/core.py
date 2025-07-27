@@ -4,8 +4,7 @@ import tempfile
 import threading
 from queue import Queue
 from .plugins import get_writer
-from .utils import setup_logger
-from .progress import ProgressBar
+from .utils import setup_logger, ProgressBar
 
 def write(obj, target_path, format=None, show_progress=False, **kwargs):
     """
@@ -65,6 +64,7 @@ def write(obj, target_path, format=None, show_progress=False, **kwargs):
         logger.info(f"_SUCCESS 플래그 파일 생성: {success_path}")
 
 
+"""write 함수 내부에서 사용되는 보조 함수"""
 def _execute_write(writer, obj, path, **kwargs):
     """단순히 쓰기 작업을 실행하는 내부 함수"""
     if callable(writer):

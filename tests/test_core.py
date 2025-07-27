@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import pytest
-from atomicwriter.core import write
+from src.atomicwriter.core import write
 
 
 def test_write_parquet(tmp_path):
