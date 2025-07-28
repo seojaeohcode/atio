@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from atomicwriter.core import write
+from atomicwriter import write
 
 
 def print_file_status(path):
