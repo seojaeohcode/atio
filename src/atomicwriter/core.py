@@ -5,8 +5,7 @@ import threading
 import time
 from queue import Queue
 from .plugins import get_writer
-from .utils import setup_logger
-from .progress import ProgressBar
+from .utils import setup_logger, ProgressBar
 
 def write(obj, target_path, format=None, show_progress=False, verbose=False, **kwargs):
     """
