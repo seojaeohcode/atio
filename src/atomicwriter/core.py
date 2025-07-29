@@ -3,10 +3,10 @@ import os
 import tempfile
 import threading
 import time
+import numpy as np
 from queue import Queue
 from .plugins import get_writer
-from .utils import setup_logger
-from .progress import ProgressBar
+from .utils import setup_logger, ProgressBar
 
 def write(obj, target_path, format=None, show_progress=False, verbose=False, **kwargs):
     """
@@ -154,7 +154,19 @@ def write(obj, target_path, format=None, show_progress=False, verbose=False, **k
 def _execute_write(writer, obj, path, **kwargs):
     """단순히 쓰기 작업을 실행하는 내부 함수"""
     if callable(writer):
-        writer(obj, path, **kwargs)
+        if writer in (np.savez, np.savez_compressed):
+            # .npz 저장을 위해서는 데이터 객체(obj)가 반드시 딕셔너리여야 합니다.
+            if not isinstance(obj, dict):
+                raise TypeError(
+                    f"To save multiple arrays with '{writer.__name__}', "
+                    f"the data object must be a dictionary, not {type(obj).__name__}"
+                )
+            writer(path, **obj)
+
+        # 2. np.save, np.savetxt 등 다른 모든 일반 함수 처리
+        else:
+            writer(path, obj, **kwargs)
+
     else:
         getattr(obj, writer)(path, **kwargs)
 
