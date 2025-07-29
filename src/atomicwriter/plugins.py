@@ -77,10 +77,15 @@ try:
         # 값: 실제 '함수 객체' (호출 방식: np.save(arr, path))
         "npy": np.save,
         "npz": np.savez,
+        "npz_compressed": np.savez_compressed,
         "csv": np.savetxt,
         
         # 값: '메소드 이름(문자열)' (호출 방식: arr.tofile(path))
         "bin": "tofile",
+    }
+    WRITER_MAPPING[dict] = {
+        "npz": np.savez,  # 딕셔너리 저장을 위해 np.savez 사용
+        "npz_compressed": np.savez_compressed,  # 압축 저장
     }
     logger.info("NumPy writers registered successfully.")
 
