@@ -6,7 +6,7 @@
 
 import pandas as pd
 import numpy as np
-from atomicwriter import write
+from atio import write
 
 def main():
     print("=== 수동 인터럽트 테스트 ===")

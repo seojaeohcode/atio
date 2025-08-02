@@ -3,12 +3,14 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "atomicwriter"
-version = "0.1.0"
+name = "atio"
+version = "1.0.0"
 authors = [
-    { name="Your Name", email="you@example.com" },
+    { name="Seo Jae Oh", email="seojaeohcoder@gmail.com" },
 ]
-description = "Atomic file writer for Pandas, Polars, Numpy, etc."
+keywords = ["atomic", "file", "writer", "pandas", "polars", "numpy", "data"]
+urls = { Homepage = "https://github.com/seojaeohcode/atomic-writer" }
+description = "Safe atomic file writer for Pandas, Polars, NumPy, and other data objects"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.7"
@@ -30,6 +32,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "build",
+    "twine",
 ]
 
 # `find_packages()` 역할을 하는 부분 (src 레이아웃 사용 시)

@@ -5,7 +5,7 @@
 
 import pandas as pd
 import numpy as np
-from atomicwriter import write
+from atio import write
 
 def test_basic_usage():
     """기본 사용법 테스트 (verbose=False)"""

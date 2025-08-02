@@ -8,7 +8,7 @@ import numpy as np
 import time
 import signal
 import threading
-from atomicwriter import write
+from atio import write
 
 def create_large_dataframe():
     """대용량 DataFrame 생성 (인터럽트 시뮬레이션용)"""
@@ -134,7 +134,7 @@ def test_manual_interrupt():
     print("python3 -c \"")
     print("import pandas as pd")
     print("import numpy as np")
-    print("from atomicwriter import write")
+    print("from atio import write")
     print("df = pd.DataFrame({'A': np.random.randn(1000000)})")
     print("write(df, 'manual_interrupt_test.parquet', format='parquet', debug_level=True)")
     print("\"")

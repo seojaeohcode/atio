@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from atomicwriter import write
+from atio import write
 
 # 대용량 더미 데이터 생성
 print("Creating a large dummy DataFrame...")

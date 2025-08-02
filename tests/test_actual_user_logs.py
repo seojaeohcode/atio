@@ -6,7 +6,7 @@
 
 import pandas as pd
 import numpy as np
-from atomicwriter import write
+from atio import write
 
 def show_actual_logs():
     """실제 사용자가 보는 로그들을 보여줍니다"""

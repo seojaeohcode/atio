@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import os
 import time
-from atomicwriter import write
+from atio import write
 
 def test_network_drive_slow():
     """네트워크 드라이브 느린 상황 시뮬레이션"""

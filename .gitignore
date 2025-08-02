@@ -66,6 +66,9 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
+# PyPI credentials
+.pypirc
+
 # Test outputs (직접 추가)
 /output_data/
 /tests/output_data/

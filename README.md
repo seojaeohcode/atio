@@ -1,4 +1,4 @@
-# AtomicWriter 🛡️
+# Atio 🛡️
 
 안전하고 **원자적인 파일 쓰기**를 지원하는 경량 Python 라이브러리입니다.  
 Pandas, Polars, NumPy 등 데이터 객체 저장 시 **파일 손상 없이**, **트랜잭션처럼 안전하게 처리**할 수 있습니다.
@@ -18,11 +18,11 @@ Pandas, Polars, NumPy 등 데이터 객체 저장 시 **파일 손상 없이**, 
 
 ## 🔍 성능 진단 로깅 (NEW!)
 
-AtomicWriter는 이제 **성능 진단 로깅** 기능을 제공합니다. `verbose=True` 옵션을 사용하면 각 단계별 실행 시간을 측정하여 병목점을 정확히 파악할 수 있습니다.
+Atio는 이제 **성능 진단 로깅** 기능을 제공합니다. `verbose=True` 옵션을 사용하면 각 단계별 실행 시간을 측정하여 병목점을 정확히 파악할 수 있습니다.
 
 ### 기본 사용법 (간단한 정보만):
 ```python
-import atomicwriter as aw
+import atio as aw
 import pandas as pd
 
 df = pd.DataFrame({"a": [1, 2, 3]})
@@ -94,7 +94,7 @@ aw.write(df, "output.parquet", format="parquet", verbose=True)
 - ✅ **동시 접근 오류**: 멀티스레딩 환경에서의 충돌 진단
 
 **장점:**
-- 🎯 **정확한 병목점 파악**: AtomicWriter 오버헤드 vs 실제 쓰기 작업 시간 구분
+- 🎯 **정확한 병목점 파악**: Atio 오버헤드 vs 실제 쓰기 작업 시간 구분
 - 🔧 **성능 최적화 가이드**: 어느 단계에서 시간이 많이 소요되는지 명확히 표시
 - 🐛 **디버깅 시간 단축**: 문제의 원인을 빠르게 파악 가능
 - 📊 **성능 모니터링**: 대용량 데이터 처리 시 성능 추적

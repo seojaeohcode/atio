@@ -2,7 +2,7 @@ import logging
 import os
 
 
-def setup_logger(name="atomicwriter", debug_level=False):
+def setup_logger(name="atio", debug_level=False):
     logger = logging.getLogger(name)
     if not logger.handlers:
         handler = logging.StreamHandler()

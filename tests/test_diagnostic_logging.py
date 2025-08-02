@@ -9,7 +9,7 @@ import numpy as np
 import logging
 import io
 import sys
-from atomicwriter import write
+from atio import write
 
 def capture_logs(func):
     """로그를 캡처하는 데코레이터"""
@@ -30,7 +30,10 @@ def capture_logs(func):
         
         try:
             result = func(*args, **kwargs)
-            return result, log_capture.getvalue()
+            logs = log_capture.getvalue()
+            # 로그 분석 및 검증
+            analyze_logs(logs, func.__name__)
+            return result
         finally:
             # 핸들러 정리
             logger.removeHandler(handler)
@@ -47,7 +50,6 @@ def test_basic_success():
     })
     
     write(df, 'test_basic_success.parquet', format='parquet')
-    return None
 
 @capture_logs
 def test_verbose_success():
@@ -58,7 +60,6 @@ def test_verbose_success():
     })
     
     write(df, 'test_verbose_success.parquet', format='parquet', verbose=True)
-    return None
 
 @capture_logs
 def test_basic_error():
@@ -72,7 +73,6 @@ def test_basic_error():
         write(df, 'test_basic_error.xyz', format='xyz')
     except Exception:
         pass
-    return None
 
 @capture_logs
 def test_verbose_error():
@@ -86,7 +86,6 @@ def test_verbose_error():
         write(df, 'test_verbose_error.xyz', format='xyz', verbose=True)
     except Exception:
         pass
-    return None
 
 @capture_logs
 def test_large_data_success():
@@ -99,7 +98,6 @@ def test_large_data_success():
     })
     
     write(df, 'test_large_data_success.parquet', format='parquet')
-    return None
 
 @capture_logs
 def test_large_data_verbose():
@@ -112,7 +110,6 @@ def test_large_data_verbose():
     })
     
     write(df, 'test_large_data_verbose.parquet', format='parquet', verbose=True)
-    return None
 
 def analyze_logs(logs, test_name):
     """로그 분석 및 진단 정보 확인"""
@@ -159,67 +156,25 @@ def main():
     print("라이브러리 기본 진단 로깅 테스트 시작")
     print("=" * 60)
     
-    results = {}
-    
     # 1. 기본 사용법 성공 테스트
-    _, logs = test_basic_success()
-    results['basic_success'] = analyze_logs(logs, "기본 사용법 성공")
+    test_basic_success()
     
     # 2. verbose 모드 성공 테스트
-    _, logs = test_verbose_success()
-    results['verbose_success'] = analyze_logs(logs, "verbose 모드 성공")
+    test_verbose_success()
     
     # 3. 기본 사용법 오류 테스트
-    _, logs = test_basic_error()
-    results['basic_error'] = analyze_logs(logs, "기본 사용법 오류")
+    test_basic_error()
     
     # 4. verbose 모드 오류 테스트
-    _, logs = test_verbose_error()
-    results['verbose_error'] = analyze_logs(logs, "verbose 모드 오류")
+    test_verbose_error()
     
     # 5. 대용량 데이터 기본 테스트
-    _, logs = test_large_data_success()
-    results['large_basic'] = analyze_logs(logs, "대용량 데이터 기본")
+    test_large_data_success()
     
     # 6. 대용량 데이터 verbose 테스트
-    _, logs = test_large_data_verbose()
-    results['large_verbose'] = analyze_logs(logs, "대용량 데이터 verbose")
+    test_large_data_verbose()
     
-    # 결과 요약
-    print("\n" + "=" * 60)
-    print("테스트 결과 요약")
-    print("=" * 60)
-    
-    total_tests = len(results)
-    basic_diagnostic_count = sum(1 for r in results.values() if r['basic_diagnostic'])
-    detailed_diagnostic_count = sum(1 for r in results.values() if r['detailed_diagnostic'])
-    time_info_count = sum(1 for r in results.values() if r['time_info'])
-    error_info_count = sum(1 for r in results.values() if r['error_info'])
-    step_info_count = sum(1 for r in results.values() if r['step_info'])
-    
-    print(f"총 테스트 수: {total_tests}")
-    print(f"기본 진단 정보 제공: {basic_diagnostic_count}/{total_tests}")
-    print(f"상세 진단 정보 제공: {detailed_diagnostic_count}/{total_tests}")
-    print(f"소요 시간 정보 제공: {time_info_count}/{total_tests}")
-    print(f"오류 정보 제공: {error_info_count}/{total_tests}")
-    print(f"단계별 정보 제공: {step_info_count}/{total_tests}")
-    
-    # 개선 아이디어 3 달성도 평가
-    print("\n💡 개선 아이디어 3 달성도:")
-    if basic_diagnostic_count == total_tests:
-        print("✅ 기본 진단 정보: 완벽 달성")
-    else:
-        print(f"⚠️ 기본 진단 정보: {basic_diagnostic_count}/{total_tests} 달성")
-    
-    if detailed_diagnostic_count >= total_tests // 2:
-        print("✅ 상세 진단 정보: 대부분 달성")
-    else:
-        print(f"⚠️ 상세 진단 정보: {detailed_diagnostic_count}/{total_tests} 달성")
-    
-    if time_info_count == total_tests:
-        print("✅ 소요 시간 정보: 완벽 달성")
-    else:
-        print(f"⚠️ 소요 시간 정보: {time_info_count}/{total_tests} 달성")
+    print("\n✅ 모든 진단 로깅 테스트 완료")
 
 if __name__ == "__main__":
     main() 

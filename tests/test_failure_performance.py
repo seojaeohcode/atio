@@ -6,7 +6,7 @@
 import pandas as pd
 import numpy as np
 import time
-from atomicwriter import write
+from atio import write
 
 def create_slow_dataframe():
     """느린 처리를 시뮬레이션하는 DataFrame 생성"""

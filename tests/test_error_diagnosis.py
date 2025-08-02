@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import os
 import time
-from atomicwriter import write
+from atio import write
 
 def test_unsupported_format():
     """지원하지 않는 형식 오류 테스트"""
