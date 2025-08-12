@@ -8,20 +8,73 @@ from queue import Queue
 from .plugins import get_writer
 from .utils import setup_logger, ProgressBar
 
-def write(obj, target_path, format=None, show_progress=False, verbose=False, **kwargs):
+def write(obj, target_path=None, format=None, show_progress=False, verbose=False, **kwargs):
     """
-    데이터 객체(obj)를 안전하게 target_path에 저장합니다. (롤백 기능 추가)
-    format: 'parquet', 'csv' 등
-    show_progress: 진행도 표시 여부
-    verbose: 상세한 성능 진단 정보 출력 여부 (기본: False)
-    kwargs: 저장 함수에 전달할 추가 인자
+    데이터 객체(obj)를 안전하게 target_path 또는 데이터베이스에 저장합니다.
+
+    - 파일 기반 쓰기 (format: 'csv', 'parquet', 'excel' 등):
+      - target_path (str): 필수. 데이터가 저장될 파일 경로입니다.
+      - 롤백 기능이 있는 원자적 쓰기를 수행합니다.
+
+    - 데이터베이스 기반 쓰기 (format: 'sql', 'database'):
+      - target_path: 사용되지 않습니다.
+      - kwargs (dict): 데이터베이스 쓰기에 필요한 추가 인자들입니다.
+        - pandas.to_sql: 'name'(테이블명), 'con'(커넥션 객체)가 필수입니다.
+        - polars.write_database: 'table_name', 'connection_uri'가 필수입니다.
+    
+    Args:
+        obj: 저장할 데이터 객체 (e.g., pandas.DataFrame, polars.DataFrame, np.ndarray).
+        target_path (str, optional): 파일 저장 경로. 파일 기반 쓰기 시 필수. Defaults to None.
+        format (str, optional): 저장할 포맷. Defaults to None.
+        show_progress (bool): 진행도 표시 여부. Defaults to False.
+        verbose (bool): 상세한 성능 진단 정보 출력 여부. Defaults to False.
+        **kwargs: 각 쓰기 함수에 전달될 추가 키워드 인자.
     """
     logger = setup_logger(debug_level=verbose)
-    
     t0 = time.perf_counter()
-    
+
+    # --- 1. 데이터베이스 쓰기 특별 처리 ---
+    # 데이터베이스 쓰기는 파일 경로 기반의 원자적 쓰기 로직을 따르지 않습니다.
+    if format in ('sql', 'database'):
+        logger.info(f"데이터베이스 쓰기 모드 시작 (format: {format})")
+        writer_method_name = get_writer(obj, format)
+        
+        if writer_method_name is None:
+            err_msg = f"객체 타입 {type(obj).__name__}에 대해 지원하지 않는 format: {format}"
+            logger.error(err_msg)
+            raise ValueError(err_msg)
+
+        try:
+            writer_func = getattr(obj, writer_method_name)
+            
+            # 각 데이터베이스 쓰기 함수에 필요한 필수 인자 확인
+            if format == 'sql': # Pandas
+                if 'name' not in kwargs or 'con' not in kwargs:
+                    raise ValueError("'name'(테이블명)과 'con'(DB 커넥션) 인자는 'sql' 포맷에 필수입니다.")
+            elif format == 'database': # Polars
+                if 'table_name' not in kwargs or 'connection_uri' not in kwargs:
+                    raise ValueError("'table_name'과 'connection_uri' 인자는 'database' 포맷에 필수입니다.")
+            
+            # target_path는 무시하고 **kwargs로 받은 인자들을 사용하여 DB에 직접 씁니다.
+            writer_func(**kwargs)
+            
+            t_end = time.perf_counter()
+            logger.info(f"✅ 데이터베이스 쓰기 완료 (총 소요 시간: {t_end - t0:.4f}s)")
+            return # DB 쓰기 완료 후 함수 종료
+
+        except Exception as e:
+            t_err = time.perf_counter()
+            logger.error(f"데이터베이스 쓰기 중 예외 발생: {e}")
+            logger.info(f"데이터베이스 쓰기 실패 (소요 시간: {t_err - t0:.4f}s, 에러: {type(e).__name__})")
+            raise e
+
+    # --- 2. 파일 기반 원자적 쓰기 ---
+    if target_path is None:
+        raise ValueError("파일 기반 쓰기(예: 'csv', 'parquet')에는 'target_path' 인자가 필수입니다.")
+
     dir_name = os.path.dirname(os.path.abspath(target_path))
     base_name = os.path.basename(target_path)
+    os.makedirs(dir_name, exist_ok=True)
 
     # 롤백을 위한 백업 경로 설정
     backup_path = target_path + "._backup"
@@ -82,7 +135,7 @@ def write(obj, target_path, format=None, show_progress=False, verbose=False, **k
             logger.info(f"원자적 교체 완료: {tmp_path} -> {target_path}")
             
             # [롤백 STEP 3] _SUCCESS 플래그 생성
-            success_path = target_path + "._SUCCESS"
+            success_path = os.path.join(os.path.dirname(target_path), f".{os.path.basename(target_path)}._SUCCESS")
             with open(success_path, "w") as f:
                 f.write("OK\n")
             t4 = time.perf_counter()
@@ -98,7 +151,7 @@ def write(obj, target_path, format=None, show_progress=False, verbose=False, **k
                              f"setup={t1-t0:.4f}s, write_call={t2-t1:.4f}s, "
                              f"replace={t3-t2:.4f}s, success_flag={t4-t3:.4f}s, "
                              f"total={t4-t0:.4f}s")
-            logger.info(f"Atomic write completed successfully (took {t4-t0:.4f}s)")
+            logger.info(f"✅ Atomic write completed successfully (took {t4-t0:.4f}s)")
 
         except Exception as e:
             # [롤백 STEP 5] 교체 또는 플래그 생성 실패 시 롤백 실행
@@ -131,21 +184,27 @@ def write(obj, target_path, format=None, show_progress=False, verbose=False, **k
             raise e
 
 def _execute_write(writer, obj, path, **kwargs):
-    """단순히 쓰기 작업을 실행하는 내부 함수"""
+    """
+    내부 쓰기 실행 함수. 핸들러 타입에 따라 분기하여 실제 쓰기 작업을 수행합니다.
+    - callable(writer): `np.save`와 같은 함수 핸들러
+    - str(writer): `to_csv`와 같은 객체의 메소드 핸들러
+    """
+    # 1. writer가 호출 가능한 '함수'인 경우 (e.g., np.save, np.savetxt)
     if callable(writer):
+        # 1a. np.savez, np.savez_compressed 특별 처리: 여러 배열을 dict로 받아 저장
         if writer in (np.savez, np.savez_compressed):
-            # .npz 저장을 위해서는 데이터 객체(obj)가 반드시 딕셔너리여야 합니다.
             if not isinstance(obj, dict):
                 raise TypeError(
-                    f"To save multiple arrays with '{writer.__name__}', "
-                    f"the data object must be a dictionary, not {type(obj).__name__}"
+                    f"'{writer.__name__}'로 여러 배열을 저장하려면, "
+                    f"데이터 객체는 dict 타입이어야 합니다. (현재: {type(obj).__name__})"
                 )
             writer(path, **obj)
-
-        # 2. np.save, np.savetxt 등 다른 모든 일반 함수 처리
+        # 1b. 그 외 일반적인 함수 핸들러 처리
         else:
             writer(path, obj, **kwargs)
 
+    # 2. writer가 '메소드 이름(문자열)'인 경우 (e.g., 'to_csv', 'to_excel')
+    # 이 경우, obj.to_csv(path, **kwargs) 와 같이 호출됩니다.
     else:
         getattr(obj, writer)(path, **kwargs)
 
@@ -180,142 +239,3 @@ def _execute_write_with_progress(writer, obj, path, **kwargs):
     # 작업 스레드에서 예외가 발생했는지 확인하고, 있었다면 다시 발생시킴
     if not exception_queue.empty():
         raise exception_queue.get_nowait()
-    
-
-import uuid
-from .utils import read_json, write_json
-
-def write_snapshot(obj, table_path, mode='overwrite', format='parquet', **kwargs):
-    logger = setup_logger(debug_level=False)
-
-    # 1. 경로 설정 및 폴더 생성
-    os.makedirs(os.path.join(table_path, 'data'), exist_ok=True)
-    os.makedirs(os.path.join(table_path, 'metadata'), exist_ok=True)
-    
-    # 2. 현재 버전 확인
-    pointer_path = os.path.join(table_path, '_current_version.json')
-    current_version = 0
-    if os.path.exists(pointer_path):
-        current_version = read_json(pointer_path)['version_id']
-    new_version = current_version + 1
-
-    # 3. 임시 디렉토리 내에서 모든 작업 수행
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # 3a. 새 데이터 파일 쓰기
-        # (기존 _execute_write 재활용)
-        writer = get_writer(obj, format)
-        data_filename = f"{uuid.uuid4()}.{format}"
-        tmp_data_path = os.path.join(tmpdir, data_filename)
-        _execute_write(writer, obj, tmp_data_path, **kwargs)
-
-       # 3. 임시 디렉토리 내에서 모든 작업 수행
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # 3a. 새 데이터 파일 쓰기
-        writer = get_writer(obj, format)
-        if writer is None:
-            raise ValueError(f"지원하지 않는 format: {format} for object type {type(obj)}")
-            
-        data_filename = f"{uuid.uuid4()}.{format}"
-        tmp_data_path = os.path.join(tmpdir, data_filename)
-        _execute_write(writer, obj, tmp_data_path, **kwargs)
-
-        # 3b. 새 manifest 생성
-        new_manifest = {
-            'files': [{'path': os.path.join('data', data_filename), 'format': format}]
-        }
-        manifest_filename = f"manifest-{uuid.uuid4()}.json"
-        write_json(new_manifest, os.path.join(tmpdir, manifest_filename))
-
-        # 3c. 새 snapshot 생성을 위한 준비
-        all_manifests = [os.path.join('metadata', manifest_filename)]
-
-        # ⭐ [수정된 부분] 'append' 모드 처리 로직 추가
-        if mode.lower() == 'append' and current_version > 0:
-            try:
-                prev_metadata_path = os.path.join(table_path, 'metadata', f'v{current_version}.metadata.json')
-                prev_metadata = read_json(prev_metadata_path)
-                prev_snapshot_filename = prev_metadata['snapshot_filename']
-                
-                prev_snapshot_path = os.path.join(table_path, prev_snapshot_filename)
-                prev_snapshot = read_json(prev_snapshot_path)
-                existing_manifests = prev_snapshot['manifests']
-                
-                all_manifests.extend(existing_manifests)
-            except (FileNotFoundError, KeyError):
-                logger.warning(f"Append mode: 이전 버전(v{current_version})의 메타데이터를 찾을 수 없거나 형식이 올바르지 않습니다. Overwrite 모드로 동작합니다.")
-
-        # 3d. 최종 manifest 목록으로 새 snapshot 생성
-        snapshot_id = int(time.time())
-        snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
-        
-        new_snapshot = {
-            'snapshot_id': snapshot_id,
-            'timestamp': time.time(),
-            'manifests': all_manifests
-        }
-        write_json(new_snapshot, os.path.join(tmpdir, snapshot_filename))
-        
-        # 3e. 새 version metadata 생성
-        new_metadata = {
-            'version_id': new_version,
-            'snapshot_id': snapshot_id,
-            'snapshot_filename': os.path.join('metadata', snapshot_filename)
-        }
-        metadata_filename = f"v{new_version}.metadata.json"
-        write_json(new_metadata, os.path.join(tmpdir, metadata_filename))
-
-        # 3f. 새 포인터 파일 생성
-        new_pointer = {'version_id': new_version}
-        tmp_pointer_path = os.path.join(tmpdir, '_current_version.json')
-        write_json(new_pointer, tmp_pointer_path)
-
-        # 4. 최종 커밋
-        # ... (os.rename, os.replace 로직은 기존과 동일) ...
-        os.rename(tmp_data_path, os.path.join(table_path, 'data', data_filename))
-        os.rename(os.path.join(tmpdir, manifest_filename), os.path.join(table_path, 'metadata', manifest_filename))
-        os.rename(os.path.join(tmpdir, snapshot_filename), os.path.join(table_path, 'metadata', snapshot_filename))
-        os.rename(os.path.join(tmpdir, metadata_filename), os.path.join(table_path, 'metadata', metadata_filename))
-        os.replace(tmp_pointer_path, pointer_path)
-        logger.info(f"✅ 스냅샷 쓰기 완료! '{table_path}'가 버전 {new_version}으로 업데이트되었습니다.")
-
-
-
-def read_table(table_path, version=None, output_as='pandas'):
-    # 1. 읽을 버전 결정 및 진입점(metadata.json) 찾기
-    pointer_path = os.path.join(table_path, '_current_version.json')
-    if version is None:
-        version_id = read_json(pointer_path)['version_id']
-    else:
-        version_id = version
-    
-    metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
-    metadata = read_json(metadata_path)
-    snapshot_filepath = metadata['snapshot_filename']
-
-    # 2. metadata -> snapshot -> manifest 순으로 파싱
-    snapshot_path = os.path.join(table_path, snapshot_filepath) # 정확한 경로 사용
-    snapshot = read_json(snapshot_path)
-    
-    # 3. 모든 manifest를 읽어 최종 데이터 파일 목록 취합
-    all_data_files = []
-    for manifest_ref in snapshot['manifests']:
-        manifest_path = os.path.join(table_path, manifest_ref)
-        manifest = read_json(manifest_path)
-        for file_info in manifest['files']:
-            # file_info 에는 path, format 등의 정보가 있음
-            all_data_files.append(os.path.join(table_path, file_info['path']))
-
-    # 4. output_as 옵션에 따라 최종 데이터 객체 생성
-    if not all_data_files:
-        # 데이터가 없는 경우 처리
-        return None # 또는 빈 DataFrame
-
-    if output_as == 'pandas':
-        import pandas as pd
-        return pd.read_parquet(all_data_files)
-    elif output_as == 'polars':
-        import polars as pl
-        return pl.read_parquet(all_data_files)
-    # NumPy 등의 다른 형식 처리 로직 추가
-    
-    raise ValueError(f"지원하지 않는 출력 형식: {output_as}")
