@@ -201,3 +201,142 @@ def _execute_write_with_progress(writer, obj, path, **kwargs):
     # 작업 스레드에서 예외가 발생했는지 확인하고, 있었다면 다시 발생시킴
     if not exception_queue.empty():
         raise exception_queue.get_nowait()
+    
+
+import uuid
+from .utils import read_json, write_json
+
+def write_snapshot(obj, table_path, mode='overwrite', format='parquet', **kwargs):
+    logger = setup_logger(debug_level=False)
+
+    # 1. 경로 설정 및 폴더 생성
+    os.makedirs(os.path.join(table_path, 'data'), exist_ok=True)
+    os.makedirs(os.path.join(table_path, 'metadata'), exist_ok=True)
+    
+    # 2. 현재 버전 확인
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    current_version = 0
+    if os.path.exists(pointer_path):
+        current_version = read_json(pointer_path)['version_id']
+    new_version = current_version + 1
+
+    # 3. 임시 디렉토리 내에서 모든 작업 수행
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # 3a. 새 데이터 파일 쓰기
+        # (기존 _execute_write 재활용)
+        writer = get_writer(obj, format)
+        data_filename = f"{uuid.uuid4()}.{format}"
+        tmp_data_path = os.path.join(tmpdir, data_filename)
+        _execute_write(writer, obj, tmp_data_path, **kwargs)
+
+       # 3. 임시 디렉토리 내에서 모든 작업 수행
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # 3a. 새 데이터 파일 쓰기
+        writer = get_writer(obj, format)
+        if writer is None:
+            raise ValueError(f"지원하지 않는 format: {format} for object type {type(obj)}")
+            
+        data_filename = f"{uuid.uuid4()}.{format}"
+        tmp_data_path = os.path.join(tmpdir, data_filename)
+        _execute_write(writer, obj, tmp_data_path, **kwargs)
+
+        # 3b. 새 manifest 생성
+        new_manifest = {
+            'files': [{'path': os.path.join('data', data_filename), 'format': format}]
+        }
+        manifest_filename = f"manifest-{uuid.uuid4()}.json"
+        write_json(new_manifest, os.path.join(tmpdir, manifest_filename))
+
+        # 3c. 새 snapshot 생성을 위한 준비
+        all_manifests = [os.path.join('metadata', manifest_filename)]
+
+        # ⭐ [수정된 부분] 'append' 모드 처리 로직 추가
+        if mode.lower() == 'append' and current_version > 0:
+            try:
+                prev_metadata_path = os.path.join(table_path, 'metadata', f'v{current_version}.metadata.json')
+                prev_metadata = read_json(prev_metadata_path)
+                prev_snapshot_filename = prev_metadata['snapshot_filename']
+                
+                prev_snapshot_path = os.path.join(table_path, prev_snapshot_filename)
+                prev_snapshot = read_json(prev_snapshot_path)
+                existing_manifests = prev_snapshot['manifests']
+                
+                all_manifests.extend(existing_manifests)
+            except (FileNotFoundError, KeyError):
+                logger.warning(f"Append mode: 이전 버전(v{current_version})의 메타데이터를 찾을 수 없거나 형식이 올바르지 않습니다. Overwrite 모드로 동작합니다.")
+
+        # 3d. 최종 manifest 목록으로 새 snapshot 생성
+        snapshot_id = int(time.time())
+        snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
+        
+        new_snapshot = {
+            'snapshot_id': snapshot_id,
+            'timestamp': time.time(),
+            'manifests': all_manifests
+        }
+        write_json(new_snapshot, os.path.join(tmpdir, snapshot_filename))
+        
+        # 3e. 새 version metadata 생성
+        new_metadata = {
+            'version_id': new_version,
+            'snapshot_id': snapshot_id,
+            'snapshot_filename': os.path.join('metadata', snapshot_filename)
+        }
+        metadata_filename = f"v{new_version}.metadata.json"
+        write_json(new_metadata, os.path.join(tmpdir, metadata_filename))
+
+        # 3f. 새 포인터 파일 생성
+        new_pointer = {'version_id': new_version}
+        tmp_pointer_path = os.path.join(tmpdir, '_current_version.json')
+        write_json(new_pointer, tmp_pointer_path)
+
+        # 4. 최종 커밋
+        # ... (os.rename, os.replace 로직은 기존과 동일) ...
+        os.rename(tmp_data_path, os.path.join(table_path, 'data', data_filename))
+        os.rename(os.path.join(tmpdir, manifest_filename), os.path.join(table_path, 'metadata', manifest_filename))
+        os.rename(os.path.join(tmpdir, snapshot_filename), os.path.join(table_path, 'metadata', snapshot_filename))
+        os.rename(os.path.join(tmpdir, metadata_filename), os.path.join(table_path, 'metadata', metadata_filename))
+        os.replace(tmp_pointer_path, pointer_path)
+        logger.info(f"✅ 스냅샷 쓰기 완료! '{table_path}'가 버전 {new_version}으로 업데이트되었습니다.")
+
+
+
+def read_table(table_path, version=None, output_as='pandas'):
+    # 1. 읽을 버전 결정 및 진입점(metadata.json) 찾기
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    if version is None:
+        version_id = read_json(pointer_path)['version_id']
+    else:
+        version_id = version
+    
+    metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
+    metadata = read_json(metadata_path)
+    snapshot_filepath = metadata['snapshot_filename']
+
+    # 2. metadata -> snapshot -> manifest 순으로 파싱
+    snapshot_path = os.path.join(table_path, snapshot_filepath) # 정확한 경로 사용
+    snapshot = read_json(snapshot_path)
+    
+    # 3. 모든 manifest를 읽어 최종 데이터 파일 목록 취합
+    all_data_files = []
+    for manifest_ref in snapshot['manifests']:
+        manifest_path = os.path.join(table_path, manifest_ref)
+        manifest = read_json(manifest_path)
+        for file_info in manifest['files']:
+            # file_info 에는 path, format 등의 정보가 있음
+            all_data_files.append(os.path.join(table_path, file_info['path']))
+
+    # 4. output_as 옵션에 따라 최종 데이터 객체 생성
+    if not all_data_files:
+        # 데이터가 없는 경우 처리
+        return None # 또는 빈 DataFrame
+
+    if output_as == 'pandas':
+        import pandas as pd
+        return pd.read_parquet(all_data_files)
+    elif output_as == 'polars':
+        import polars as pl
+        return pl.read_parquet(all_data_files)
+    # NumPy 등의 다른 형식 처리 로직 추가
+    
+    raise ValueError(f"지원하지 않는 출력 형식: {output_as}")
