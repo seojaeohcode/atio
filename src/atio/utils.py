@@ -104,3 +104,14 @@ class ProgressBar:
             f"({self._format_size(final_size)} in {time_str})"
         )
         print(clear_line + finish_message, flush=True)
+
+
+import json
+
+def read_json(path: str):
+    with open(path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+def write_json(data: dict, path: str):
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=4)
