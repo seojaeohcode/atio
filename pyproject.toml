@@ -22,7 +22,7 @@ classifiers = [
 
 
 dependencies = [
-    "pandas>=3.0",
+    "pandas>=2.3.1",
     "pyarrow>=17.0",
     "polars>=1.0",
     "numpy>=2.0,<3.0",
@@ -36,8 +36,8 @@ dependencies = [
 dev = [
     "pytest~=8.4",
     "build~=1.2",
-    "twine~=5.1"
-    "sphinx_rtd_theme==1.0.0"
+    "twine~=5.1",
+    "sphinx_rtd_theme==1.0.0",
     "myst-parser==0.18.0"
 ]
 
