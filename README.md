@@ -1,225 +1,280 @@
-# Atio 🛡️
+<div align="center">
 
-안전하고 **원자적인 파일 쓰기**를 지원하는 경량 Python 라이브러리입니다.  
-Pandas, Polars, NumPy 등 데이터 객체 저장 시 **파일 손상 없이**, **트랜잭션처럼 안전하게 처리**할 수 있습니다.
+<img src="https://img.shields.io/badge/ATIO-3776AB?style=for-the-badge&logo=python&logoColor=white" width="200" />
 
----
+<b>Python library for safe atomic file writing and database writing</b><br>
+<b>🚀 `pip install atio`</b>
 
-## 🌟 주요 기능
+[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
+[![PyPI](https://img.shields.io/badge/PyPI-2.0.0-orange.svg)](https://pypi.org/project/atio/)
 
-- ✅ 임시 디렉토리 스테이징 후 **원자적 파일 교체**  
-- 📦 Pandas, Polars, NumPy 등 다양한 데이터 객체 지원  
-- 📍 `_SUCCESS` 플래그 파일 생성 — 저장 완료 여부 표시  
-- 🛠 실패 시 **원본 파일 보존**, 임시 파일 자동 정리  
-- 🧩 플러그인 아키텍처로 **확장성 좋음**
-- 🔍 **성능 진단 로깅** — 각 단계별 실행 시간 측정 및 병목점 분석
+</div>
 
 ---
 
-## 🔍 성능 진단 로깅 (NEW!)
+## 📖 Overview
 
-Atio는 이제 **성능 진단 로깅** 기능을 제공합니다. `verbose=True` 옵션을 사용하면 각 단계별 실행 시간을 측정하여 병목점을 정확히 파악할 수 있습니다.
+Atio is a Python library that prevents data loss and ensures safe file writing. Through atomic writing, it protects existing data even when errors occur during file writing, and supports various data formats and database connections.
 
-### 기본 사용법 (간단한 정보만):
-```python
-import atio as aw
-import pandas as pd
+### ✨ Key Features
 
-df = pd.DataFrame({"a": [1, 2, 3]})
+- 🔒 **Atomic File Writing**: Safe writing using temporary files
+- 📊 **Multiple Format Support**: CSV, Parquet, Excel, JSON, etc.
+- 🗄️ **Database Support**: Direct SQL and Database writing
+- 📈 **Progress Display**: Progress monitoring for large data processing
+- 🔄 **Rollback Function**: Automatic recovery when errors occur
+- 🎯 **Simple API**: Intuitive and easy-to-use interface
+- 📋 **Version Management**: Snapshot-based data version management
+- 🧹 **Auto Cleanup**: Automatic deletion of old data
 
-# 기본 사용법 - 간단한 성공/실패 정보만
-aw.write(df, "output.parquet", format="parquet")
-```
-
-**출력 예시:**
-```
-[INFO] 임시 디렉토리 생성: /tmp/tmp_xxx
-[INFO] 임시 파일 경로: /tmp/tmp_xxx/output.parquet
-[INFO] 사용할 writer: to_parquet (format: parquet)
-[INFO] 데이터 임시 파일에 저장 완료: /tmp/tmp_xxx/output.parquet
-[INFO] 원자적 교체 완료: /tmp/tmp_xxx/output.parquet -> output.parquet
-[INFO] _SUCCESS 플래그 파일 생성: output.parquet._SUCCESS
-[INFO] Atomic write completed successfully (took 0.2359s)
-```
-
-### 상세 진단 모드 (verbose=True):
-```python
-# 상세한 성능 진단 정보 출력
-aw.write(df, "output.parquet", format="parquet", verbose=True)
-```
-
-**출력 예시:**
-```
-[INFO] 임시 디렉토리 생성: /tmp/tmp_xxx
-[INFO] 임시 파일 경로: /tmp/tmp_xxx/output.parquet
-[INFO] 사용할 writer: to_parquet (format: parquet)
-[INFO] 데이터 임시 파일에 저장 완료: /tmp/tmp_xxx/output.parquet
-[INFO] 원자적 교체 완료: /tmp/tmp_xxx/output.parquet -> output.parquet
-[INFO] _SUCCESS 플래그 파일 생성: output.parquet._SUCCESS
-[DEBUG] Atomic write step timings (SUCCESS): setup=0.0012s, write_call=0.2345s, replace=0.0001s, success_flag=0.0001s, total=0.2359s
-```
-
-### 오류 발생 시 (기본 사용법):
-```
-[INFO] 임시 디렉토리 생성: /tmp/tmp_xxx
-[INFO] 임시 파일 경로: /tmp/tmp_xxx/output.parquet
-[INFO] 사용할 writer: to_parquet (format: parquet)
-[ERROR] 임시 파일 저장 중 예외 발생: [Errno 28] No space left on device
-[INFO] Atomic write failed during write stage (took 0.1246s, error: OSError)
-```
-
-### 오류 발생 시 (verbose=True):
-```
-[INFO] 임시 디렉토리 생성: /tmp/tmp_xxx
-[INFO] 임시 파일 경로: /tmp/tmp_xxx/output.parquet
-[INFO] 사용할 writer: to_parquet (format: parquet)
-[ERROR] 임시 파일 저장 중 예외 발생: [Errno 28] No space left on device
-[DEBUG] Atomic write step timings (ERROR during write): setup=0.0012s, write_call=0.1234s (실패), replace=N/A, success_flag=N/A, total=0.1246s, error_type=OSError
-```
-
-**측정되는 단계:**
-- `setup`: 임시 폴더 생성 및 초기 설정
-- `write_call`: 실제 데이터 쓰기 함수 호출 (대부분의 시간 소요)
-- `replace`: 원자적 파일 교체
-- `success_flag`: _SUCCESS 플래그 파일 생성
-- `total`: 전체 작업 시간
-
-**지원하는 오류 상황:**
-- ✅ **KeyboardInterrupt**: 인터럽트 발생 시점과 소요 시간 표시
-- ✅ **권한 오류**: 파일 시스템 권한 문제 진단
-- ✅ **디스크 공간 부족**: 저장 공간 부족 상황 진단
-- ✅ **메모리 부족**: 메모리 압박 상황 진단
-- ✅ **네트워크 오류**: 네트워크 드라이브 접근 문제 진단
-- ✅ **지원하지 않는 형식**: 잘못된 파일 형식 지정 시 진단
-- ✅ **동시 접근 오류**: 멀티스레딩 환경에서의 충돌 진단
-
-**장점:**
-- 🎯 **정확한 병목점 파악**: Atio 오버헤드 vs 실제 쓰기 작업 시간 구분
-- 🔧 **성능 최적화 가이드**: 어느 단계에서 시간이 많이 소요되는지 명확히 표시
-- 🐛 **디버깅 시간 단축**: 문제의 원인을 빠르게 파악 가능
-- 📊 **성능 모니터링**: 대용량 데이터 처리 시 성능 추적
-- 🚨 **오류 진단**: 실패 상황에서도 정확한 원인과 발생 시점 파악
-
----
-
-## 🧠 왜 이 도구가 정말 중요한가요?
-
-NumPy나 Pandas는 데이터 분석에서는 최적이지만, **파일로 저장할 때는 아래와 같은 위험**이 있습니다:
-
-1. **파일 일부만 저장되어 깨질 수 있음** — 강제 종료나 오류 시
-2. **동시 쓰기 충돌** — 멀티프로세스 환경에서 파일이 엉킬 수 있음
-3. **플랫폼 간 동작 차이** — Windows와 Linux/macOS에서 파일 시스템 동작이 다름
-
-AtomicWriter는 임시 파일에 쓰고 **단일 `rename()`/`replace()` 작업으로 교체**합니다.  
-이 방식은 **“완전히 저장되거나 전혀 저장되지 않는”** 원자성(atomicity)을 보장하며,  
-- POSIX: `os.replace` (atomic), `fsync`  
-- Windows: `MoveFileEx`, `Commit`  
-를 활용하여 파일이 **항상 일관된 상태**를 유지하도록 합니다 :contentReference[oaicite:1]{index=1}.
-
----
-
-## ⚙️ 설치
+## 🚀 Installation
 
 ```bash
-pip install atomicwriter
-
-## 🛠️ 사용 예제
-
-```python
-import atomicwriter as aw
-import pandas as pd
-
-df = pd.DataFrame({"a": [1, 2, 3]})
-
-# 기본 사용법
-aw.write(df, "output.parquet", format="parquet")
-# │→ 임시 파일 작성 → 원자적 교체 → _SUCCESS 생성
-# │→ 실패 시 원본 보존, 임시 파일 자동 정리
-
-# 상세 성능 진단 로깅 활성화
-aw.write(df, "output_verbose.parquet", format="parquet", verbose=True)
-# │→ 각 단계별 실행 시간 측정 및 로그 출력
-
-# 진행도 표시와 함께 사용
-aw.write(df, "output_progress.parquet", format="parquet", show_progress=True)
-# │→ 실시간 진행도 표시
-
-# 모든 옵션 조합
-aw.write(df, "output_full.parquet", format="parquet", 
-         verbose=True, show_progress=True)
-# │→ 성능 진단 + 진행도 표시
+pip install atio
 ```
 
-## 💡 빅데이터 워크플로우에서 활용 시나리오
+## 📚 Usage
 
-| 시나리오               | 해결 방법                   | 장점                    |
-|------------------------|-----------------------------|-------------------------|
-| Pandas → CSV 저장      | 임시 파일에 기록 후 교체    | CSV 파일 깨짐 방지      |
-| 멀티프로세스 병렬 쓰기 | atomic replace 방식 사용    | 충돌 없는 안전 저장     |
-| 데이터 파이프라인 작업 | 저장 성공 시 `_SUCCESS` 확인 | 데이터 완전성 보장      |
+### `atio.write()` - Basic File/Database Writing
+
+**Purpose**: Save data to a single file or database
+
+**Key Parameters**:
+- `obj`: Data to save (pandas.DataFrame, polars.DataFrame, numpy.ndarray)
+- `target_path`: File save path (required for file writing)
+- `format`: Save format ('csv', 'parquet', 'excel', 'json', 'sql', 'database')
+- `show_progress`: Whether to display progress
+- `verbose`: Whether to output detailed performance information
+
+#### Basic File Writing
+
+```python
+import atio
+import pandas as pd
+
+df = pd.DataFrame({
+    "name": ["Alice", "Bob", "Charlie"],
+    "age": [25, 30, 35],
+    "city": ["Seoul", "Busan", "Incheon"]
+})
+
+# Save in various formats
+atio.write(df, "users.parquet", format="parquet")
+atio.write(df, "users.csv", format="csv", index=False)
+atio.write(df, "users.xlsx", format="excel", sheet_name="Users")
+```
+
+#### Database Writing
+
+```python
+import atio
+import pandas as pd
+from sqlalchemy import create_engine
+
+df = pd.DataFrame({
+    "product_id": [101, 102, 103],
+    "product_name": ["Laptop", "Mouse", "Keyboard"],
+    "price": [1200, 25, 75]
+})
+
+# Save to SQL database
+engine = create_engine('postgresql://user:password@localhost/dbname')
+atio.write(df, format="sql", name="products", con=engine, if_exists="replace")
+```
+
+#### Advanced Features (Progress, Performance Monitoring)
+
+```python
+# Save with progress display
+atio.write(large_df, "big_data.parquet", format="parquet", show_progress=True)
+
+# Output detailed performance information
+atio.write(df, "data.parquet", format="parquet", verbose=True)
+
+# Use Polars DataFrame
+import polars as pl
+polars_df = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+atio.write(polars_df, "data.parquet", format="parquet")
+```
+
+### `atio.write_snapshot()` - Version-Managed Table Storage
+
+**Purpose**: Save data in table format with version management
+
+**Key Parameters**:
+- `obj`: Data to save
+- `table_path`: Table save path
+- `mode`: Save mode ('overwrite', 'append')
+- `format`: Save format
+
+#### Version Management Usage
+
+```python
+# Save with version management in table format
+atio.write_snapshot(df, "my_table", mode="overwrite", format="parquet")
+
+# Add to existing data (append mode)
+new_data = pd.DataFrame({"name": ["David"], "age": [40], "city": ["Daejeon"]})
+atio.write_snapshot(new_data, "my_table", mode="append", format="parquet")
+```
+
+### `atio.read_table()` - Table Data Reading
+
+**Purpose**: Read data from table
+
+**Key Parameters**:
+- `table_path`: Table path
+- `version`: Version number to read (None for latest)
+- `output_as`: Output format ('pandas', 'polars')
+
+#### Table Reading Usage
+
+```python
+# Read latest data
+latest_data = atio.read_table("my_table", output_as="pandas")
+
+# Read specific version
+version_1_data = atio.read_table("my_table", version=1, output_as="pandas")
+
+# Read in Polars format
+polars_data = atio.read_table("my_table", output_as="polars")
+```
+
+### `atio.expire_snapshots()` - Old Data Cleanup
+
+**Purpose**: Clean up old snapshots and orphaned files
+
+**Key Parameters**:
+- `table_path`: Table path
+- `keep_for`: Retention period
+- `dry_run`: Whether to actually delete (True for preview only)
+
+#### Data Cleanup Usage
+
+```python
+from datetime import timedelta
+
+# Clean up old data (preview)
+atio.expire_snapshots("my_table", keep_for=timedelta(days=7), dry_run=True)
+
+# Execute actual deletion
+atio.expire_snapshots("my_table", keep_for=timedelta(days=7), dry_run=False)
+```
+
+## 📊 Supported Formats
+
+| Format | Description | Required Parameters | Example |
+|--------|-------------|-------------------|---------|
+| `csv` | CSV file | `target_path` | `atio.write(df, "data.csv", format="csv")` |
+| `parquet` | Parquet file | `target_path` | `atio.write(df, "data.parquet", format="parquet")` |
+| `excel` | Excel file | `target_path` | `atio.write(df, "data.xlsx", format="excel")` |
+| `json` | JSON file | `target_path` | `atio.write(df, "data.json", format="json")` |
+| `sql` | SQL database | `name`, `con` | `atio.write(df, format="sql", name="table", con=engine)` |
+| `database` | Database (Polars) | `table_name`, `connection_uri` | `atio.write(df, format="database", table_name="table", connection_uri="...")` |
+
+## 🎯 Real-World Usage Scenarios
+
+### Scenario 1: Large CSV File Writing Interruption
+
+**Problem**: A user was saving large analysis results to a .csv file using Pandas when an unexpected power outage or kernel force termination occurred. The result file was corrupted with only 3MB saved out of 50MB, and could not be read afterward.
+
+**Atio Solution**: `atio.write()` first writes to a temporary file, then only replaces the original after all writing is successful. Therefore, even if interrupted, the existing file is preserved and corrupted temporary files are automatically cleaned up, ensuring stability.
+
+### Scenario 2: File Conflicts in Multiprocessing Environment
+
+**Problem**: In a Python multiprocessing-based data collection pipeline, multiple processes were simultaneously saving to the same file, causing conflicts. As a result, log files were overwritten and lost, or some JSON files were saved in corrupted, unparseable forms.
+
+**Atio Solution**: Using `atio.write()`'s atomic replacement method for file writing ensures that only one process can move to the final path at a time. This guarantees conflict-free, collision-free saving without race conditions.
+
+### Scenario 3: Data Pipeline Validation Issues
+
+**Problem**: In ETL operations, the automated system could not determine whether .parquet saving was completed, so corrupted or incomplete data was used in the next stage. This resulted in missing values in model training data, causing quality degradation.
+
+**Atio Solution**: Using `atio.write_snapshot()` creates a `_SUCCESS` flag file only when saving is successfully completed. Subsequent stages can safely run the pipeline based on the presence or absence of `_SUCCESS`.
+
+### Scenario 4: Lack of Data Version Management
+
+**Problem**: As datasets for machine learning model training were updated multiple times, it became impossible to track which version of data was used to train which model. Experimental result reproducibility decreased and model performance comparison became difficult.
+
+**Atio Solution**: Using `atio.write_snapshot()` and `atio.read_table()` allows automatic management of data versions. Snapshots are created for each version, allowing you to return to data from any specific point in time, ensuring experimental reproducibility.
+
+### Scenario 5: System Interruption Due to Disk Space Shortage
+
+**Problem**: During large data processing, the system was interrupted due to insufficient disk space. Incomplete files from processing remained, continuing to occupy disk space and requiring manual cleanup.
+
+**Atio Solution**: Using `atio.expire_snapshots()` allows automatic cleanup of snapshots and orphaned files older than the set retention period. You can preview files to be deleted with `dry_run=True` option, then safely perform cleanup operations.
+
+### Scenario 6: Network Error During Database Storage
+
+**Problem**: While saving analysis results to a PostgreSQL database, the network connection was interrupted, stopping the save operation. Partially saved tables remained in the database, breaking data integrity.
+
+**Atio Solution**: `atio.write()`'s database storage feature uses transactions to ensure all data is either successfully saved or not saved at all. When network errors occur, automatic rollback maintains data integrity.
+
+### Scenario 7: Complexity in Experimental Data Management
+
+**Problem**: A research team was conducting multiple experiments simultaneously, causing experimental data to mix and making it difficult to track which data was used for which experiment. Experimental result reliability decreased and reproduction became impossible.
+
+**Atio Solution**: Using `atio.write_snapshot()` creates independent tables for each experiment, and `atio.read_table()` can read the exact data for specific experiments. Automated version management and metadata tracking for each experiment ensures research reproducibility and reliability.
+
+### Scenario 8: Data Loss During Cloud Streaming
+
+**Problem**: While processing real-time data collected from IoT sensors, system restart or network errors occurred. Data being processed was lost, breaking the continuity of important sensor data.
+
+**Atio Solution**: Using `atio.write_snapshot()` buffers real-time data and saves it atomically at regular intervals. After system restart, data collection can resume from the last save point, ensuring data continuity.
+
+### Scenario 9: Memory Shortage During Large Data Processing
+
+**Problem**: While processing DataFrames larger than 10GB, the process was force-terminated due to memory shortage. All intermediate results being processed were lost, requiring restart from the beginning.
+
+**Atio Solution**: Using `atio.write()`'s `show_progress=True` option along with chunk-based data processing controls memory usage. Each chunk is processed after the previous one is successfully saved, so even if it fails in the middle, already saved data is preserved.
+
+### Scenario 10: Conflicts with Backup Systems
+
+**Problem**: While trying to save a large file during automatic backup system execution, the backup software attempted to backup a file being written, causing file corruption. The backup file was also saved in an incomplete state.
+
+**Atio Solution**: Using `atio.write()`'s atomic replacement method for file saving ensures that backup systems only see complete files when reading. Temporary files are excluded from backup targets, enabling conflict-free, safe backups. 
+
+## 🔍 Performance Monitoring
+
+```python
+# Output detailed performance information
+atio.write(df, "data.parquet", format="parquet", verbose=True)
+```
+
+Output example:
+```
+[INFO] Temporary directory created: /tmp/tmp12345
+[INFO] Temporary file path: /tmp/tmp12345/data.parquet
+[INFO] Writer to use: to_parquet (format: parquet)
+[INFO] ✅ File writing completed (total time: 0.1234s)
+```
+
+## 📦 Dependencies
+
+### Required Dependencies
+- Python 3.7+
+- pandas
+- numpy
+
+### Optional Dependencies
+- `pyarrow` or `fastparquet`: Parquet format support
+- `openpyxl` or `xlsxwriter`: Excel format support
+- `sqlalchemy`: SQL database support
+- `polars`: Polars DataFrame support
+
+## 📄 License
+
+This project is distributed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for details.
+
+## 🐛 Bug Reports
+
+Found a bug? Please report it on the [Issues](https://github.com/seojaeohcode/atio/issues) page.
 
 ---
 
-## 🔄 비교 – 유사 라이브러리 특징 정리
+<div align="center">
 
-### [python-atomicwrites](https://github.com/untitaker/python-atomicwrites)
-- 간편한 API
-- Windows 지원
-- 크로스 플랫폼 호환
+**Atio** - Safe and Fast Data Writing Library 🚀
 
-### atomicwriter (본 프로젝트)
-- ✅ 경량
-- ✅ 플러그인 아키텍처
-- ✅ Pandas / Polars / Numpy 등 데이터 객체 중심 저장 지원
-
----
-
-## ✅ 라이선스
-
-Apache 2.0 — 기업 및 커뮤니티 모두 자유롭게 사용 가능
-
----
-
-## ✨ 요약
-
-**AtomicWriter**는 분석만큼 중요한 **“저장” 단계를 안전하게 처리**하는 도구입니다.
-
-특히 데이터 무결성이 중요한 환경에서  
-(예: 머신러닝 배치, 멀티프로세스 분석, 중요 로그 저장 등)  
-**작지만 강력한 해결책**을 제공합니다.
-
-📘 시나리오 1: Pandas CSV 저장 중 작업 중단
-문제 상황:
-한 사용자가 Pandas로 대용량 분석 결과를 .csv 파일로 저장하던 중, 예상치 못한 전원 차단이나 커널 강제 종료가 발생했습니다.
-결과 파일은 50MB 중 3MB만 저장된 채 손상되었고, 이후 읽기도 되지 않았습니다.
-
-AtomicWriter로 해결:
-임시 파일에 먼저 기록 후, 모든 쓰기가 성공해야만 원본과 교체됩니다.
-따라서 중간에 꺼져도 기존 파일은 보존되고, 손상된 임시 파일은 자동 정리되어 안정성을 확보할 수 있습니다.
-
-📘 시나리오 2: 멀티프로세스 환경에서 경쟁 조건(Race Condition)
-문제 상황:
-Python multiprocessing 기반 데이터 수집 파이프라인에서 여러 프로세스가 동시에 같은 파일을 저장하며 충돌이 발생했습니다.
-결과적으로 로그 파일이 덮어쓰여 누락되거나, 일부 JSON 파일은 파싱할 수 없는 손상된 형태로 저장됐습니다.
-
-AtomicWriter로 해결:
-파일 쓰기를 atomic replace 방식으로 수행하면, 한 번에 하나의 프로세스만 최종 경로로 이동할 수 있습니다.
-이로써 경쟁 조건 없이 충돌 없이 저장이 보장됩니다.
-
-📘 시나리오 3: 데이터 파이프라인 검증 불가
-문제 상황:
-ETL 작업에서 .parquet 저장이 완료됐는지 여부를 자동 시스템이 판단할 수 없어, 손상되거나 미완성된 데이터를 다음 단계에서 그대로 사용했습니다.
-결과적으로 모델 학습 데이터에 결측값이 포함되어 품질 저하가 발생했습니다.
-
-AtomicWriter로 해결:
-저장이 성공적으로 완료된 경우에만 _SUCCESS 플래그 파일을 함께 생성하도록 설정할 수 있습니다.
-후속 단계는 _SUCCESS 유무를 기준으로 안전하게 파이프라인을 구동할 수 있습니다.
-
-📘 시나리오 4: Polars DataFrame을 S3로 저장 중 오류 발생
-문제 상황:
-Polars DataFrame을 AWS S3에 직접 저장하는 중간에 ConnectionError가 발생하여 S3에는 부분적으로 깨진 .parquet 파일이 올라갔습니다.
-다음 번 실행에서 이 파일을 재사용하려 했지만, S3에서 파일이 손상된 채로 존재해 오류를 유발했습니다.
-
-AtomicWriter로 해결:
-로컬 임시 파일에 완전히 저장된 후에만 S3 업로드 또는 교체가 수행됩니다.
-네트워크 이슈나 디스크 오류에도 최종 파일은 항상 완전한 상태로만 존재하게 됩니다.
+</div> 
