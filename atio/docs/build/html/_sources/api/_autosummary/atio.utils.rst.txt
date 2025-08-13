@@ -1,0 +1,19 @@
+atio.utils
+==========
+
+.. automodule:: atio.utils
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      check_file_exists
+      setup_logger
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ProgressBar
+   

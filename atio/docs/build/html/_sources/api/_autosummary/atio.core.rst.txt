@@ -1,0 +1,12 @@
+atio.core
+=========
+
+.. automodule:: atio.core
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      write
+   
