@@ -202,7 +202,6 @@ def write_snapshot(obj, table_path, mode='overwrite', format='parquet', **kwargs
     # 3. 임시 디렉토리 내에서 모든 작업 수행
     with tempfile.TemporaryDirectory() as tmpdir:
         # 3a. 새 데이터 파일 쓰기
-        # (기존 _execute_write 재활용)
         writer = get_writer(obj, format)
         data_filename = f"{uuid.uuid4()}.{format}"
         tmp_data_path = os.path.join(tmpdir, data_filename)
@@ -229,7 +228,6 @@ def write_snapshot(obj, table_path, mode='overwrite', format='parquet', **kwargs
         # 3c. 새 snapshot 생성을 위한 준비
         all_manifests = [os.path.join('metadata', manifest_filename)]
 
-        # ⭐ [수정된 부분] 'append' 모드 처리 로직 추가
         if mode.lower() == 'append' and current_version > 0:
             try:
                 prev_metadata_path = os.path.join(table_path, 'metadata', f'v{current_version}.metadata.json')
@@ -270,13 +268,12 @@ def write_snapshot(obj, table_path, mode='overwrite', format='parquet', **kwargs
         write_json(new_pointer, tmp_pointer_path)
 
         # 4. 최종 커밋
-        # ... (os.rename, os.replace 로직은 기존과 동일) ...
         os.rename(tmp_data_path, os.path.join(table_path, 'data', data_filename))
         os.rename(os.path.join(tmpdir, manifest_filename), os.path.join(table_path, 'metadata', manifest_filename))
         os.rename(os.path.join(tmpdir, snapshot_filename), os.path.join(table_path, 'metadata', snapshot_filename))
         os.rename(os.path.join(tmpdir, metadata_filename), os.path.join(table_path, 'metadata', metadata_filename))
         os.replace(tmp_pointer_path, pointer_path)
-        logger.info(f"✅ 스냅샷 쓰기 완료! '{table_path}'가 버전 {new_version}으로 업데이트되었습니다.")
+        logger.info(f"스냅샷 쓰기 완료! '{table_path}'가 버전 {new_version}으로 업데이트되었습니다.")
 
 
 
@@ -319,3 +316,105 @@ def read_table(table_path, version=None, output_as='pandas'):
     # NumPy 등의 다른 형식 처리 로직 추가
     
     raise ValueError(f"지원하지 않는 출력 형식: {output_as}")
+
+
+from datetime import datetime, timedelta
+
+def expire_snapshots(table_path, keep_for=timedelta(days=7), dry_run=True):
+    """
+    설정된 보관 기간(keep_for)보다 오래된 스냅샷과
+    더 이상 참조되지 않는 데이터 파일을 삭제합니다.
+    """
+    logger = setup_logger()
+    now = datetime.now()
+    metadata_dir = os.path.join(table_path, 'metadata')
+    
+    if not os.path.isdir(metadata_dir):
+        logger.info("정리할 테이블이 없거나 메타데이터 폴더를 찾을 수 없습니다.")
+        return
+
+    # --- 1. 모든 메타데이터 정보와 파일명 수집 ---
+    all_versions_meta = {}      # version_id -> version_meta
+    all_snapshots_meta = {}     # snapshot_id -> snapshot_meta
+    all_manifest_paths = set()  # 모든 manifest 파일 경로
+    
+    for filename in os.listdir(metadata_dir):
+        path = os.path.join(metadata_dir, filename)
+        if filename.startswith('v') and filename.endswith('.metadata.json'):
+            meta = read_json(path)
+            all_versions_meta[meta['version_id']] = meta
+        elif filename.startswith('snapshot-'):
+            snap = read_json(path)
+            all_snapshots_meta[snap['snapshot_id']] = snap
+        elif filename.startswith('manifest-'):
+            all_manifest_paths.add(os.path.join('metadata', filename))
+
+    # --- 2. "살아있는" 객체 식별 ---
+    live_snapshot_ids = set()
+    live_manifests = set()
+    live_data_files = set()
+
+    # 현재 버전을 포함하여 보관 기간 내의 모든 버전을 "살아있는" 것으로 간주
+    for version_meta in all_versions_meta.values():
+        snapshot_id = version_meta['snapshot_id']
+        snapshot = all_snapshots_meta.get(snapshot_id)
+        
+        if snapshot and (now - datetime.fromtimestamp(snapshot['timestamp'])) < keep_for:
+            live_snapshot_ids.add(snapshot_id)
+            for manifest_ref in snapshot.get('manifests', []):
+                live_manifests.add(manifest_ref)
+                manifest_path = os.path.join(table_path, manifest_ref)
+                if os.path.exists(manifest_path):
+                    manifest_data = read_json(manifest_path)
+                    for file_info in manifest_data.get('files', []):
+                        live_data_files.add(file_info['path'])
+
+    # --- 3. 삭제할 "고아" 객체 식별 ---
+    files_to_delete = []
+
+    # 고아 데이터 파일 찾기
+    data_dir = os.path.join(table_path, 'data')
+    if os.path.isdir(data_dir):
+        for data_file in os.listdir(data_dir):
+            relative_path = os.path.join('data', data_file)
+            if relative_path not in live_data_files:
+                files_to_delete.append(os.path.join(table_path, relative_path))
+
+    # 고아 매니페스트 파일 찾기
+    manifests_to_delete = all_manifest_paths - live_manifests
+    for manifest_path in manifests_to_delete:
+        files_to_delete.append(os.path.join(table_path, manifest_path))
+
+    # 고아 스냅샷 및 버전 메타데이터 파일 찾기
+    for version_id, version_meta in all_versions_meta.items():
+        snapshot_id = version_meta['snapshot_id']
+        if snapshot_id not in live_snapshot_ids:
+            # vX.metadata.json 파일 삭제 대상 추가
+            files_to_delete.append(os.path.join(metadata_dir, f"v{version_id}.metadata.json"))
+            # snapshot-X.json 파일 삭제 대상 추가
+            snapshot_filename = version_meta.get('snapshot_filename') # 이전 단계에서 이 키를 추가했었음
+            if snapshot_filename:
+                 files_to_delete.append(os.path.join(table_path, snapshot_filename))
+    
+    # 중복 제거
+    files_to_delete = sorted(list(set(files_to_delete)))
+
+    # --- 4. 최종 삭제 실행 ---
+    if not files_to_delete:
+        logger.info("삭제할 오래된 파일이 없습니다.")
+        return
+
+    logger.info(f"총 {len(files_to_delete)}개의 오래된 파일을 찾았습니다.")
+    if dry_run:
+        logger.info("[Dry Run] 아래 파일들이 삭제될 예정입니다:")
+        for f in files_to_delete:
+            print(f"  - {f}")
+    else:
+        logger.info("오래된 파일들을 삭제합니다...")
+        for f in files_to_delete:
+            try:
+                os.remove(f)
+                logger.debug(f"  - 삭제됨: {f}")
+            except OSError as e:
+                logger.error(f"  - 삭제 실패: {f}, 오류: {e}")
+        logger.info("삭제 작업이 완료되었습니다.")
