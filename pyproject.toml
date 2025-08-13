@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "atio"
-version = "1.0.0"
+version = "2.0.0"
 authors = [
     { name="Seo Jae Oh", email="seojaeohcoder@gmail.com" },
 ]
@@ -25,7 +25,11 @@ dependencies = [
     "pandas",
     "pyarrow",
     "polars",
-    # "fsspec", # 나중에 원격 지원 추가 시 주석 해제
+    "numpy",
+    "sqlalchemy",
+    "openpyxl",
+    "connectorx",
+    "fsspec"
 ]
 
 # (선택 사항이지만 강력 추천) 개발용 의존성 분리
