@@ -1,29 +1,29 @@
-# import pandas as pd
-# import numpy as np
-# from atio import read_table, write_snapshot
+import pandas as pd
+import numpy as np
+from atio import read_table, write_snapshot
 
 
-# TABLE_DIR = "daily_sales_table"
+TABLE_DIR = "daily_sales_table"
 
-# # v1: 덮어쓰기로 첫 데이터 생성
-# print("v1: 첫 데이터 쓰기 (overwrite)")
-# df1 = pd.DataFrame({'date': ['2025-08-11'], 'sales': [100]})
-# write_snapshot(df1, TABLE_DIR, mode='overwrite')
+# v1: 덮어쓰기로 첫 데이터 생성
+print("v1: 첫 데이터 쓰기 (overwrite)")
+df1 = pd.DataFrame({'date': ['2025-08-11'], 'sales': [100]})
+write_snapshot(df1, TABLE_DIR, mode='overwrite')
 
-# # v2: 데이터 추가
-# print("v2: 데이터 추가하기 (append)")
-# df2 = pd.DataFrame({'date': ['2025-08-12'], 'sales': [120]})
-# write_snapshot(df2, TABLE_DIR, mode='append') # append 로직 구현 후 테스트
+# v2: 데이터 추가
+print("v2: 데이터 추가하기 (append)")
+df2 = pd.DataFrame({'date': ['2025-08-12'], 'sales': [120]})
+write_snapshot(df2, TABLE_DIR, mode='append') # append 로직 구현 후 테스트
 
-# # 최신 데이터 읽기
-# print("\n[최신 데이터 읽기]")
-# latest_df = read_table(TABLE_DIR)
-# print(latest_df)
+# 최신 데이터 읽기
+print("\n[최신 데이터 읽기]")
+latest_df = read_table(TABLE_DIR)
+print(latest_df)
 
-# # 과거 데이터 읽기 (시간 여행)
-# print("\n[과거(v1) 데이터 읽기 - 시간 여행]")
-# v1_df = read_table(TABLE_DIR, version=1)
-# print(v1_df)
+# 과거 데이터 읽기
+print("\n[과거(v1) 데이터 읽기]")
+v1_df = read_table(TABLE_DIR, version=1)
+print(v1_df)
 
 import atio
 import pandas as pd
@@ -49,7 +49,7 @@ def backdate_snapshot(table_path: str, version: int, days_ago: int):
     """
     테스트를 위해 특정 버전의 스냅샷 타임스탬프를 과거로 조작하는 헬퍼 함수
     """
-    print(f"  -> {version}번 버전의 타임스탬프를 {days_ago}일 전으로 변경합니다.")
+    print(f"{version}번 버전의 타임스탬프를 {days_ago}일 전으로 변경합니다.")
     
     # 1. 버전 메타데이터에서 스냅샷 파일명 찾기
     metadata_path = os.path.join(table_path, 'metadata', f'v{version}.metadata.json')
@@ -78,7 +78,7 @@ def list_files(title, table_path):
         for f in sorted(os.listdir(data_path)):
             print(f"    - {f}")
             
-    print(f"  [metadata 폴der]")
+    print(f"  [metadata 폴더]")
     if os.path.exists(meta_path):
         for f in sorted(os.listdir(meta_path)):
             print(f"    - {f}")
@@ -110,20 +110,20 @@ def main():
     list_files("정리 전 파일 목록", TABLE_DIR)
 
     ## 3. Dry Run으로 삭제 대상 미리보기
-    print(f"\n## 2. {KEEP_FOR_DAYS}일이 지난 스냅샷 정리 (Dry Run) ##")
+    print(f"\n2. {KEEP_FOR_DAYS}일이 지난 스냅샷 정리 (Dry Run)")
     atio.expire_snapshots(TABLE_DIR, keep_for=timedelta(days=KEEP_FOR_DAYS), dry_run=True)
 
     ## 4. 실제 정리 작업 실행
-    print(f"\n## 3. 실제 정리 작업 실행 (dry_run=False) ##")
+    print(f"\n3. 실제 정리 작업 실행 (dry_run=False)")
     atio.expire_snapshots(TABLE_DIR, keep_for=timedelta(days=KEEP_FOR_DAYS), dry_run=False)
 
     ## 5. 정리 후 상태 확인
     list_files("정리 후 파일 목록", TABLE_DIR)
     
     ## 6. 테스트 폴더 정리
-    print(f"\n## 4. 테스트 완료 후 '{TABLE_DIR}' 폴더 삭제 ##")
+    print(f"\n4. 테스트 완료 후 '{TABLE_DIR}' 폴더 삭제")
     shutil.rmtree(TABLE_DIR)
-    print(" -> 정리 완료.")
+    print("정리 완료")
 
 if __name__ == "__main__":
     main()
