@@ -37,6 +37,8 @@ dev = [
     "pytest~=8.4",
     "build~=1.2",
     "twine~=5.1"
+    "sphinx_rtd_theme==1.0.0"
+    "myst-parser==0.18.0"
 ]
 
 # `find_packages()` 역할을 하는 부분 (src 레이아웃 사용 시)

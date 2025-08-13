@@ -12,3 +12,5 @@ fsspec>=2024.5.0
 pytest~=8.4
 build~=1.2
 twine~=5.1
+sphinx_rtd_theme==1.0.0
+myst-parser==0.18.0
