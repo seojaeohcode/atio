@@ -1,13 +1,16 @@
 # 핵심 의존성
-pandas
-polars
-pyarrow
-sqlalchemy
-openpyxl
-connectorx
-fsspec
+pandas>=3.0
+pyarrow>=17.0
+polars>=1.0
+numpy>=2.0,<3.0
+sqlalchemy>=2.0
+openpyxl>=3.1
+connectorx>=0.3.0
+fsspec>=2024.5.0
 
 # 개발용 의존성
-pytest
-build
-twine
+pytest~=8.4
+build~=1.2
+twine~=5.1
+sphinx_rtd_theme==1.0.0
+myst-parser==0.18.0
