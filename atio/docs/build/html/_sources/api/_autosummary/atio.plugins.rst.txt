@@ -1,0 +1,13 @@
+atio.plugins
+============
+
+.. automodule:: atio.plugins
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get_writer
+      register_writer
+   

@@ -1,0 +1,15 @@
+﻿atio
+====
+
+.. automodule:: atio
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   core
+   plugins
+   utils
