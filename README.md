@@ -7,7 +7,8 @@
 
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
-[![PyPI](https://img.shields.io/badge/PyPI-2.0.0-orange.svg)](https://pypi.org/project/atio/)
+[![PyPI](https://img.shields.io/badge/PyPI-2.1.0-orange.svg)](https://pypi.org/project/atio/)
+[![Documentation](https://img.shields.io/badge/Documentation-Read%20the%20Docs-blue.svg)](https://seojaeohcode.github.io/atio/)
 
 </div>
 
