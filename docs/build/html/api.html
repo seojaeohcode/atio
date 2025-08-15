@@ -1,0 +1,489 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ko" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API 참조 &mdash; Atio 2.0.0 문서</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=86ec957b"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=afa94a99"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="설정 및 구성" href="configuration.html" />
+    <link rel="prev" title="고급 사용법" href="advanced_usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Atio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">사용자 가이드:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">설치 가이드</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">빠른 시작</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">사용 예제</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">고급 사용법</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API 참조:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API 참조</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">주요 함수</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core">Core 모듈</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#atio.core.write"><code class="docutils literal notranslate"><span class="pre">write()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#atio.core.write_snapshot"><code class="docutils literal notranslate"><span class="pre">write_snapshot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#atio.core.read_table"><code class="docutils literal notranslate"><span class="pre">read_table()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#atio.core.expire_snapshots"><code class="docutils literal notranslate"><span class="pre">expire_snapshots()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#write">write()</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#atio.core.atio.write"><code class="docutils literal notranslate"><span class="pre">atio.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#write-snapshot">write_snapshot()</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#atio.core.atio.write_snapshot"><code class="docutils literal notranslate"><span class="pre">atio.write_snapshot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#read-table">read_table()</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#atio.core.atio.read_table"><code class="docutils literal notranslate"><span class="pre">atio.read_table()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#expire-snapshots">expire_snapshots()</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#atio.core.atio.expire_snapshots"><code class="docutils literal notranslate"><span class="pre">atio.expire_snapshots()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#plugins">Plugins 모듈</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#atio.plugins.register_writer"><code class="docutils literal notranslate"><span class="pre">register_writer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#atio.plugins.get_writer"><code class="docutils literal notranslate"><span class="pre">get_writer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#utils">Utils 모듈</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#atio.utils.setup_logger"><code class="docutils literal notranslate"><span class="pre">setup_logger()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#atio.utils.check_file_exists"><code class="docutils literal notranslate"><span class="pre">check_file_exists()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#atio.utils.ProgressBar"><code class="docutils literal notranslate"><span class="pre">ProgressBar</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#atio.utils.ProgressBar.__init__"><code class="docutils literal notranslate"><span class="pre">ProgressBar.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#atio.utils.ProgressBar.run"><code class="docutils literal notranslate"><span class="pre">ProgressBar.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#atio.utils.read_json"><code class="docutils literal notranslate"><span class="pre">read_json()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#atio.utils.write_json"><code class="docutils literal notranslate"><span class="pre">write_json()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">지원하는 형식</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#csv">CSV 형식</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parquet">Parquet 형식</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#excel">Excel 형식</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#json">JSON 형식</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sql">SQL 형식</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">예외 처리</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">설정 및 구성</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Atio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API 참조</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api">
+<h1>API 참조<a class="headerlink" href="#api" title="Link to this heading"></a></h1>
+<p>Atio의 모든 함수와 클래스에 대한 상세한 API 문서입니다.</p>
+<section id="id1">
+<h2>주요 함수<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p id="module-atio">Atio: 안전한 원자적 파일 쓰기 라이브러리</p>
+</section>
+<section id="core">
+<h2>Core 모듈<a class="headerlink" href="#core" title="Link to this heading"></a></h2>
+<p id="module-atio.core">progress 적용 후 write 함수</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.write">
+<span class="sig-prename descclassname"><span class="pre">atio.core.</span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/core.html#write"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.core.write" title="Link to this definition"></a></dt>
+<dd><p>데이터 객체(obj)를 안전하게 target_path 또는 데이터베이스에 저장합니다.</p>
+<ul>
+<li><p>파일 기반 쓰기 (format: ‘csv’, ‘parquet’, ‘excel’ 등):
+- target_path (str): 필수. 데이터가 저장될 파일 경로입니다.
+- 롤백 기능이 있는 원자적 쓰기를 수행합니다.</p></li>
+<li><p>데이터베이스 기반 쓰기 (format: ‘sql’, ‘database’):
+- target_path: 사용되지 않습니다.
+- kwargs (dict): 데이터베이스 쓰기에 필요한 추가 인자들입니다.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>pandas.to_sql: ‘name’(테이블명), ‘con’(커넥션 객체)가 필수입니다.</p></li>
+<li><p>polars.write_database: ‘table_name’, ‘connection_uri’가 필수입니다.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">매개변수<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – 저장할 데이터 객체 (e.g., pandas.DataFrame, polars.DataFrame, np.ndarray).</p></li>
+<li><p><strong>target_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><em>str</em></a><em>, </em><em>optional</em>) – 파일 저장 경로. 파일 기반 쓰기 시 필수. Defaults to None.</p></li>
+<li><p><strong>format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><em>str</em></a><em>, </em><em>optional</em>) – 저장할 포맷. Defaults to None.</p></li>
+<li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(Python v3.13에서)"><em>bool</em></a>) – 진행도 표시 여부. Defaults to False.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(Python v3.13에서)"><em>bool</em></a>) – 상세한 성능 진단 정보 출력 여부. Defaults to False.</p></li>
+<li><p><strong>**kwargs</strong> – 각 쓰기 함수에 전달될 추가 키워드 인자.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.write_snapshot">
+<span class="sig-prename descclassname"><span class="pre">atio.core.</span></span><span class="sig-name descname"><span class="pre">write_snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'overwrite'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'parquet'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/core.html#write_snapshot"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.core.write_snapshot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.read_table">
+<span class="sig-prename descclassname"><span class="pre">atio.core.</span></span><span class="sig-name descname"><span class="pre">read_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pandas'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/core.html#read_table"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.core.read_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.expire_snapshots">
+<span class="sig-prename descclassname"><span class="pre">atio.core.</span></span><span class="sig-name descname"><span class="pre">expire_snapshots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_for</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.timedelta(days=7)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/core.html#expire_snapshots"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.core.expire_snapshots" title="Link to this definition"></a></dt>
+<dd><p>설정된 보관 기간(keep_for)보다 오래된 스냅샷과
+더 이상 참조되지 않는 데이터 파일을 삭제합니다.</p>
+</dd></dl>
+
+</section>
+<section id="write">
+<h2>write()<a class="headerlink" href="#write" title="Link to this heading"></a></h2>
+<p>안전한 원자적 파일 쓰기를 수행하는 메인 함수입니다.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.atio.write">
+<span class="sig-prename descclassname"><span class="pre">atio.</span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'parquet'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#atio.core.atio.write" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">매개변수<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – 저장할 데이터 객체 (pandas.DataFrame, polars.DataFrame, numpy.ndarray)</p></li>
+<li><p><strong>target_path</strong> – 저장할 파일 경로 (파일 저장 시 필수)</p></li>
+<li><p><strong>format</strong> – 저장 형식 (‘csv’, ‘parquet’, ‘excel’, ‘json’, ‘sql’, ‘database’)</p></li>
+<li><p><strong>show_progress</strong> – 진행률 표시 여부 (기본값: False)</p></li>
+<li><p><strong>verbose</strong> – 상세 성능 정보 출력 여부 (기본값: False)</p></li>
+<li><p><strong>**kwargs</strong> – <p>형식별 추가 매개변수</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">반환<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ValueError, IOError, DatabaseError</p>
+</dd>
+</dl>
+<p><strong>사용 예제:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
+
+<span class="c1"># 기본 사용법</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 진행률 표시</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># 성능 정보 출력</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="write-snapshot">
+<h2>write_snapshot()<a class="headerlink" href="#write-snapshot" title="Link to this heading"></a></h2>
+<p>데이터 스냅샷을 생성하여 버전 관리를 수행합니다.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.atio.write_snapshot">
+<span class="sig-prename descclassname"><span class="pre">atio.</span></span><span class="sig-name descname"><span class="pre">write_snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'parquet'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#atio.core.atio.write_snapshot" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">매개변수<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – 저장할 데이터 객체</p></li>
+<li><p><strong>table_name</strong> – 테이블 이름 (스냅샷 디렉토리명)</p></li>
+<li><p><strong>format</strong> – 저장 형식</p></li>
+<li><p><strong>**kwargs</strong> – <p>추가 매개변수</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">반환<span class="colon">:</span></dt>
+<dd class="field-even"><p>생성된 스냅샷 ID</p>
+</dd>
+</dl>
+<p><strong>사용 예제:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 스냅샷 생성</span>
+<span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">atio</span><span class="o">.</span><span class="n">write_snapshot</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;생성된 스냅샷 ID: </span><span class="si">{</span><span class="n">snapshot_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="read-table">
+<h2>read_table()<a class="headerlink" href="#read-table" title="Link to this heading"></a></h2>
+<p>스냅샷에서 데이터를 읽어옵니다.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.atio.read_table">
+<span class="sig-prename descclassname"><span class="pre">atio.</span></span><span class="sig-name descname"><span class="pre">read_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapshot_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'latest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'parquet'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#atio.core.atio.read_table" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">매개변수<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table_name</strong> – 테이블 이름</p></li>
+<li><p><strong>snapshot_id</strong> – 스냅샷 ID (기본값: ‘latest’)</p></li>
+<li><p><strong>format</strong> – 읽을 형식</p></li>
+<li><p><strong>**kwargs</strong> – <p>추가 매개변수</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">반환<span class="colon">:</span></dt>
+<dd class="field-even"><p>데이터 객체</p>
+</dd>
+</dl>
+<p><strong>사용 예제:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 최신 스냅샷 읽기</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">atio</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 특정 스냅샷 읽기</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">atio</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="o">=</span><span class="s2">&quot;20240101_120000&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="expire-snapshots">
+<h2>expire_snapshots()<a class="headerlink" href="#expire-snapshots" title="Link to this heading"></a></h2>
+<p>오래된 스냅샷을 정리합니다.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.atio.expire_snapshots">
+<span class="sig-prename descclassname"><span class="pre">atio.</span></span><span class="sig-name descname"><span class="pre">expire_snapshots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'parquet'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#atio.core.atio.expire_snapshots" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">매개변수<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table_name</strong> – 테이블 이름</p></li>
+<li><p><strong>days</strong> – 보관할 일수 (기본값: 30)</p></li>
+<li><p><strong>format</strong> – 형식</p></li>
+</ul>
+</dd>
+<dt class="field-even">반환<span class="colon">:</span></dt>
+<dd class="field-even"><p>삭제된 스냅샷 수</p>
+</dd>
+</dl>
+<p><strong>사용 예제:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 30일 이상 된 스냅샷 정리</span>
+<span class="n">deleted_count</span> <span class="o">=</span> <span class="n">atio</span><span class="o">.</span><span class="n">expire_snapshots</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">days</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;삭제된 스냅샷 수: </span><span class="si">{</span><span class="n">deleted_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="plugins">
+<h2>Plugins 모듈<a class="headerlink" href="#plugins" title="Link to this heading"></a></h2>
+<dl class="py function" id="module-atio.plugins">
+<dt class="sig sig-object py" id="atio.plugins.register_writer">
+<span class="sig-prename descclassname"><span class="pre">atio.plugins.</span></span><span class="sig-name descname"><span class="pre">register_writer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/plugins.html#register_writer"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.plugins.register_writer" title="Link to this definition"></a></dt>
+<dd><p>(객체 타입, 포맷) 쌍으로 쓰기 핸들러를 등록</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.plugins.get_writer">
+<span class="sig-prename descclassname"><span class="pre">atio.plugins.</span></span><span class="sig-name descname"><span class="pre">get_writer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/plugins.html#get_writer"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.plugins.get_writer" title="Link to this definition"></a></dt>
+<dd><p>객체의 타입과 포맷에 맞는 핸들러를 조회</p>
+</dd></dl>
+
+</section>
+<section id="utils">
+<h2>Utils 모듈<a class="headerlink" href="#utils" title="Link to this heading"></a></h2>
+<dl class="py function" id="module-atio.utils">
+<dt class="sig sig-object py" id="atio.utils.setup_logger">
+<span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">setup_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'atio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#setup_logger"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.setup_logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.utils.check_file_exists">
+<span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">check_file_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#check_file_exists"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.check_file_exists" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="atio.utils.ProgressBar">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">ProgressBar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Event" title="(Python v3.13에서)"><span class="pre">Event</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Writing'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#ProgressBar"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.ProgressBar" title="Link to this definition"></a></dt>
+<dd><p>기반 클래스: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(Python v3.13에서)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>파일 쓰기 진행 상황을 콘솔에 표시하는 클래스.
+스피너, 처리된 용량, 처리 속도, 경과 시간을 표시합니다.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="atio.utils.ProgressBar.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Event" title="(Python v3.13에서)"><span class="pre">Event</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Writing'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#ProgressBar.__init__"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.ProgressBar.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="atio.utils.ProgressBar.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#ProgressBar.run"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.ProgressBar.run" title="Link to this definition"></a></dt>
+<dd><p>진행도 막대를 실행하는 메인 루프.
+이 함수가 모니터링 스레드에서 실행됩니다.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.utils.read_json">
+<span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">read_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#read_json"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.read_json" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.utils.write_json">
+<span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">write_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(Python v3.13에서)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#write_json"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.write_json" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="id8">
+<h2>지원하는 형식<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<section id="csv">
+<h3>CSV 형식<a class="headerlink" href="#csv" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 매개변수:</strong>
+- <cite>index</cite>: 인덱스 포함 여부
+- <cite>encoding</cite>: 인코딩 방식
+- <cite>sep</cite>: 구분자
+- <cite>na_rep</cite>: NA 값 표현</p>
+</section>
+<section id="parquet">
+<h3>Parquet 형식<a class="headerlink" href="#parquet" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;snappy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 매개변수:</strong>
+- <cite>compression</cite>: 압축 방식 (‘snappy’, ‘gzip’, ‘brotli’)
+- <cite>engine</cite>: 엔진 (‘pyarrow’, ‘fastparquet’)</p>
+</section>
+<section id="excel">
+<h3>Excel 형식<a class="headerlink" href="#excel" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.xlsx&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;excel&quot;</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s2">&quot;Sheet1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 매개변수:</strong>
+- <cite>sheet_name</cite>: 시트 이름
+- <cite>engine</cite>: 엔진 (‘openpyxl’, ‘xlsxwriter’)</p>
+</section>
+<section id="json">
+<h3>JSON 형식<a class="headerlink" href="#json" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.json&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 매개변수:</strong>
+- <cite>orient</cite>: 방향 (‘records’, ‘split’, ‘index’, ‘columns’, ‘values’, ‘table’)</p>
+</section>
+<section id="sql">
+<h3>SQL 형식<a class="headerlink" href="#sql" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;sql&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;table_name&quot;</span><span class="p">,</span> <span class="n">con</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span> <span class="n">if_exists</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 매개변수:</strong>
+- <cite>name</cite>: 테이블 이름
+- <cite>con</cite>: 데이터베이스 연결
+- <cite>if_exists</cite>: 테이블 존재 시 동작 (‘fail’, ‘replace’, ‘append’)</p>
+</section>
+</section>
+<section id="id9">
+<h2>예외 처리<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<p>Atio는 다음과 같은 예외를 발생시킬 수 있습니다:</p>
+<ul class="simple">
+<li><p><strong>ValueError</strong>: 잘못된 매개변수나 형식</p></li>
+<li><p><strong>IOError</strong>: 파일 시스템 오류</p></li>
+<li><p><strong>DatabaseError</strong>: 데이터베이스 연결 오류</p></li>
+<li><p><strong>ImportError</strong>: 필요한 패키지가 설치되지 않은 경우</p></li>
+</ul>
+<p><strong>예외 처리 예제:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;매개변수 오류: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;파일 시스템 오류: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;예상치 못한 오류: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="advanced_usage.html" class="btn btn-neutral float-left" title="고급 사용법" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="설정 및 구성" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Seo Jae Oh.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

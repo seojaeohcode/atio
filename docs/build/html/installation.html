@@ -1,0 +1,310 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ko" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>설치 가이드 &mdash; Atio 2.0.0 문서</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=86ec957b"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=afa94a99"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="빠른 시작" href="quickstart.html" />
+    <link rel="prev" title="Atio Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Atio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">사용자 가이드:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">설치 가이드</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pypi">PyPI를 통한 설치</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">특정 버전 설치</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">개발 버전 설치</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">의존성</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">필수 의존성</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">선택적 의존성</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">모든 의존성 설치</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">환경 확인</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">가상환경 사용 권장</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conda">Conda 사용</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">문제 해결</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">업그레이드</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id12">제거</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">빠른 시작</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">사용 예제</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">고급 사용법</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API 참조:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API 참조</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">설정 및 구성</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Atio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">설치 가이드</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>설치 가이드<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<p>Atio를 설치하는 방법을 안내합니다.</p>
+<section id="pypi">
+<h2>PyPI를 통한 설치<a class="headerlink" href="#pypi" title="Link to this heading"></a></h2>
+<p>가장 간단한 설치 방법은 PyPI를 사용하는 것입니다:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>atio
+</pre></div>
+</div>
+<section id="id2">
+<h3>특정 버전 설치<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>특정 버전을 설치하려면:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">atio</span><span class="o">==</span><span class="m">2</span>.0.0
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>개발 버전 설치<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>최신 개발 버전을 설치하려면:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/seojaeohcode/atio.git
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id4">
+<h2>의존성<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<section id="id5">
+<h3>필수 의존성<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Python 3.8+</p></li>
+<li><p>pandas</p></li>
+<li><p>numpy</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>선택적 의존성<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>특정 형식을 사용하려면 추가 라이브러리가 필요합니다:</p>
+<p><strong>Parquet 형식:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install pyarrow
+# 또는
+pip install fastparquet</p>
+</div></blockquote>
+<p><strong>Excel 형식:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install openpyxl
+# 또는
+pip install xlsxwriter</p>
+</div></blockquote>
+<p><strong>SQL 데이터베이스:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install sqlalchemy</p>
+</div></blockquote>
+<p><strong>Polars 지원:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install polars</p>
+</div></blockquote>
+<p><strong>Avro 형식 (Polars):</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install fastavro</p>
+</div></blockquote>
+<p><strong>Polars Excel 지원:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install xlsx2csv openpyxl</p>
+</div></blockquote>
+<p><strong>Polars 데이터베이스 지원:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install connectorx</p>
+</div></blockquote>
+</section>
+<section id="id7">
+<h3>모든 의존성 설치<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<p>모든 기능을 사용하려면:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>atio<span class="o">[</span>all<span class="o">]</span>
+</pre></div>
+</div>
+<p>또는 개별적으로:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>atio
+pip<span class="w"> </span>install<span class="w"> </span>pyarrow<span class="w"> </span>openpyxl<span class="w"> </span>sqlalchemy<span class="w"> </span>polars<span class="w"> </span>fastavro<span class="w"> </span>xlsx2csv<span class="w"> </span>connectorx
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id8">
+<h2>환경 확인<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<p>설치가 완료되었는지 확인하려면:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atio 버전: </span><span class="si">{</span><span class="n">atio</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># 기본 기능 테스트</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;test.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;설치가 성공적으로 완료되었습니다!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id9">
+<h2>가상환경 사용 권장<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<p>프로젝트별로 독립적인 환경을 유지하기 위해 가상환경 사용을 권장합니다:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 가상환경 생성</span>
+python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>atio_env
+
+<span class="c1"># 가상환경 활성화 (Windows)</span>
+atio_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate
+
+<span class="c1"># 가상환경 활성화 (macOS/Linux)</span>
+<span class="nb">source</span><span class="w"> </span>atio_env/bin/activate
+
+<span class="c1"># Atio 설치</span>
+pip<span class="w"> </span>install<span class="w"> </span>atio
+</pre></div>
+</div>
+</section>
+<section id="conda">
+<h2>Conda 사용<a class="headerlink" href="#conda" title="Link to this heading"></a></h2>
+<p>Conda를 사용하는 경우:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Conda 환경 생성</span>
+conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>atio_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8
+conda<span class="w"> </span>activate<span class="w"> </span>atio_env
+
+<span class="c1"># Atio 설치</span>
+pip<span class="w"> </span>install<span class="w"> </span>atio
+</pre></div>
+</div>
+</section>
+<section id="id10">
+<h2>문제 해결<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<p>설치 중 문제가 발생하는 경우:</p>
+<p><strong>권한 오류:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install atio –user</p>
+</div></blockquote>
+<p><strong>캐시 문제:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install atio –no-cache-dir</p>
+</div></blockquote>
+<p><strong>의존성 충돌:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>pip install atio –force-reinstall</p>
+</div></blockquote>
+<p><strong>특정 Python 버전:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>python3.8 -m pip install atio</p>
+</div></blockquote>
+</section>
+<section id="id11">
+<h2>업그레이드<a class="headerlink" href="#id11" title="Link to this heading"></a></h2>
+<p>최신 버전으로 업그레이드:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>atio
+</pre></div>
+</div>
+<p>특정 버전으로 다운그레이드:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">atio</span><span class="o">==</span><span class="m">1</span>.0.0
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h2>제거<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<p>Atio를 제거하려면:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>uninstall<span class="w"> </span>atio
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Atio Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="quickstart.html" class="btn btn-neutral float-right" title="빠른 시작" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Seo Jae Oh.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,516 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ko" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>지원하는 파일 형식 &mdash; Atio 2.0.0 문서</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=86ec957b"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=afa94a99"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Atio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">사용자 가이드:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">설치 가이드</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">빠른 시작</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">사용 예제</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">고급 사용법</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API 참조:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API 참조</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">설정 및 구성</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Atio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">지원하는 파일 형식</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/formats.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>지원하는 파일 형식<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<p>Atio는 다양한 데이터 형식을 지원합니다. 각 형식별로 지원하는 라이브러리와 사용법을 설명합니다.</p>
+<section id="pandas-dataframe">
+<h2>Pandas DataFrame 형식<a class="headerlink" href="#pandas-dataframe" title="Link to this heading"></a></h2>
+<p>Pandas DataFrame은 가장 많은 형식을 지원합니다.</p>
+<section id="csv-comma-separated-values">
+<h3>CSV (Comma-Separated Values)<a class="headerlink" href="#csv-comma-separated-values" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">35</span><span class="p">],</span>
+    <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Seoul&quot;</span><span class="p">,</span> <span class="s2">&quot;Busan&quot;</span><span class="p">,</span> <span class="s2">&quot;Incheon&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># 기본 CSV 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># 추가 옵션과 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span>
+           <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+           <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>index</cite>: 인덱스 포함 여부 (기본값: True)
+- <cite>encoding</cite>: 인코딩 방식 (기본값: ‘utf-8’)
+- <cite>sep</cite>: 구분자 (기본값: ‘,’)
+- <cite>header</cite>: 헤더 포함 여부 (기본값: True)</p>
+</section>
+<section id="parquet">
+<h3>Parquet<a class="headerlink" href="#parquet" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Parquet 형식으로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 압축 옵션과 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+           <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;snappy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>compression</cite>: 압축 방식 (‘snappy’, ‘gzip’, ‘brotli’, None)
+- <cite>index</cite>: 인덱스 포함 여부 (기본값: True)</p>
+</section>
+<section id="excel">
+<h3>Excel<a class="headerlink" href="#excel" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Excel 파일로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.xlsx&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;excel&quot;</span><span class="p">)</span>
+
+<span class="c1"># 시트명과 옵션 지정</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.xlsx&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;excel&quot;</span><span class="p">,</span>
+           <span class="n">sheet_name</span><span class="o">=</span><span class="s2">&quot;Users&quot;</span><span class="p">,</span>
+           <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>sheet_name</cite>: 시트 이름 (기본값: ‘Sheet1’)
+- <cite>index</cite>: 인덱스 포함 여부 (기본값: True)
+- <cite>engine</cite>: 엔진 (‘openpyxl’, ‘xlsxwriter’)</p>
+<p><strong>필요 라이브러리:</strong> <cite>pip install openpyxl</cite></p>
+</section>
+<section id="json">
+<h3>JSON<a class="headerlink" href="#json" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># JSON 형식으로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.json&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">)</span>
+
+<span class="c1"># 들여쓰기와 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.json&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span>
+           <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+           <span class="n">orient</span><span class="o">=</span><span class="s1">&#39;records&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>orient</cite>: JSON 구조 (‘split’, ‘records’, ‘index’, ‘columns’, ‘values’, ‘table’)
+- <cite>indent</cite>: 들여쓰기 크기
+- <cite>date_format</cite>: 날짜 형식</p>
+</section>
+<section id="pickle">
+<h3>Pickle<a class="headerlink" href="#pickle" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Pickle 형식으로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.pkl&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;pickle&quot;</span><span class="p">)</span>
+
+<span class="c1"># 압축과 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.pkl&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;pickle&quot;</span><span class="p">,</span>
+           <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>compression</cite>: 압축 방식 (‘gzip’, ‘bz2’, ‘xz’, None)</p>
+</section>
+<section id="html">
+<h3>HTML<a class="headerlink" href="#html" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># HTML 테이블로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.html&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;html&quot;</span><span class="p">)</span>
+
+<span class="c1"># 스타일과 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.html&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;html&quot;</span><span class="p">,</span>
+           <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">classes</span><span class="o">=</span><span class="s1">&#39;table table-striped&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>classes</cite>: CSS 클래스
+- <cite>index</cite>: 인덱스 포함 여부 (기본값: True)</p>
+</section>
+<section id="sql">
+<h3>SQL<a class="headerlink" href="#sql" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_engine</span>
+
+<span class="c1"># 데이터베이스 연결</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;postgresql://user:password@localhost/dbname&#39;</span><span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># SQL 데이터베이스에 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;sql&quot;</span><span class="p">,</span>
+           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span><span class="p">,</span>
+           <span class="n">con</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span>
+           <span class="n">if_exists</span><span class="o">=</span><span class="s1">&#39;replace&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>name</cite>: 테이블 이름 (필수)
+- <cite>con</cite>: 데이터베이스 연결 객체 (필수)
+- <cite>if_exists</cite>: 테이블이 존재할 때 동작 (‘fail’, ‘replace’, ‘append’)
+- <cite>index</cite>: 인덱스를 컬럼으로 저장 여부 (기본값: True)</p>
+<p><strong>필요 라이브러리:</strong> <cite>pip install sqlalchemy</cite></p>
+</section>
+</section>
+<section id="polars-dataframe">
+<h2>Polars DataFrame 형식<a class="headerlink" href="#polars-dataframe" title="Link to this heading"></a></h2>
+<p>Polars는 빠른 데이터 처리를 위한 현대적인 DataFrame 라이브러리입니다.</p>
+<section id="csv">
+<h3>CSV<a class="headerlink" href="#csv" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">35</span><span class="p">],</span>
+    <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Seoul&quot;</span><span class="p">,</span> <span class="s2">&quot;Busan&quot;</span><span class="p">,</span> <span class="s2">&quot;Incheon&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># CSV 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># 구분자와 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span>
+           <span class="n">separator</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>separator</cite>: 구분자 (기본값: ‘,’)
+- <cite>include_header</cite>: 헤더 포함 여부 (기본값: True)</p>
+</section>
+<section id="id2">
+<h3>Parquet<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Parquet 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 압축과 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+           <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;snappy&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>compression</cite>: 압축 방식 (‘snappy’, ‘gzip’, ‘brotli’, ‘lz4raw’, ‘zstd’, None)</p>
+</section>
+<section id="id3">
+<h3>JSON<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># JSON 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.json&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">)</span>
+
+<span class="c1"># 파일별 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.json&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span>
+           <span class="n">file</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>file</cite>: 파일별 저장 여부 (기본값: False)</p>
+</section>
+<section id="ipc-arrow">
+<h3>IPC (Arrow)<a class="headerlink" href="#ipc-arrow" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># IPC (Arrow) 형식으로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.arrow&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ipc&quot;</span><span class="p">)</span>
+
+<span class="c1"># 압축과 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.arrow&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ipc&quot;</span><span class="p">,</span>
+           <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;lz4&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>compression</cite>: 압축 방식 (‘lz4’, ‘zstd’, None)</p>
+</section>
+<section id="avro">
+<h3>Avro<a class="headerlink" href="#avro" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Avro 형식으로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.avro&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;avro&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>필요 라이브러리:</strong> <cite>pip install fastavro</cite></p>
+</section>
+<section id="id4">
+<h3>Excel<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Excel 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.xlsx&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;excel&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>필요 라이브러리:</strong> <cite>pip install xlsx2csv openpyxl</cite></p>
+</section>
+<section id="database">
+<h3>Database<a class="headerlink" href="#database" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 데이터베이스에 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;database&quot;</span><span class="p">,</span>
+           <span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span><span class="p">,</span>
+           <span class="n">connection_uri</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@localhost/dbname&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>table_name</cite>: 테이블 이름 (필수)
+- <cite>connection_uri</cite>: 데이터베이스 연결 URI (필수)</p>
+<p><strong>필요 라이브러리:</strong> <cite>pip install connectorx</cite></p>
+</section>
+</section>
+<section id="numpy">
+<h2>NumPy 배열 형식<a class="headerlink" href="#numpy" title="Link to this heading"></a></h2>
+<p>NumPy 배열은 수치 데이터 처리에 최적화된 형식을 지원합니다.</p>
+<section id="npy-numpy-binary">
+<h3>NPY (NumPy Binary)<a class="headerlink" href="#npy-numpy-binary" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]])</span>
+
+<span class="c1"># .npy 파일로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="s2">&quot;array.npy&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;npy&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>특징:</strong>
+- 단일 배열을 효율적으로 저장
+- 메타데이터와 함께 저장
+- 빠른 읽기/쓰기 속도</p>
+</section>
+<section id="npz-numpy-compressed">
+<h3>NPZ (NumPy Compressed)<a class="headerlink" href="#npz-numpy-compressed" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 여러 배열을 딕셔너리로 저장</span>
+<span class="n">arrays</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+    <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="p">}</span>
+
+<span class="c1"># 압축되지 않은 .npz 파일로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arrays</span><span class="p">,</span> <span class="s2">&quot;data.npz&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;npz&quot;</span><span class="p">)</span>
+
+<span class="c1"># 압축된 .npz 파일로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arrays</span><span class="p">,</span> <span class="s2">&quot;data.npz&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;npz_compressed&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>특징:</strong>
+- 여러 배열을 하나의 파일에 저장
+- 압축 옵션으로 저장 공간 절약
+- 딕셔너리 형태로 데이터 구조화</p>
+</section>
+<section id="id5">
+<h3>CSV<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># CSV로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="s2">&quot;array.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># 구분자와 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="s2">&quot;array.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span>
+           <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">,</span>
+           <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>지원 옵션:</strong>
+- <cite>delimiter</cite>: 구분자 (기본값: ‘,’)
+- <cite>fmt</cite>: 숫자 형식 (예: ‘%.2f’, ‘%.4e’)
+- <cite>header</cite>: 헤더 포함 여부
+- <cite>comments</cite>: 주석 문자</p>
+</section>
+</section>
+<section id="id6">
+<h2>형식별 성능 비교<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<p>다양한 형식의 성능 특성을 비교해보겠습니다.</p>
+<section id="id7">
+<h3>속도 비교<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>가장 빠른 형식:</strong>
+- NumPy: <cite>.npy</cite>, <cite>.npz</cite>
+- Polars: <cite>.ipc</cite> (Arrow)
+- Pandas: <cite>.parquet</cite> (snappy 압축)</p></li>
+<li><p><strong>중간 속도:</strong>
+- CSV (단순한 구조)
+- JSON (중간 복잡도)</p></li>
+<li><p><strong>상대적으로 느린 형식:</strong>
+- Excel (복잡한 구조)
+- Pickle (Python 특화)</p></li>
+</ol>
+</section>
+<section id="id8">
+<h3>용량 비교<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>가장 작은 용량:</strong>
+- <cite>.parquet</cite> (컬럼 기반 압축)
+- <cite>.npz_compressed</cite> (압축된 NumPy)
+- <cite>.ipc</cite> (Arrow 압축)</p></li>
+<li><p><strong>중간 용량:</strong>
+- <cite>.npy</cite> (단일 배열)
+- JSON (텍스트 기반)</p></li>
+<li><p><strong>상대적으로 큰 용량:</strong>
+- CSV (텍스트 기반)
+- Excel (복잡한 구조)</p></li>
+</ol>
+</section>
+<section id="id9">
+<h3>호환성 비교<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>최고 호환성:</strong>
+- CSV (모든 시스템에서 지원)
+- JSON (웹 표준)</p></li>
+<li><p><strong>좋은 호환성:</strong>
+- Excel (비즈니스 환경)
+- Parquet (빅데이터 생태계)</p></li>
+<li><p><strong>제한적 호환성:</strong>
+- <cite>.npy</cite>/<cite>.npz</cite> (Python/NumPy 특화)
+- <cite>.ipc</cite> (Arrow 생태계)</p></li>
+</ol>
+</section>
+</section>
+<section id="id10">
+<h2>권장 사용 사례<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<section id="id11">
+<h3>데이터 분석 및 머신러닝<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 학습 데이터: 빠른 읽기/쓰기를 위해 Parquet 사용</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">training_data</span><span class="p">,</span> <span class="s2">&quot;train.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 모델 가중치: NumPy 배열로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">model_weights</span><span class="p">,</span> <span class="s2">&quot;weights.npy&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;npy&quot;</span><span class="p">)</span>
+
+<span class="c1"># 실험 결과: JSON으로 저장 (가독성)</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="s2">&quot;experiment_results.json&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h3>웹 애플리케이션<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># API 응답: JSON 형식</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">api_data</span><span class="p">,</span> <span class="s2">&quot;response.json&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">)</span>
+
+<span class="c1"># 대용량 데이터: Parquet 형식</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">large_dataset</span><span class="p">,</span> <span class="s2">&quot;dataset.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id13">
+<h3>데이터 파이프라인<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 중간 결과: 빠른 처리를 위해 IPC 사용</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">intermediate_data</span><span class="p">,</span> <span class="s2">&quot;step1.arrow&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ipc&quot;</span><span class="p">)</span>
+
+<span class="c1"># 최종 결과: 호환성을 위해 CSV 사용</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">final_data</span><span class="p">,</span> <span class="s2">&quot;output.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id14">
+<h3>비즈니스 보고서<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 엑셀 보고서</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">report_data</span><span class="p">,</span> <span class="s2">&quot;monthly_report.xlsx&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;excel&quot;</span><span class="p">)</span>
+
+<span class="c1"># HTML 대시보드</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dashboard_data</span><span class="p">,</span> <span class="s2">&quot;dashboard.html&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;html&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id15">
+<h2>형식 확장하기<a class="headerlink" href="#id15" title="Link to this heading"></a></h2>
+<p>새로운 형식을 추가하려면 플러그인 시스템을 사용하세요.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">atio.plugins</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_writer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># 커스텀 형식 등록</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_writer</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s1">&#39;records&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="c1"># 등록</span>
+<span class="n">register_writer</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;yaml&quot;</span><span class="p">,</span> <span class="n">yaml_writer</span><span class="p">)</span>
+
+<span class="c1"># 사용</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.yaml&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Seo Jae Oh.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

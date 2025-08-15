@@ -1,25 +1,26 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
+<html class="writer-html5" lang="ko" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Atio Documentation &mdash; atio  documentation</title>
+  <title>Atio Documentation &mdash; Atio 2.0.0 문서</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/documentation_options.js?v=86ec957b"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=afa94a99"></script>
     <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Modules" href="api/modules.html" /> 
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="설치 가이드" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -31,7 +32,7 @@
           
           
           <a href="#" class="icon icon-home">
-            atio
+            Atio
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -41,9 +42,17 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+              <p class="caption" role="heading"><span class="caption-text">사용자 가이드:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">설치 가이드</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">빠른 시작</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">사용 예제</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">고급 사용법</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API 참조:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API 참조</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">설정 및 구성</a></li>
 </ul>
 
         </div>
@@ -52,7 +61,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">atio</a>
+          <a href="#">Atio</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -62,7 +71,7 @@
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Atio Documentation</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/index.md.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -72,271 +81,343 @@
              
   <section id="atio-documentation">
 <h1>Atio Documentation<a class="headerlink" href="#atio-documentation" title="Link to this heading"></a></h1>
-</section>
-<section id="atio">
-<h1>Atio 🛡️<a class="headerlink" href="#atio" title="Link to this heading"></a></h1>
-<p>안전하고 <strong>원자적인 파일 쓰기</strong>를 지원하는 경량 Python 라이브러리입니다.<br />
-Pandas, Polars, NumPy 등 데이터 객체 저장 시 <strong>파일 손상 없이</strong>, <strong>트랜잭션처럼 안전하게 처리</strong>할 수 있습니다.</p>
-<hr class="docutils" />
-<section id="id1">
-<h2>🌟 주요 기능<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>✅ 임시 디렉토리 스테이징 후 <strong>원자적 파일 교체</strong></p></li>
-<li><p>📦 Pandas, Polars, NumPy 등 다양한 데이터 객체 지원</p></li>
-<li><p>📍 <code class="docutils literal notranslate"><span class="pre">_SUCCESS</span></code> 플래그 파일 생성 — 저장 완료 여부 표시</p></li>
-<li><p>🛠 실패 시 <strong>원본 파일 보존</strong>, 임시 파일 자동 정리</p></li>
-<li><p>🧩 플러그인 아키텍처로 <strong>확장성 좋음</strong></p></li>
-<li><p>🔍 <strong>성능 진단 로깅</strong> — 각 단계별 실행 시간 측정 및 병목점 분석</p></li>
-</ul>
-</section>
-<hr class="docutils" />
-<section id="new">
-<h2>🔍 성능 진단 로깅 (NEW!)<a class="headerlink" href="#new" title="Link to this heading"></a></h2>
-<p>Atio는 이제 <strong>성능 진단 로깅</strong> 기능을 제공합니다. <code class="docutils literal notranslate"><span class="pre">verbose=True</span></code> 옵션을 사용하면 각 단계별 실행 시간을 측정하여 병목점을 정확히 파악할 수 있습니다.</p>
-<section id="id2">
-<h3>기본 사용법 (간단한 정보만):<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">aw</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
-
-<span class="c1"># 기본 사용법 - 간단한 성공/실패 정보만</span>
-<span class="n">aw</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;output.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><strong>출력 예시:</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">임시</span> <span class="n">디렉토리</span> <span class="n">생성</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">임시</span> <span class="n">파일</span> <span class="n">경로</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">parquet</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">사용할</span> <span class="n">writer</span><span class="p">:</span> <span class="n">to_parquet</span> <span class="p">(</span><span class="nb">format</span><span class="p">:</span> <span class="n">parquet</span><span class="p">)</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">데이터</span> <span class="n">임시</span> <span class="n">파일에</span> <span class="n">저장</span> <span class="n">완료</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">parquet</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">원자적</span> <span class="n">교체</span> <span class="n">완료</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">parquet</span> <span class="o">-&gt;</span> <span class="n">output</span><span class="o">.</span><span class="n">parquet</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">_SUCCESS</span> <span class="n">플래그</span> <span class="n">파일</span> <span class="n">생성</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">parquet</span><span class="o">.</span><span class="n">_SUCCESS</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">Atomic</span> <span class="n">write</span> <span class="n">completed</span> <span class="n">successfully</span> <span class="p">(</span><span class="n">took</span> <span class="mf">0.2359</span><span class="n">s</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="verbose-true">
-<h3>상세 진단 모드 (verbose=True):<a class="headerlink" href="#verbose-true" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 상세한 성능 진단 정보 출력</span>
-<span class="n">aw</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;output.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><strong>출력 예시:</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">임시</span> <span class="n">디렉토리</span> <span class="n">생성</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">임시</span> <span class="n">파일</span> <span class="n">경로</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">parquet</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">사용할</span> <span class="n">writer</span><span class="p">:</span> <span class="n">to_parquet</span> <span class="p">(</span><span class="nb">format</span><span class="p">:</span> <span class="n">parquet</span><span class="p">)</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">데이터</span> <span class="n">임시</span> <span class="n">파일에</span> <span class="n">저장</span> <span class="n">완료</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">parquet</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">원자적</span> <span class="n">교체</span> <span class="n">완료</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">parquet</span> <span class="o">-&gt;</span> <span class="n">output</span><span class="o">.</span><span class="n">parquet</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">_SUCCESS</span> <span class="n">플래그</span> <span class="n">파일</span> <span class="n">생성</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">parquet</span><span class="o">.</span><span class="n">_SUCCESS</span>
-<span class="p">[</span><span class="n">DEBUG</span><span class="p">]</span> <span class="n">Atomic</span> <span class="n">write</span> <span class="n">step</span> <span class="n">timings</span> <span class="p">(</span><span class="n">SUCCESS</span><span class="p">):</span> <span class="n">setup</span><span class="o">=</span><span class="mf">0.0012</span><span class="n">s</span><span class="p">,</span> <span class="n">write_call</span><span class="o">=</span><span class="mf">0.2345</span><span class="n">s</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="mf">0.0001</span><span class="n">s</span><span class="p">,</span> <span class="n">success_flag</span><span class="o">=</span><span class="mf">0.0001</span><span class="n">s</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="mf">0.2359</span><span class="n">s</span>
-</pre></div>
-</div>
-</section>
+<p><strong>Atio</strong> 🛡️는 안전하고 원자적인 파일 쓰기를 지원하는 경량 Python 라이브러리입니다.</p>
+<p>Pandas, Polars, NumPy 등 데이터 객체 저장 시 <strong>파일 손상 없이</strong>, <a href="#id1"><span class="problematic" id="id2">**</span></a>트랜잭션처럼 안전하게 처리**할 수 있습니다.</p>
 <section id="id3">
-<h3>오류 발생 시 (기본 사용법):<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">임시</span> <span class="n">디렉토리</span> <span class="n">생성</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">임시</span> <span class="n">파일</span> <span class="n">경로</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">parquet</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">사용할</span> <span class="n">writer</span><span class="p">:</span> <span class="n">to_parquet</span> <span class="p">(</span><span class="nb">format</span><span class="p">:</span> <span class="n">parquet</span><span class="p">)</span>
-<span class="p">[</span><span class="n">ERROR</span><span class="p">]</span> <span class="n">임시</span> <span class="n">파일</span> <span class="n">저장</span> <span class="n">중</span> <span class="n">예외</span> <span class="n">발생</span><span class="p">:</span> <span class="p">[</span><span class="n">Errno</span> <span class="mi">28</span><span class="p">]</span> <span class="n">No</span> <span class="n">space</span> <span class="n">left</span> <span class="n">on</span> <span class="n">device</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">Atomic</span> <span class="n">write</span> <span class="n">failed</span> <span class="n">during</span> <span class="n">write</span> <span class="n">stage</span> <span class="p">(</span><span class="n">took</span> <span class="mf">0.1246</span><span class="n">s</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="ne">OSError</span><span class="p">)</span>
-</pre></div>
-</div>
+<h2>주요 기능<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>🔒 <strong>Atomic File Writing</strong></dt><dd><p>Safe writing using temporary files</p>
+</dd>
+<dt>📊 <strong>Multiple Format Support</strong></dt><dd><p>CSV, Parquet, Excel, JSON, etc.</p>
+</dd>
+<dt>🗄️ <strong>Database Support</strong></dt><dd><p>Direct SQL and Database writing</p>
+</dd>
+<dt>📈 <strong>Progress Display</strong></dt><dd><p>Progress monitoring for large data processing</p>
+</dd>
+<dt>🔄 <strong>Rollback Function</strong></dt><dd><p>Automatic recovery when errors occur</p>
+</dd>
+<dt>🎯 <strong>Simple API</strong></dt><dd><p>Intuitive and easy-to-use interface</p>
+</dd>
+<dt>📋 <strong>Version Management</strong></dt><dd><p>Snapshot-based data version management</p>
+</dd>
+<dt>🧹 <strong>Auto Cleanup</strong></dt><dd><p>Automatic deletion of old data</p>
+</dd>
+</dl>
 </section>
 <section id="id4">
-<h3>오류 발생 시 (verbose=True):<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">임시</span> <span class="n">디렉토리</span> <span class="n">생성</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">임시</span> <span class="n">파일</span> <span class="n">경로</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">tmp_xxx</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">parquet</span>
-<span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="n">사용할</span> <span class="n">writer</span><span class="p">:</span> <span class="n">to_parquet</span> <span class="p">(</span><span class="nb">format</span><span class="p">:</span> <span class="n">parquet</span><span class="p">)</span>
-<span class="p">[</span><span class="n">ERROR</span><span class="p">]</span> <span class="n">임시</span> <span class="n">파일</span> <span class="n">저장</span> <span class="n">중</span> <span class="n">예외</span> <span class="n">발생</span><span class="p">:</span> <span class="p">[</span><span class="n">Errno</span> <span class="mi">28</span><span class="p">]</span> <span class="n">No</span> <span class="n">space</span> <span class="n">left</span> <span class="n">on</span> <span class="n">device</span>
-<span class="p">[</span><span class="n">DEBUG</span><span class="p">]</span> <span class="n">Atomic</span> <span class="n">write</span> <span class="n">step</span> <span class="n">timings</span> <span class="p">(</span><span class="n">ERROR</span> <span class="n">during</span> <span class="n">write</span><span class="p">):</span> <span class="n">setup</span><span class="o">=</span><span class="mf">0.0012</span><span class="n">s</span><span class="p">,</span> <span class="n">write_call</span><span class="o">=</span><span class="mf">0.1234</span><span class="n">s</span> <span class="p">(</span><span class="n">실패</span><span class="p">),</span> <span class="n">replace</span><span class="o">=</span><span class="n">N</span><span class="o">/</span><span class="n">A</span><span class="p">,</span> <span class="n">success_flag</span><span class="o">=</span><span class="n">N</span><span class="o">/</span><span class="n">A</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="mf">0.1246</span><span class="n">s</span><span class="p">,</span> <span class="n">error_type</span><span class="o">=</span><span class="ne">OSError</span>
+<h2>빠른 시작<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># 간단한 DataFrame 생성</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">35</span><span class="p">],</span>
+    <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Seoul&quot;</span><span class="p">,</span> <span class="s2">&quot;Busan&quot;</span><span class="p">,</span> <span class="s2">&quot;Incheon&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># 안전한 파일 쓰기</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 진행도 표시와 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>측정되는 단계:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">setup</span></code>: 임시 폴더 생성 및 초기 설정</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">write_call</span></code>: 실제 데이터 쓰기 함수 호출 (대부분의 시간 소요)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">replace</span></code>: 원자적 파일 교체</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">success_flag</span></code>: _SUCCESS 플래그 파일 생성</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">total</span></code>: 전체 작업 시간</p></li>
-</ul>
-<p><strong>지원하는 오류 상황:</strong></p>
-<ul class="simple">
-<li><p>✅ <strong>KeyboardInterrupt</strong>: 인터럽트 발생 시점과 소요 시간 표시</p></li>
-<li><p>✅ <strong>권한 오류</strong>: 파일 시스템 권한 문제 진단</p></li>
-<li><p>✅ <strong>디스크 공간 부족</strong>: 저장 공간 부족 상황 진단</p></li>
-<li><p>✅ <strong>메모리 부족</strong>: 메모리 압박 상황 진단</p></li>
-<li><p>✅ <strong>네트워크 오류</strong>: 네트워크 드라이브 접근 문제 진단</p></li>
-<li><p>✅ <strong>지원하지 않는 형식</strong>: 잘못된 파일 형식 지정 시 진단</p></li>
-<li><p>✅ <strong>동시 접근 오류</strong>: 멀티스레딩 환경에서의 충돌 진단</p></li>
-</ul>
-<p><strong>장점:</strong></p>
-<ul class="simple">
-<li><p>🎯 <strong>정확한 병목점 파악</strong>: Atio 오버헤드 vs 실제 쓰기 작업 시간 구분</p></li>
-<li><p>🔧 <strong>성능 최적화 가이드</strong>: 어느 단계에서 시간이 많이 소요되는지 명확히 표시</p></li>
-<li><p>🐛 <strong>디버깅 시간 단축</strong>: 문제의 원인을 빠르게 파악 가능</p></li>
-<li><p>📊 <strong>성능 모니터링</strong>: 대용량 데이터 처리 시 성능 추적</p></li>
-<li><p>🚨 <strong>오류 진단</strong>: 실패 상황에서도 정확한 원인과 발생 시점 파악</p></li>
-</ul>
 </section>
-</section>
-<hr class="docutils" />
 <section id="id5">
-<h2>🧠 왜 이 도구가 정말 중요한가요?<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
-<p>NumPy나 Pandas는 데이터 분석에서는 최적이지만, <strong>파일로 저장할 때는 아래와 같은 위험</strong>이 있습니다:</p>
-<ol class="arabic simple">
-<li><p><strong>파일 일부만 저장되어 깨질 수 있음</strong> — 강제 종료나 오류 시</p></li>
-<li><p><strong>동시 쓰기 충돌</strong> — 멀티프로세스 환경에서 파일이 엉킬 수 있음</p></li>
-<li><p><strong>플랫폼 간 동작 차이</strong> — Windows와 Linux/macOS에서 파일 시스템 동작이 다름</p></li>
-</ol>
-<p>AtomicWriter는 임시 파일에 쓰고 <strong>단일 <code class="docutils literal notranslate"><span class="pre">rename()</span></code>/<code class="docutils literal notranslate"><span class="pre">replace()</span></code> 작업으로 교체</strong>합니다.<br />
-이 방식은 <strong>“완전히 저장되거나 전혀 저장되지 않는”</strong> 원자성(atomicity)을 보장하며,</p>
-<ul class="simple">
-<li><p>POSIX: <code class="docutils literal notranslate"><span class="pre">os.replace</span></code> (atomic), <code class="docutils literal notranslate"><span class="pre">fsync</span></code></p></li>
-<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">MoveFileEx</span></code>, <code class="docutils literal notranslate"><span class="pre">Commit</span></code><br />
-를 활용하여 파일이 <strong>항상 일관된 상태</strong>를 유지하도록 합니다 :contentReference[oaicite:1]{index=1}.</p></li>
-</ul>
-</section>
-<hr class="docutils" />
-<section id="id6">
-<h2>⚙️ 설치<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>atomicwriter
-
-<span class="c1">## 🛠️ 사용 예제</span>
-
-<span class="sb">```</span>python
-import<span class="w"> </span>atomicwriter<span class="w"> </span>as<span class="w"> </span>aw
-import<span class="w"> </span>pandas<span class="w"> </span>as<span class="w"> </span>pd
-
-<span class="nv">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>pd.DataFrame<span class="o">({</span><span class="s2">&quot;a&quot;</span>:<span class="w"> </span><span class="o">[</span><span class="m">1</span>,<span class="w"> </span><span class="m">2</span>,<span class="w"> </span><span class="m">3</span><span class="o">]})</span>
-
-<span class="c1"># 기본 사용법</span>
-aw.write<span class="o">(</span>df,<span class="w"> </span><span class="s2">&quot;output.parquet&quot;</span>,<span class="w"> </span><span class="nv">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="o">)</span>
-<span class="c1"># │→ 임시 파일 작성 → 원자적 교체 → _SUCCESS 생성</span>
-<span class="c1"># │→ 실패 시 원본 보존, 임시 파일 자동 정리</span>
-
-<span class="c1"># 상세 성능 진단 로깅 활성화</span>
-aw.write<span class="o">(</span>df,<span class="w"> </span><span class="s2">&quot;output_verbose.parquet&quot;</span>,<span class="w"> </span><span class="nv">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span>,<span class="w"> </span><span class="nv">verbose</span><span class="o">=</span>True<span class="o">)</span>
-<span class="c1"># │→ 각 단계별 실행 시간 측정 및 로그 출력</span>
-
-<span class="c1"># 진행도 표시와 함께 사용</span>
-aw.write<span class="o">(</span>df,<span class="w"> </span><span class="s2">&quot;output_progress.parquet&quot;</span>,<span class="w"> </span><span class="nv">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span>,<span class="w"> </span><span class="nv">show_progress</span><span class="o">=</span>True<span class="o">)</span>
-<span class="c1"># │→ 실시간 진행도 표시</span>
-
-<span class="c1"># 모든 옵션 조합</span>
-aw.write<span class="o">(</span>df,<span class="w"> </span><span class="s2">&quot;output_full.parquet&quot;</span>,<span class="w"> </span><span class="nv">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span>,<span class="w"> </span>
-<span class="w">         </span><span class="nv">verbose</span><span class="o">=</span>True,<span class="w"> </span><span class="nv">show_progress</span><span class="o">=</span>True<span class="o">)</span>
-<span class="c1"># │→ 성능 진단 + 진행도 표시</span>
-</pre></div>
-</div>
-</section>
-<section id="id7">
-<h2>💡 빅데이터 워크플로우에서 활용 시나리오<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
-<table class="docutils align-default">
+<h2>지원하는 형식<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<table class="docutils align-default" id="id9">
+<caption><span class="caption-text">지원하는 파일 형식</span><a class="headerlink" href="#id9" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>시나리오</p></th>
-<th class="head"><p>해결 방법</p></th>
-<th class="head"><p>장점</p></th>
+<tr class="row-odd"><th class="head"><p>형식</p></th>
+<th class="head"><p>Pandas</p></th>
+<th class="head"><p>Polars</p></th>
+<th class="head"><p>NumPy</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Pandas → CSV 저장</p></td>
-<td><p>임시 파일에 기록 후 교체</p></td>
-<td><p>CSV 파일 깨짐 방지</p></td>
+<tr class="row-even"><td><p>CSV</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 </tr>
-<tr class="row-odd"><td><p>멀티프로세스 병렬 쓰기</p></td>
-<td><p>atomic replace 방식 사용</p></td>
-<td><p>충돌 없는 안전 저장</p></td>
+<tr class="row-odd"><td><p>Parquet</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
 </tr>
-<tr class="row-even"><td><p>데이터 파이프라인 작업</p></td>
-<td><p>저장 성공 시 <code class="docutils literal notranslate"><span class="pre">_SUCCESS</span></code> 확인</p></td>
-<td><p>데이터 완전성 보장</p></td>
+<tr class="row-even"><td><p>Excel</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-odd"><td><p>JSON</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-even"><td><p>Pickle</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-odd"><td><p>HTML</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-even"><td><p>SQL</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-odd"><td><p>Database</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-even"><td><p>NPY/NPZ</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<hr class="docutils" />
-<section id="id8">
-<h2>🔄 비교 – 유사 라이브러리 특징 정리<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
-<section id="python-atomicwrites">
-<h3><a class="reference external" href="https://github.com/untitaker/python-atomicwrites">python-atomicwrites</a><a class="headerlink" href="#python-atomicwrites" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>간편한 API</p></li>
-<li><p>Windows 지원</p></li>
-<li><p>크로스 플랫폼 호환</p></li>
-</ul>
+<section id="id6">
+<h2>사용 사례<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>🔹 <strong>데이터 파이프라인</strong></dt><dd><p>ETL 과정에서 중간 데이터 안전하게 저장</p>
+</dd>
+<dt>🔹 <strong>실험 데이터 관리</strong></dt><dd><p>머신러닝 실험 결과의 버전 관리</p>
+</dd>
+<dt>🔹 <strong>대용량 데이터 처리</strong></dt><dd><p>대용량 파일의 안전한 저장 및 진행도 모니터링</p>
+</dd>
+<dt>🔹 <strong>데이터베이스 연동</strong></dt><dd><p>Pandas/Polars 데이터를 SQL/NoSQL DB에 안전하게 저장</p>
+</dd>
+</dl>
 </section>
-<section id="atomicwriter">
-<h3>atomicwriter (본 프로젝트)<a class="headerlink" href="#atomicwriter" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>✅ 경량</p></li>
-<li><p>✅ 플러그인 아키텍처</p></li>
-<li><p>✅ Pandas / Polars / Numpy 등 데이터 객체 중심 저장 지원</p></li>
-</ul>
-</section>
-</section>
-<hr class="docutils" />
-<section id="id9">
-<h2>✅ 라이선스<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
-<p>Apache 2.0 — 기업 및 커뮤니티 모두 자유롭게 사용 가능</p>
-</section>
-<hr class="docutils" />
-<section id="id10">
-<h2>✨ 요약<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
-<p><strong>AtomicWriter</strong>는 분석만큼 중요한 <strong>“저장” 단계를 안전하게 처리</strong>하는 도구입니다.</p>
-<p>특히 데이터 무결성이 중요한 환경에서<br />
-(예: 머신러닝 배치, 멀티프로세스 분석, 중요 로그 저장 등)<br />
-<strong>작지만 강력한 해결책</strong>을 제공합니다.</p>
-<p>📘 시나리오 1: Pandas CSV 저장 중 작업 중단
-문제 상황:
-한 사용자가 Pandas로 대용량 분석 결과를 .csv 파일로 저장하던 중, 예상치 못한 전원 차단이나 커널 강제 종료가 발생했습니다.
-결과 파일은 50MB 중 3MB만 저장된 채 손상되었고, 이후 읽기도 되지 않았습니다.</p>
-<p>AtomicWriter로 해결:
-임시 파일에 먼저 기록 후, 모든 쓰기가 성공해야만 원본과 교체됩니다.
-따라서 중간에 꺼져도 기존 파일은 보존되고, 손상된 임시 파일은 자동 정리되어 안정성을 확보할 수 있습니다.</p>
-<p>📘 시나리오 2: 멀티프로세스 환경에서 경쟁 조건(Race Condition)
-문제 상황:
-Python multiprocessing 기반 데이터 수집 파이프라인에서 여러 프로세스가 동시에 같은 파일을 저장하며 충돌이 발생했습니다.
-결과적으로 로그 파일이 덮어쓰여 누락되거나, 일부 JSON 파일은 파싱할 수 없는 손상된 형태로 저장됐습니다.</p>
-<p>AtomicWriter로 해결:
-파일 쓰기를 atomic replace 방식으로 수행하면, 한 번에 하나의 프로세스만 최종 경로로 이동할 수 있습니다.
-이로써 경쟁 조건 없이 충돌 없이 저장이 보장됩니다.</p>
-<p>📘 시나리오 3: 데이터 파이프라인 검증 불가
-문제 상황:
-ETL 작업에서 .parquet 저장이 완료됐는지 여부를 자동 시스템이 판단할 수 없어, 손상되거나 미완성된 데이터를 다음 단계에서 그대로 사용했습니다.
-결과적으로 모델 학습 데이터에 결측값이 포함되어 품질 저하가 발생했습니다.</p>
-<p>AtomicWriter로 해결:
-저장이 성공적으로 완료된 경우에만 _SUCCESS 플래그 파일을 함께 생성하도록 설정할 수 있습니다.
-후속 단계는 _SUCCESS 유무를 기준으로 안전하게 파이프라인을 구동할 수 있습니다.</p>
-<p>📘 시나리오 4: Polars DataFrame을 S3로 저장 중 오류 발생
-문제 상황:
-Polars DataFrame을 AWS S3에 직접 저장하는 중간에 ConnectionError가 발생하여 S3에는 부분적으로 깨진 .parquet 파일이 올라갔습니다.
-다음 번 실행에서 이 파일을 재사용하려 했지만, S3에서 파일이 손상된 채로 존재해 오류를 유발했습니다.</p>
-<p>AtomicWriter로 해결:
-로컬 임시 파일에 완전히 저장된 후에만 S3 업로드 또는 교체가 수행됩니다.
-네트워크 이슈나 디스크 오류에도 최종 파일은 항상 완전한 상태로만 존재하게 됩니다.</p>
+<section id="id7">
+<h2>목차<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">사용자 가이드:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/_autosummary/atio.html">atio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">설치 가이드</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#pypi">PyPI를 통한 설치</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id4">의존성</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id8">환경 확인</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id9">가상환경 사용 권장</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#conda">Conda 사용</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id10">문제 해결</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id11">업그레이드</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id12">제거</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">빠른 시작</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#id2">기본 사용법</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#id3">다양한 형식 지원</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#id4">진행률 표시</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#id5">성능 모니터링</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#polars-dataframe">Polars DataFrame 지원</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#id6">데이터베이스 저장</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#id7">스냅샷 기능</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#id8">다음 단계</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">사용 예제</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#id2">기본 예제</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#id4">대용량 데이터 처리</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#id6">데이터베이스 연동</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#id7">스냅샷 기반 버전 관리</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#polars-dataframe">Polars DataFrame 활용</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#id10">에러 처리 및 복구</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#id12">배치 처리</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#id14">성능 최적화</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#id16">실제 사용 사례</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">고급 사용법</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#id2">스냅샷 기반 버전 관리</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#id6">데이터베이스 연동</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#id7">성능 최적화</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#id10">에러 처리</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#id14">플러그인 확장</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#numpy">NumPy 배열 처리</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#id18">실제 사용 사례</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API 참조:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API 참조</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id1">주요 함수</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#core">Core 모듈</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#write">write()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#write-snapshot">write_snapshot()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#read-table">read_table()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#expire-snapshots">expire_snapshots()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#plugins">Plugins 모듈</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#utils">Utils 모듈</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id8">지원하는 형식</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id9">예외 처리</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">설정 및 구성</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id2">로깅 설정</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id5">진행도 표시</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id8">성능 최적화 설정</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id11">임시 디렉토리 설정</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id13">에러 처리 설정</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id16">완료 플래그 시스템</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id19">스냅샷 설정</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id22">환경 변수 설정</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id26">플러그인 설정</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id29">설정 파일 사용</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id30">모범 사례</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id33">설정 검증</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </section>
 </section>
+<section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<section id="module-atio">
+<span id="id8"></span><h2>핵심 함수들<a class="headerlink" href="#module-atio" title="Link to this heading"></a></h2>
+<p>Atio: 안전한 원자적 파일 쓰기 라이브러리</p>
+<p id="module-atio.core">progress 적용 후 write 함수</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.write">
+<span class="sig-prename descclassname"><span class="pre">atio.core.</span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/core.html#write"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.core.write" title="Link to this definition"></a></dt>
+<dd><p>데이터 객체(obj)를 안전하게 target_path 또는 데이터베이스에 저장합니다.</p>
+<ul>
+<li><p>파일 기반 쓰기 (format: ‘csv’, ‘parquet’, ‘excel’ 등):
+- target_path (str): 필수. 데이터가 저장될 파일 경로입니다.
+- 롤백 기능이 있는 원자적 쓰기를 수행합니다.</p></li>
+<li><p>데이터베이스 기반 쓰기 (format: ‘sql’, ‘database’):
+- target_path: 사용되지 않습니다.
+- kwargs (dict): 데이터베이스 쓰기에 필요한 추가 인자들입니다.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>pandas.to_sql: ‘name’(테이블명), ‘con’(커넥션 객체)가 필수입니다.</p></li>
+<li><p>polars.write_database: ‘table_name’, ‘connection_uri’가 필수입니다.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">매개변수<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – 저장할 데이터 객체 (e.g., pandas.DataFrame, polars.DataFrame, np.ndarray).</p></li>
+<li><p><strong>target_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><em>str</em></a><em>, </em><em>optional</em>) – 파일 저장 경로. 파일 기반 쓰기 시 필수. Defaults to None.</p></li>
+<li><p><strong>format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><em>str</em></a><em>, </em><em>optional</em>) – 저장할 포맷. Defaults to None.</p></li>
+<li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(Python v3.13에서)"><em>bool</em></a>) – 진행도 표시 여부. Defaults to False.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(Python v3.13에서)"><em>bool</em></a>) – 상세한 성능 진단 정보 출력 여부. Defaults to False.</p></li>
+<li><p><strong>**kwargs</strong> – 각 쓰기 함수에 전달될 추가 키워드 인자.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.write_snapshot">
+<span class="sig-prename descclassname"><span class="pre">atio.core.</span></span><span class="sig-name descname"><span class="pre">write_snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'overwrite'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'parquet'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/core.html#write_snapshot"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.core.write_snapshot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.read_table">
+<span class="sig-prename descclassname"><span class="pre">atio.core.</span></span><span class="sig-name descname"><span class="pre">read_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pandas'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/core.html#read_table"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.core.read_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.core.expire_snapshots">
+<span class="sig-prename descclassname"><span class="pre">atio.core.</span></span><span class="sig-name descname"><span class="pre">expire_snapshots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_for</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.timedelta(days=7)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/core.html#expire_snapshots"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.core.expire_snapshots" title="Link to this definition"></a></dt>
+<dd><p>설정된 보관 기간(keep_for)보다 오래된 스냅샷과
+더 이상 참조되지 않는 데이터 파일을 삭제합니다.</p>
+</dd></dl>
+
+<dl class="py function" id="module-atio.plugins">
+<dt class="sig sig-object py" id="atio.plugins.register_writer">
+<span class="sig-prename descclassname"><span class="pre">atio.plugins.</span></span><span class="sig-name descname"><span class="pre">register_writer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/plugins.html#register_writer"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.plugins.register_writer" title="Link to this definition"></a></dt>
+<dd><p>(객체 타입, 포맷) 쌍으로 쓰기 핸들러를 등록</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.plugins.get_writer">
+<span class="sig-prename descclassname"><span class="pre">atio.plugins.</span></span><span class="sig-name descname"><span class="pre">get_writer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/plugins.html#get_writer"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.plugins.get_writer" title="Link to this definition"></a></dt>
+<dd><p>객체의 타입과 포맷에 맞는 핸들러를 조회</p>
+</dd></dl>
+
+<dl class="py function" id="module-atio.utils">
+<dt class="sig sig-object py" id="atio.utils.setup_logger">
+<span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">setup_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'atio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#setup_logger"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.setup_logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.utils.check_file_exists">
+<span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">check_file_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#check_file_exists"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.check_file_exists" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="atio.utils.ProgressBar">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">ProgressBar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Event" title="(Python v3.13에서)"><span class="pre">Event</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Writing'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#ProgressBar"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.ProgressBar" title="Link to this definition"></a></dt>
+<dd><p>파일 쓰기 진행 상황을 콘솔에 표시하는 클래스.
+스피너, 처리된 용량, 처리 속도, 경과 시간을 표시합니다.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="atio.utils.ProgressBar.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Event" title="(Python v3.13에서)"><span class="pre">Event</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Writing'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#ProgressBar.__init__"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.ProgressBar.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="atio.utils.ProgressBar.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#ProgressBar.run"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.ProgressBar.run" title="Link to this definition"></a></dt>
+<dd><p>진행도 막대를 실행하는 메인 루프.
+이 함수가 모니터링 스레드에서 실행됩니다.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.utils.read_json">
+<span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">read_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#read_json"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.read_json" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atio.utils.write_json">
+<span class="sig-prename descclassname"><span class="pre">atio.utils.</span></span><span class="sig-name descname"><span class="pre">write_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(Python v3.13에서)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(Python v3.13에서)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atio/utils.html#write_json"><span class="viewcode-link"><span class="pre">[소스]</span></span></a><a class="headerlink" href="#atio.utils.write_json" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">색인</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">모듈 목록</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">검색 페이지</span></a></p></li>
+</ul>
+</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="api/modules.html" class="btn btn-neutral float-right" title="Modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="installation.html" class="btn btn-neutral float-right" title="설치 가이드" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, jujangchoi.</p>
+    <p>&#169; Copyright 2025, Seo Jae Oh.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

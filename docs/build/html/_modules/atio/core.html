@@ -1,0 +1,600 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ko" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>atio.core &mdash; Atio 2.0.0 문서</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=86ec957b"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/translations.js?v=afa94a99"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="색인" href="../../genindex.html" />
+    <link rel="search" title="검색" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Atio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">사용자 가이드:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">설치 가이드</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">빠른 시작</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">사용 예제</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advanced_usage.html">고급 사용법</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API 참조:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API 참조</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">설정 및 구성</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Atio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">모듈 코드</a></li>
+      <li class="breadcrumb-item active">atio.core</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>atio.core의 소스 코드</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;progress 적용 후 write 함수&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">queue</span><span class="w"> </span><span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.plugins</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_writer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_logger</span><span class="p">,</span> <span class="n">ProgressBar</span>
+
+<div class="viewcode-block" id="write">
+<a class="viewcode-back" href="../../index.html#atio.core.write">[문서]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">target_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    데이터 객체(obj)를 안전하게 target_path 또는 데이터베이스에 저장합니다.</span>
+
+<span class="sd">    - 파일 기반 쓰기 (format: &#39;csv&#39;, &#39;parquet&#39;, &#39;excel&#39; 등):</span>
+<span class="sd">      - target_path (str): 필수. 데이터가 저장될 파일 경로입니다.</span>
+<span class="sd">      - 롤백 기능이 있는 원자적 쓰기를 수행합니다.</span>
+
+<span class="sd">    - 데이터베이스 기반 쓰기 (format: &#39;sql&#39;, &#39;database&#39;):</span>
+<span class="sd">      - target_path: 사용되지 않습니다.</span>
+<span class="sd">      - kwargs (dict): 데이터베이스 쓰기에 필요한 추가 인자들입니다.</span>
+<span class="sd">        - pandas.to_sql: &#39;name&#39;(테이블명), &#39;con&#39;(커넥션 객체)가 필수입니다.</span>
+<span class="sd">        - polars.write_database: &#39;table_name&#39;, &#39;connection_uri&#39;가 필수입니다.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        obj: 저장할 데이터 객체 (e.g., pandas.DataFrame, polars.DataFrame, np.ndarray).</span>
+<span class="sd">        target_path (str, optional): 파일 저장 경로. 파일 기반 쓰기 시 필수. Defaults to None.</span>
+<span class="sd">        format (str, optional): 저장할 포맷. Defaults to None.</span>
+<span class="sd">        show_progress (bool): 진행도 표시 여부. Defaults to False.</span>
+<span class="sd">        verbose (bool): 상세한 성능 진단 정보 출력 여부. Defaults to False.</span>
+<span class="sd">        **kwargs: 각 쓰기 함수에 전달될 추가 키워드 인자.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="n">debug_level</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+    <span class="c1"># --- 1. 데이터베이스 쓰기 특별 처리 ---</span>
+    <span class="c1"># 데이터베이스 쓰기는 파일 경로 기반의 원자적 쓰기 로직을 따르지 않습니다.</span>
+    <span class="k">if</span> <span class="nb">format</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;sql&#39;</span><span class="p">,</span> <span class="s1">&#39;database&#39;</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;데이터베이스 쓰기 모드 시작 (format: </span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="n">writer_method_name</span> <span class="o">=</span> <span class="n">get_writer</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">writer_method_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;객체 타입 </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">에 대해 지원하지 않는 format: </span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">writer_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">writer_method_name</span><span class="p">)</span>
+            
+            <span class="c1"># 각 데이터베이스 쓰기 함수에 필요한 필수 인자 확인</span>
+            <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s1">&#39;sql&#39;</span><span class="p">:</span> <span class="c1"># Pandas</span>
+                <span class="k">if</span> <span class="s1">&#39;name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">or</span> <span class="s1">&#39;con&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;name&#39;(테이블명)과 &#39;con&#39;(DB 커넥션) 인자는 &#39;sql&#39; 포맷에 필수입니다.&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s1">&#39;database&#39;</span><span class="p">:</span> <span class="c1"># Polars</span>
+                <span class="k">if</span> <span class="s1">&#39;table_name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">or</span> <span class="s1">&#39;connection_uri&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;table_name&#39;과 &#39;connection_uri&#39; 인자는 &#39;database&#39; 포맷에 필수입니다.&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># target_path는 무시하고 **kwargs로 받은 인자들을 사용하여 DB에 직접 씁니다.</span>
+            <span class="n">writer_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            
+            <span class="n">t_end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ 데이터베이스 쓰기 완료 (총 소요 시간: </span><span class="si">{</span><span class="n">t_end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s)&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="c1"># DB 쓰기 완료 후 함수 종료</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">t_err</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;데이터베이스 쓰기 중 예외 발생: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;데이터베이스 쓰기 실패 (소요 시간: </span><span class="si">{</span><span class="n">t_err</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, 에러: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+    <span class="c1"># --- 2. 파일 기반 원자적 쓰기 ---</span>
+    <span class="k">if</span> <span class="n">target_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;파일 기반 쓰기(예: &#39;csv&#39;, &#39;parquet&#39;)에는 &#39;target_path&#39; 인자가 필수입니다.&quot;</span><span class="p">)</span>
+
+    <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">target_path</span><span class="p">))</span>
+    <span class="n">base_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_path</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># 롤백을 위한 백업 경로 설정</span>
+    <span class="n">backup_path</span> <span class="o">=</span> <span class="n">target_path</span> <span class="o">+</span> <span class="s2">&quot;._backup&quot;</span>
+    <span class="n">original_exists</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">target_path</span><span class="p">)</span>
+    
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">dir_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+        <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">base_name</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;임시 디렉토리 생성: </span><span class="si">{</span><span class="n">tmpdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;임시 파일 경로: </span><span class="si">{</span><span class="n">tmp_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">get_writer</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;지원하지 않는 format: </span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atomic write step timings (FAILED at setup): &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;setup=</span><span class="si">{</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, total=</span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atomic write failed at setup stage (took </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s)&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;지원하지 않는 format: </span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;사용할 writer: </span><span class="si">{</span><span class="n">writer</span><span class="si">}</span><span class="s2"> (format: </span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">_execute_write</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_execute_write_with_progress</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            
+            <span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;데이터 임시 파일에 저장 완료: </span><span class="si">{</span><span class="n">tmp_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># 쓰기 실패 시에는 롤백할 필요가 없음 (원본 파일은 그대로 있음)</span>
+            <span class="n">t_error</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;임시 파일 저장 중 예외 발생: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atomic write step timings (ERROR during write): &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;setup=</span><span class="si">{</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, write_call=</span><span class="si">{</span><span class="n">t_error</span><span class="o">-</span><span class="n">t1</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s (실패), &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;total=</span><span class="si">{</span><span class="n">t_error</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, error_type=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atomic write failed during write stage (took </span><span class="si">{</span><span class="n">t_error</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, error: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="c1"># [롤백 STEP 1] 기존 파일 백업</span>
+        <span class="k">if</span> <span class="n">original_exists</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;기존 파일 백업: </span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">backup_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># rename은 atomic 연산이므로 백업 과정도 안전합니다.</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">target_path</span><span class="p">,</span> <span class="n">backup_path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;백업 생성 실패. 작업을 중단합니다: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="c1"># 백업 실패 시 더 이상 진행하면 안 되므로 예외를 발생시킵니다.</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to create backup for </span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># [롤백 STEP 2] 원자적 교체</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">target_path</span><span class="p">)</span>
+            <span class="n">t3</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;원자적 교체 완료: </span><span class="si">{</span><span class="n">tmp_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># [롤백 STEP 3] _SUCCESS 플래그 생성</span>
+            <span class="n">success_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target_path</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_path</span><span class="p">)</span><span class="si">}</span><span class="s2">._SUCCESS&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">success_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;OK</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">t4</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_SUCCESS 플래그 파일 생성: </span><span class="si">{</span><span class="n">success_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># [롤백 STEP 4] 성공 시 백업 파일 삭제</span>
+            <span class="k">if</span> <span class="n">original_exists</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">backup_path</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;작업 성공, 백업 파일 삭제 완료: </span><span class="si">{</span><span class="n">backup_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atomic write step timings (SUCCESS): &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;setup=</span><span class="si">{</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, write_call=</span><span class="si">{</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;replace=</span><span class="si">{</span><span class="n">t3</span><span class="o">-</span><span class="n">t2</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, success_flag=</span><span class="si">{</span><span class="n">t4</span><span class="o">-</span><span class="n">t3</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;total=</span><span class="si">{</span><span class="n">t4</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Atomic write completed successfully (took </span><span class="si">{</span><span class="n">t4</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s)&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># [롤백 STEP 5] 교체 또는 플래그 생성 실패 시 롤백 실행</span>
+            <span class="n">t_final_error</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;최종 저장 단계에서 오류 발생. 롤백을 시작합니다. 원인: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">original_exists</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># 새로 쓴 불완전한 파일이 있다면 삭제</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">target_path</span><span class="p">):</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">target_path</span><span class="p">)</span>
+                    
+                    <span class="c1"># 백업해둔 원본 파일을 다시 복구</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">backup_path</span><span class="p">,</span> <span class="n">target_path</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;롤백 성공: 원본 파일 복구 완료 (</span><span class="si">{</span><span class="n">backup_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">rollback_e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;치명적 오류: 롤백 실패! </span><span class="si">{</span><span class="n">rollback_e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;시스템이 불안정한 상태일 수 있습니다. 수동 확인이 필요합니다.&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;남아있는 파일: (새 데이터) </span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s2">, (원본 백업) </span><span class="si">{</span><span class="n">backup_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atomic write step timings (FAILED AND ROLLED BACK): &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;setup=</span><span class="si">{</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, write_call=</span><span class="si">{</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;final_stage_fail_time=</span><span class="si">{</span><span class="n">t_final_error</span><span class="o">-</span><span class="n">t2</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;total=</span><span class="si">{</span><span class="n">t_final_error</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, error_type=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atomic write failed and rolled back (took </span><span class="si">{</span><span class="n">t_final_error</span><span class="o">-</span><span class="n">t0</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, error: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># 원본 예외를 다시 발생시켜 사용자에게 알립니다.</span>
+            <span class="k">raise</span> <span class="n">e</span></div>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_execute_write</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    내부 쓰기 실행 함수. 핸들러 타입에 따라 분기하여 실제 쓰기 작업을 수행합니다.</span>
+<span class="sd">    - callable(writer): `np.save`와 같은 함수 핸들러</span>
+<span class="sd">    - str(writer): `to_csv`와 같은 객체의 메소드 핸들러</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># 1. writer가 호출 가능한 &#39;함수&#39;인 경우 (e.g., np.save, np.savetxt)</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">writer</span><span class="p">):</span>
+        <span class="c1"># 1a. np.savez, np.savez_compressed 특별 처리: 여러 배열을 dict로 받아 저장</span>
+        <span class="k">if</span> <span class="n">writer</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">writer</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;로 여러 배열을 저장하려면, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;데이터 객체는 dict 타입이어야 합니다. (현재: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="p">)</span>
+            <span class="n">writer</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">obj</span><span class="p">)</span>
+        <span class="c1"># 1b. 그 외 일반적인 함수 핸들러 처리</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">writer</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># 2. writer가 &#39;메소드 이름(문자열)&#39;인 경우 (e.g., &#39;to_csv&#39;, &#39;to_excel&#39;)</span>
+    <span class="c1"># 이 경우, obj.to_csv(path, **kwargs) 와 같이 호출됩니다.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">writer</span><span class="p">)(</span><span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_execute_write_with_progress</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;멀티스레딩으로 쓰기 작업과 진행도 표시를 함께 실행하는 내부 함수&quot;&quot;&quot;</span>
+    <span class="n">stop_event</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+    <span class="n">exception_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+
+    <span class="c1"># 실제 쓰기 작업을 수행할 &#39;작업 스레드&#39;의 목표 함수</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">worker_task</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_execute_write</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">exception_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="c1"># 스레드 생성</span>
+    <span class="n">worker_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">worker_task</span><span class="p">)</span>
+    <span class="n">progress_bar</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">stop_event</span><span class="o">=</span><span class="n">stop_event</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Writing&quot;</span><span class="p">)</span>
+    <span class="n">monitor_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">progress_bar</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+
+    <span class="c1"># 스레드 시작</span>
+    <span class="n">worker_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">monitor_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="c1"># 작업 스레드가 끝날 때까지 대기</span>
+    <span class="n">worker_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="c1"># 모니터 스레드에 중지 신호 전송 및 종료 대기</span>
+    <span class="n">stop_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+    <span class="n">monitor_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="c1"># 작업 스레드에서 예외가 발생했는지 확인하고, 있었다면 다시 발생시킴</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exception_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">exception_queue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_json</span><span class="p">,</span> <span class="n">write_json</span>
+
+<div class="viewcode-block" id="write_snapshot">
+<a class="viewcode-back" href="../../index.html#atio.core.write_snapshot">[문서]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_snapshot</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">table_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;parquet&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="n">debug_level</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># 1. 경로 설정 및 폴더 생성</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1"># 2. 현재 버전 확인</span>
+    <span class="n">pointer_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;_current_version.json&#39;</span><span class="p">)</span>
+    <span class="n">current_version</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">pointer_path</span><span class="p">):</span>
+        <span class="n">current_version</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">pointer_path</span><span class="p">)[</span><span class="s1">&#39;version_id&#39;</span><span class="p">]</span>
+    <span class="n">new_version</span> <span class="o">=</span> <span class="n">current_version</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># 3. 임시 디렉토리 내에서 모든 작업 수행</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+        <span class="c1"># 3a. 새 데이터 파일 쓰기</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">get_writer</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span>
+        <span class="n">data_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">tmp_data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">data_filename</span><span class="p">)</span>
+        <span class="n">_execute_write</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">tmp_data_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+       <span class="c1"># 3. 임시 디렉토리 내에서 모든 작업 수행</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+        <span class="c1"># 3a. 새 데이터 파일 쓰기</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">get_writer</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;지원하지 않는 format: </span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2"> for object type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="n">data_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">tmp_data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">data_filename</span><span class="p">)</span>
+        <span class="n">_execute_write</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">tmp_data_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># 3b. 새 manifest 생성</span>
+        <span class="n">new_manifest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;files&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">data_filename</span><span class="p">),</span> <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="nb">format</span><span class="p">}]</span>
+        <span class="p">}</span>
+        <span class="n">manifest_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;manifest-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">.json&quot;</span>
+        <span class="n">write_json</span><span class="p">(</span><span class="n">new_manifest</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">manifest_filename</span><span class="p">))</span>
+
+        <span class="c1"># 3c. 새 snapshot 생성을 위한 준비</span>
+        <span class="n">all_manifests</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="n">manifest_filename</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">mode</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;append&#39;</span> <span class="ow">and</span> <span class="n">current_version</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">prev_metadata_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;v</span><span class="si">{</span><span class="n">current_version</span><span class="si">}</span><span class="s1">.metadata.json&#39;</span><span class="p">)</span>
+                <span class="n">prev_metadata</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">prev_metadata_path</span><span class="p">)</span>
+                <span class="n">prev_snapshot_filename</span> <span class="o">=</span> <span class="n">prev_metadata</span><span class="p">[</span><span class="s1">&#39;snapshot_filename&#39;</span><span class="p">]</span>
+                
+                <span class="n">prev_snapshot_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">prev_snapshot_filename</span><span class="p">)</span>
+                <span class="n">prev_snapshot</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">prev_snapshot_path</span><span class="p">)</span>
+                <span class="n">existing_manifests</span> <span class="o">=</span> <span class="n">prev_snapshot</span><span class="p">[</span><span class="s1">&#39;manifests&#39;</span><span class="p">]</span>
+                
+                <span class="n">all_manifests</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">existing_manifests</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Append mode: 이전 버전(v</span><span class="si">{</span><span class="n">current_version</span><span class="si">}</span><span class="s2">)의 메타데이터를 찾을 수 없거나 형식이 올바르지 않습니다. Overwrite 모드로 동작합니다.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># 3d. 최종 manifest 목록으로 새 snapshot 생성</span>
+        <span class="n">snapshot_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+        <span class="n">snapshot_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;snapshot-</span><span class="si">{</span><span class="n">snapshot_id</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">.json&quot;</span>
+        
+        <span class="n">new_snapshot</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;snapshot_id&#39;</span><span class="p">:</span> <span class="n">snapshot_id</span><span class="p">,</span>
+            <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span>
+            <span class="s1">&#39;manifests&#39;</span><span class="p">:</span> <span class="n">all_manifests</span>
+        <span class="p">}</span>
+        <span class="n">write_json</span><span class="p">(</span><span class="n">new_snapshot</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">snapshot_filename</span><span class="p">))</span>
+        
+        <span class="c1"># 3e. 새 version metadata 생성</span>
+        <span class="n">new_metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;version_id&#39;</span><span class="p">:</span> <span class="n">new_version</span><span class="p">,</span>
+            <span class="s1">&#39;snapshot_id&#39;</span><span class="p">:</span> <span class="n">snapshot_id</span><span class="p">,</span>
+            <span class="s1">&#39;snapshot_filename&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="n">snapshot_filename</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">metadata_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;v</span><span class="si">{</span><span class="n">new_version</span><span class="si">}</span><span class="s2">.metadata.json&quot;</span>
+        <span class="n">write_json</span><span class="p">(</span><span class="n">new_metadata</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">metadata_filename</span><span class="p">))</span>
+
+        <span class="c1"># 3f. 새 포인터 파일 생성</span>
+        <span class="n">new_pointer</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;version_id&#39;</span><span class="p">:</span> <span class="n">new_version</span><span class="p">}</span>
+        <span class="n">tmp_pointer_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="s1">&#39;_current_version.json&#39;</span><span class="p">)</span>
+        <span class="n">write_json</span><span class="p">(</span><span class="n">new_pointer</span><span class="p">,</span> <span class="n">tmp_pointer_path</span><span class="p">)</span>
+
+        <span class="c1"># 4. 최종 커밋</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">tmp_data_path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">data_filename</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">manifest_filename</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="n">manifest_filename</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">snapshot_filename</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="n">snapshot_filename</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">metadata_filename</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="n">metadata_filename</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp_pointer_path</span><span class="p">,</span> <span class="n">pointer_path</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;스냅샷 쓰기 완료! &#39;</span><span class="si">{</span><span class="n">table_path</span><span class="si">}</span><span class="s2">&#39;가 버전 </span><span class="si">{</span><span class="n">new_version</span><span class="si">}</span><span class="s2">으로 업데이트되었습니다.&quot;</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="read_table">
+<a class="viewcode-back" href="../../index.html#atio.core.read_table">[문서]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_table</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_as</span><span class="o">=</span><span class="s1">&#39;pandas&#39;</span><span class="p">):</span>
+    <span class="c1"># 1. 읽을 버전 결정 및 진입점(metadata.json) 찾기</span>
+    <span class="n">pointer_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;_current_version.json&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">version_id</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">pointer_path</span><span class="p">)[</span><span class="s1">&#39;version_id&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">version_id</span> <span class="o">=</span> <span class="n">version</span>
+    
+    <span class="n">metadata_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;v</span><span class="si">{</span><span class="n">version_id</span><span class="si">}</span><span class="s1">.metadata.json&#39;</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">metadata_path</span><span class="p">)</span>
+    <span class="n">snapshot_filepath</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;snapshot_filename&#39;</span><span class="p">]</span>
+
+    <span class="c1"># 2. metadata -&gt; snapshot -&gt; manifest 순으로 파싱</span>
+    <span class="n">snapshot_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">snapshot_filepath</span><span class="p">)</span> <span class="c1"># 정확한 경로 사용</span>
+    <span class="n">snapshot</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">snapshot_path</span><span class="p">)</span>
+    
+    <span class="c1"># 3. 모든 manifest를 읽어 최종 데이터 파일 목록 취합</span>
+    <span class="n">all_data_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">manifest_ref</span> <span class="ow">in</span> <span class="n">snapshot</span><span class="p">[</span><span class="s1">&#39;manifests&#39;</span><span class="p">]:</span>
+        <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">manifest_ref</span><span class="p">)</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">file_info</span> <span class="ow">in</span> <span class="n">manifest</span><span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">]:</span>
+            <span class="c1"># file_info 에는 path, format 등의 정보가 있음</span>
+            <span class="n">all_data_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]))</span>
+
+    <span class="c1"># 4. output_as 옵션에 따라 최종 데이터 객체 생성</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_data_files</span><span class="p">:</span>
+        <span class="c1"># 데이터가 없는 경우 처리</span>
+        <span class="k">return</span> <span class="kc">None</span> <span class="c1"># 또는 빈 DataFrame</span>
+
+    <span class="k">if</span> <span class="n">output_as</span> <span class="o">==</span> <span class="s1">&#39;pandas&#39;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">all_data_files</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">output_as</span> <span class="o">==</span> <span class="s1">&#39;polars&#39;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+        <span class="k">return</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">all_data_files</span><span class="p">)</span>
+    <span class="c1"># NumPy 등의 다른 형식 처리 로직 추가</span>
+    
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;지원하지 않는 출력 형식: </span><span class="si">{</span><span class="n">output_as</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+
+<div class="viewcode-block" id="expire_snapshots">
+<a class="viewcode-back" href="../../index.html#atio.core.expire_snapshots">[문서]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">expire_snapshots</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">keep_for</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">7</span><span class="p">),</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    설정된 보관 기간(keep_for)보다 오래된 스냅샷과</span>
+<span class="sd">    더 이상 참조되지 않는 데이터 파일을 삭제합니다.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">()</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">metadata_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">metadata_dir</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;정리할 테이블이 없거나 메타데이터 폴더를 찾을 수 없습니다.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># --- 1. 모든 메타데이터 정보와 파일명 수집 ---</span>
+    <span class="n">all_versions_meta</span> <span class="o">=</span> <span class="p">{}</span>      <span class="c1"># version_id -&gt; version_meta</span>
+    <span class="n">all_snapshots_meta</span> <span class="o">=</span> <span class="p">{}</span>     <span class="c1"># snapshot_id -&gt; snapshot_meta</span>
+    <span class="n">all_manifest_paths</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># 모든 manifest 파일 경로</span>
+    
+    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">metadata_dir</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metadata_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.metadata.json&#39;</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">all_versions_meta</span><span class="p">[</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;version_id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">meta</span>
+        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;snapshot-&#39;</span><span class="p">):</span>
+            <span class="n">snap</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">all_snapshots_meta</span><span class="p">[</span><span class="n">snap</span><span class="p">[</span><span class="s1">&#39;snapshot_id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">snap</span>
+        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;manifest-&#39;</span><span class="p">):</span>
+            <span class="n">all_manifest_paths</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+
+    <span class="c1"># --- 2. &quot;살아있는&quot; 객체 식별 ---</span>
+    <span class="n">live_snapshot_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">live_manifests</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">live_data_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="c1"># 현재 버전을 포함하여 보관 기간 내의 모든 버전을 &quot;살아있는&quot; 것으로 간주</span>
+    <span class="k">for</span> <span class="n">version_meta</span> <span class="ow">in</span> <span class="n">all_versions_meta</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">version_meta</span><span class="p">[</span><span class="s1">&#39;snapshot_id&#39;</span><span class="p">]</span>
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="n">all_snapshots_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">snapshot</span> <span class="ow">and</span> <span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">snapshot</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]))</span> <span class="o">&lt;</span> <span class="n">keep_for</span><span class="p">:</span>
+            <span class="n">live_snapshot_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">manifest_ref</span> <span class="ow">in</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;manifests&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="n">live_manifests</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">manifest_ref</span><span class="p">)</span>
+                <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">manifest_ref</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">):</span>
+                    <span class="n">manifest_data</span> <span class="o">=</span> <span class="n">read_json</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">file_info</span> <span class="ow">in</span> <span class="n">manifest_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;files&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                        <span class="n">live_data_files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">])</span>
+
+    <span class="c1"># --- 3. 삭제할 &quot;고아&quot; 객체 식별 ---</span>
+    <span class="n">files_to_delete</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># 고아 데이터 파일 찾기</span>
+    <span class="n">data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">data_file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
+            <span class="n">relative_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">data_file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">relative_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">live_data_files</span><span class="p">:</span>
+                <span class="n">files_to_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">))</span>
+
+    <span class="c1"># 고아 매니페스트 파일 찾기</span>
+    <span class="n">manifests_to_delete</span> <span class="o">=</span> <span class="n">all_manifest_paths</span> <span class="o">-</span> <span class="n">live_manifests</span>
+    <span class="k">for</span> <span class="n">manifest_path</span> <span class="ow">in</span> <span class="n">manifests_to_delete</span><span class="p">:</span>
+        <span class="n">files_to_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">manifest_path</span><span class="p">))</span>
+
+    <span class="c1"># 고아 스냅샷 및 버전 메타데이터 파일 찾기</span>
+    <span class="k">for</span> <span class="n">version_id</span><span class="p">,</span> <span class="n">version_meta</span> <span class="ow">in</span> <span class="n">all_versions_meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">version_meta</span><span class="p">[</span><span class="s1">&#39;snapshot_id&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">snapshot_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">live_snapshot_ids</span><span class="p">:</span>
+            <span class="c1"># vX.metadata.json 파일 삭제 대상 추가</span>
+            <span class="n">files_to_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metadata_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;v</span><span class="si">{</span><span class="n">version_id</span><span class="si">}</span><span class="s2">.metadata.json&quot;</span><span class="p">))</span>
+            <span class="c1"># snapshot-X.json 파일 삭제 대상 추가</span>
+            <span class="n">snapshot_filename</span> <span class="o">=</span> <span class="n">version_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;snapshot_filename&#39;</span><span class="p">)</span> <span class="c1"># 이전 단계에서 이 키를 추가했었음</span>
+            <span class="k">if</span> <span class="n">snapshot_filename</span><span class="p">:</span>
+                 <span class="n">files_to_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_path</span><span class="p">,</span> <span class="n">snapshot_filename</span><span class="p">))</span>
+    
+    <span class="c1"># 중복 제거</span>
+    <span class="n">files_to_delete</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">files_to_delete</span><span class="p">)))</span>
+
+    <span class="c1"># --- 4. 최종 삭제 실행 ---</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">files_to_delete</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;삭제할 오래된 파일이 없습니다.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;총 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files_to_delete</span><span class="p">)</span><span class="si">}</span><span class="s2">개의 오래된 파일을 찾았습니다.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[Dry Run] 아래 파일들이 삭제될 예정입니다:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files_to_delete</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;오래된 파일들을 삭제합니다...&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files_to_delete</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - 삭제됨: </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - 삭제 실패: </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">, 오류: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;삭제 작업이 완료되었습니다.&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Seo Jae Oh.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

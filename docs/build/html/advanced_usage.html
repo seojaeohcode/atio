@@ -1,0 +1,454 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ko" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>고급 사용법 &mdash; Atio 2.0.0 문서</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=86ec957b"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=afa94a99"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="API 참조" href="api.html" />
+    <link rel="prev" title="사용 예제" href="examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Atio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">사용자 가이드:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">설치 가이드</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">빠른 시작</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">사용 예제</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">고급 사용법</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">스냅샷 기반 버전 관리</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">기본 스냅샷 쓰기</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">스냅샷 읽기</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">스냅샷 정리</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">데이터베이스 연동</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pandas-sql">Pandas SQL 연동</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polars">Polars 데이터베이스 연동</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">성능 최적화</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">진행도 표시</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">상세 로깅</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">에러 처리</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id11">파일 시스템 에러</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">포맷 에러</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13">데이터베이스 에러</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id14">플러그인 확장</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id15">커스텀 형식 등록</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#numpy">NumPy 배열 처리</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id16">단일 배열 저장</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id17">여러 배열 저장</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id18">실제 사용 사례</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id19">머신러닝 파이프라인</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#etl">ETL 파이프라인</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API 참조:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API 참조</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">설정 및 구성</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Atio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">고급 사용법</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/advanced_usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>고급 사용법<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<p>이 섹션에서는 Atio의 고급 기능들을 다룹니다.</p>
+<section id="id2">
+<h2>스냅샷 기반 버전 관리<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>Atio는 데이터의 버전을 관리할 수 있는 스냅샷 시스템을 제공합니다.</p>
+<section id="id3">
+<h3>기본 스냅샷 쓰기<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># 데이터 생성</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># 스냅샷으로 저장 (버전 관리)</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write_snapshot</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;users_table&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 새로운 데이터로 업데이트</span>
+<span class="n">df_new</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">,</span> <span class="s2">&quot;David&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># append 모드로 스냅샷 추가</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write_snapshot</span><span class="p">(</span><span class="n">df_new</span><span class="p">,</span> <span class="s2">&quot;users_table&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>스냅샷 읽기<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 최신 버전 읽기</span>
+<span class="n">latest_data</span> <span class="o">=</span> <span class="n">atio</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;users_table&quot;</span><span class="p">)</span>
+
+<span class="c1"># 특정 버전 읽기</span>
+<span class="n">version_1_data</span> <span class="o">=</span> <span class="n">atio</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;users_table&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Polars로 읽기</span>
+<span class="n">polars_data</span> <span class="o">=</span> <span class="n">atio</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;users_table&quot;</span><span class="p">,</span> <span class="n">output_as</span><span class="o">=</span><span class="s2">&quot;polars&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>스냅샷 정리<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+
+<span class="c1"># 7일 이상 된 스냅샷 삭제 (dry run)</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">expire_snapshots</span><span class="p">(</span><span class="s2">&quot;users_table&quot;</span><span class="p">,</span> <span class="n">keep_for</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">7</span><span class="p">),</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># 실제 삭제 실행</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">expire_snapshots</span><span class="p">(</span><span class="s2">&quot;users_table&quot;</span><span class="p">,</span> <span class="n">keep_for</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">7</span><span class="p">),</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id6">
+<h2>데이터베이스 연동<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<p>Pandas와 Polars를 사용하여 데이터베이스에 안전하게 데이터를 저장할 수 있습니다.</p>
+<section id="pandas-sql">
+<h3>Pandas SQL 연동<a class="headerlink" href="#pandas-sql" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_engine</span>
+
+<span class="c1"># 데이터베이스 연결</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;postgresql://user:password@localhost/dbname&#39;</span><span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># SQL 데이터베이스에 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;sql&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">con</span><span class="o">=</span><span class="n">engine</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="polars">
+<h3>Polars 데이터베이스 연동<a class="headerlink" href="#polars" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># 데이터베이스에 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;database&quot;</span><span class="p">,</span>
+           <span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span><span class="p">,</span>
+           <span class="n">connection_uri</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@localhost/dbname&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id7">
+<h2>성능 최적화<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<section id="id8">
+<h3>진행도 표시<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p>대용량 파일 처리 시 진행 상황을 실시간으로 확인할 수 있습니다.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># 대용량 데이터 생성</span>
+<span class="n">large_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1000000</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+<span class="c1"># 진행도 표시와 함께 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">large_df</span><span class="p">,</span> <span class="s2">&quot;large_data.parquet&quot;</span><span class="p">,</span>
+           <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+           <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id9">
+<h3>상세 로깅<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<p>성능 진단을 위한 상세한 로깅을 활성화할 수 있습니다.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 상세한 성능 정보 출력</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>이를 통해 다음과 같은 정보를 확인할 수 있습니다:</p>
+<ul class="simple">
+<li><p>각 단계별 소요 시간</p></li>
+<li><p>임시 파일 생성 및 교체 과정</p></li>
+<li><p>백업 및 롤백 과정</p></li>
+<li><p>성능 병목점 분석</p></li>
+</ul>
+</section>
+</section>
+<section id="id10">
+<h2>에러 처리<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<p>Atio는 다양한 에러 상황에 대해 안전하게 처리합니다.</p>
+<section id="id11">
+<h3>파일 시스템 에러<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># 권한이 없는 디렉토리에 저장 시도</span>
+    <span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;/root/data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">PermissionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;권한 에러: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># 원본 파일은 그대로 보존됨</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h3>포맷 에러<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="c1"># 지원하지 않는 포맷 사용</span>
+    <span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.unknown&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;지원하지 않는 포맷: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id13">
+<h3>데이터베이스 에러<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="c1"># 잘못된 데이터베이스 연결 정보</span>
+    <span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;sql&quot;</span><span class="p">,</span>
+               <span class="n">name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span><span class="p">,</span>
+               <span class="n">con</span><span class="o">=</span><span class="s2">&quot;invalid_connection&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;데이터베이스 에러: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id14">
+<h2>플러그인 확장<a class="headerlink" href="#id14" title="Link to this heading"></a></h2>
+<p>Atio는 플러그인 아키텍처를 통해 새로운 형식을 쉽게 추가할 수 있습니다.</p>
+<section id="id15">
+<h3>커스텀 형식 등록<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">atio.plugins</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_writer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># 커스텀 형식 등록</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_writer</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># 커스텀 저장 로직</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Custom format</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+
+<span class="c1"># Pandas DataFrame에 대한 커스텀 형식 등록</span>
+<span class="n">register_writer</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">,</span> <span class="n">custom_writer</span><span class="p">)</span>
+
+<span class="c1"># 사용</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;data.custom&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="numpy">
+<h2>NumPy 배열 처리<a class="headerlink" href="#numpy" title="Link to this heading"></a></h2>
+<p>NumPy 배열의 다양한 저장 방식을 지원합니다.</p>
+<section id="id16">
+<h3>단일 배열 저장<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]])</span>
+
+<span class="c1"># .npy 파일로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="s2">&quot;array.npy&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;npy&quot;</span><span class="p">)</span>
+
+<span class="c1"># .csv 파일로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="s2">&quot;array.csv&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id17">
+<h3>여러 배열 저장<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 여러 배열을 딕셔너리로 저장</span>
+<span class="n">arrays</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+    <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="p">}</span>
+
+<span class="c1"># 압축된 .npz 파일로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arrays</span><span class="p">,</span> <span class="s2">&quot;data.npz&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;npz_compressed&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id18">
+<h2>실제 사용 사례<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
+<section id="id19">
+<h3>머신러닝 파이프라인<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
+
+<span class="c1"># 데이터 로드 및 전처리</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;raw_data.csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># 전처리된 데이터를 안전하게 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;processed_data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 학습/테스트 분할</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">],</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span>
+<span class="p">)</span>
+
+<span class="c1"># 분할된 데이터를 스냅샷으로 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write_snapshot</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="s2">&quot;training_data&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write_snapshot</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="s2">&quot;test_data&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 모델 학습</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">RandomForestClassifier</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="c1"># 예측 결과를 안전하게 저장</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="n">results_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">&#39;actual&#39;</span><span class="p">:</span> <span class="n">y_test</span><span class="p">,</span>
+    <span class="s1">&#39;predicted&#39;</span><span class="p">:</span> <span class="n">predictions</span>
+<span class="p">})</span>
+
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">results_df</span><span class="p">,</span> <span class="s2">&quot;predictions.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="etl">
+<h3>ETL 파이프라인<a class="headerlink" href="#etl" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_engine</span>
+
+<span class="c1"># 1. 원본 데이터 로드</span>
+<span class="n">raw_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;source_data.csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># 2. 데이터 정제</span>
+<span class="n">cleaned_data</span> <span class="o">=</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+<span class="n">cleaned_data</span> <span class="o">=</span> <span class="n">cleaned_data</span><span class="p">[</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># 3. 안전하게 정제된 데이터 저장</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cleaned_data</span><span class="p">,</span> <span class="s2">&quot;cleaned_data.parquet&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># 4. 데이터베이스에 저장</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;postgresql://user:password@localhost/warehouse&#39;</span><span class="p">)</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cleaned_data</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;sql&quot;</span><span class="p">,</span>
+           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;processed_table&quot;</span><span class="p">,</span>
+           <span class="n">con</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span>
+           <span class="n">if_exists</span><span class="o">=</span><span class="s1">&#39;replace&#39;</span><span class="p">)</span>
+
+<span class="c1"># 5. 스냅샷으로 버전 관리</span>
+<span class="n">atio</span><span class="o">.</span><span class="n">write_snapshot</span><span class="p">(</span><span class="n">cleaned_data</span><span class="p">,</span> <span class="s2">&quot;daily_processed&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples.html" class="btn btn-neutral float-left" title="사용 예제" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API 참조" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Seo Jae Oh.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
