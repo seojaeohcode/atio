@@ -1,6 +1,5 @@
 <div align="center">
-
-<img src="https://img.shields.io/badge/ATIO-3776AB?style=for-the-badge&logo=python&logoColor=white" width="200" />
+<img width="250" alt="atio-logo" src="https://github.com/user-attachments/assets/e34f2740-0182-4e34-b56c-ff6eb3e9fce4">
 
 <b>Python library for safe atomic file writing and database writing</b><br>
 <b>🚀 `pip install atio`</b>
