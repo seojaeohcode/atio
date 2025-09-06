@@ -5,6 +5,7 @@
 <b>Python library for safe atomic file writing and database writing</b><br>
 <b>🚀 `pip install atio`</b>
 
+[![Discord](https://img.shields.io/badge/Discord-Community-5865F2?logo=discord&logoColor=white)](https://discord.gg/EVxgByVh)
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 [![PyPI](https://img.shields.io/badge/PyPI-2.1.0-orange.svg)](https://pypi.org/project/atio/)
