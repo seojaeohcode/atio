@@ -592,3 +592,35 @@ def delete_version(table_path, version_id, dry_run=False, logger=None):
         logger.info(f"✅ 총 {deleted_count}개의 파일 삭제 작업이 완료되었습니다.")
     
     return True
+
+def rollback(table_path, version_id, logger=None):
+    """
+    테이블의 현재 버전을 지정된 버전 ID로 롤백합니다.
+
+    Args:
+        table_path (str): 테이블 데이터가 저장된 최상위 디렉토리 경로.
+        version_id (int): 롤백할 목표 버전의 ID.
+
+    Returns:
+        bool: 성공 시 True, 실패 시 False를 반환합니다.
+    """
+    if logger is None:
+        # 이 부분은 라이브러리의 로거 설정에 맞게 수정하세요.
+        logger = lambda msg, level="info": print(f"[{level.upper()}] {msg}")
+
+    # 1. 롤백하려는 버전이 실제로 존재하는지 확인
+    metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
+    if not os.path.exists(metadata_path):
+        logger(f"롤백 실패: 버전 {version_id}이(가) 존재하지 않습니다.", level="error")
+        return False
+
+    # 2. _current_version.json 포인터 파일의 내용을 수정
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    try:
+        with open(pointer_path, 'w', encoding='utf-8') as f:
+            json.dump({'version_id': version_id}, f)
+        logger(f"✅ 롤백 성공! 현재 버전이 v{version_id}(으)로 설정되었습니다.")
+        return True
+    except OSError as e:
+        logger(f"롤백 실패: 포인터 파일을 쓰는 중 오류 발생 - {e}", level="error")
+        return False

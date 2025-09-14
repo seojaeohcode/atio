@@ -5,8 +5,6 @@ import json
 import pandas as pd
 import polars as pl
 import numpy as np
-
-# atio 라이브러리에서 모든 핵심 함수들을 가져옵니다.
 from atio import write_snapshot, read_table, delete_version
 
 def set_current_version(table_path, version_id):
