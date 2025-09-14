@@ -391,7 +391,6 @@ def write_snapshot(obj, table_path, mode='overwrite', format='arrow', **kwargs):
         logger.info(f"✅ 스냅샷 저장 완료! '{table_path}'가 버전 {new_version}으로 업데이트되었습니다. (모드: {mode})")
 
 
-import os
 import pyarrow as pa
 import pyarrow.ipc
 import pandas as pd
@@ -493,103 +492,103 @@ def read_table(table_path, version=None, output_as='pandas'):
     raise ValueError(f"지원하지 않는 출력 형식입니다: {output_as}")
 
 
-from datetime import datetime, timedelta
+import shutil
+# (다른 import 문들은 그대로 유지)
 
-def expire_snapshots(table_path, keep_for=timedelta(days=7), dry_run=True):
+def delete_version(table_path, version_id, dry_run=False, logger=None):
     """
-    설정된 보관 기간(keep_for)보다 오래된 스냅샷과
-    더 이상 참조되지 않는 데이터 파일을 삭제합니다.
+    특정 버전을 삭제하고, 더 이상 참조되지 않는 데이터 파일(가비지)을 정리합니다.
+
+    Args:
+        table_path (str): 테이블 데이터가 저장된 최상위 디렉토리 경로.
+        version_id (int): 삭제할 버전의 ID.
+        dry_run (bool): True이면 실제로 삭제하지 않고 대상 목록만 출력합니다.
     """
-    logger = setup_logger()
-    now = datetime.now()
-    metadata_dir = os.path.join(table_path, 'metadata')
+    if logger is None:
+        logger = setup_logger()
+
+    # --- 1단계: 버전 메타데이터 삭제 ---
+    logger.info(f"버전 {version_id} 삭제를 시작합니다...")
     
-    if not os.path.isdir(metadata_dir):
-        logger.info("정리할 테이블이 없거나 메타데이터 폴더를 찾을 수 없습니다.")
-        return
+    # 안전장치: 현재 활성화된 최신 버전은 삭제할 수 없도록 방지
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    try:
+        current_version = read_json(pointer_path)['version_id']
+        if version_id == current_version:
+            logger.error(f"삭제 실패: 현재 활성화된 최신 버전(v{version_id})은 삭제할 수 없습니다.")
+            logger.error("다른 버전으로 롤백(rollback)한 후 시도해 주세요.")
+            return False
+    except FileNotFoundError:
+        pass
 
-    # --- 1. 모든 메타데이터 정보와 파일명 수집 ---
-    all_versions_meta = {}      # version_id -> version_meta
-    all_snapshots_meta = {}     # snapshot_id -> snapshot_meta
-    all_manifest_paths = set()  # 모든 manifest 파일 경로
-    
-    for filename in os.listdir(metadata_dir):
-        path = os.path.join(metadata_dir, filename)
-        if filename.startswith('v') and filename.endswith('.metadata.json'):
-            meta = read_json(path)
-            all_versions_meta[meta['version_id']] = meta
-        elif filename.startswith('snapshot-'):
-            snap = read_json(path)
-            all_snapshots_meta[snap['snapshot_id']] = snap
-        elif filename.startswith('manifest-'):
-            all_manifest_paths.add(os.path.join('metadata', filename))
-
-    # --- 2. "살아있는" 객체 식별 ---
-    live_snapshot_ids = set()
-    live_manifests = set()
-    live_data_files = set()
-
-    # 현재 버전을 포함하여 보관 기간 내의 모든 버전을 "살아있는" 것으로 간주
-    for version_meta in all_versions_meta.values():
-        snapshot_id = version_meta['snapshot_id']
-        snapshot = all_snapshots_meta.get(snapshot_id)
+    metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
+    if not os.path.exists(metadata_path):
+        logger.warning(f"삭제할 버전(v{version_id})을 찾을 수 없습니다.")
+        return False
         
-        if snapshot and (now - datetime.fromtimestamp(snapshot['timestamp'])) < keep_for:
-            live_snapshot_ids.add(snapshot_id)
-            for manifest_ref in snapshot.get('manifests', []):
-                live_manifests.add(manifest_ref)
-                manifest_path = os.path.join(table_path, manifest_ref)
-                if os.path.exists(manifest_path):
-                    manifest_data = read_json(manifest_path)
-                    for file_info in manifest_data.get('files', []):
-                        live_data_files.add(file_info['path'])
+    try:
+        # vX.metadata.json 파일만 먼저 삭제
+        if not dry_run:
+            os.remove(metadata_path)
+        logger.info(f"버전 {version_id}의 메타데이터를 성공적으로 삭제했습니다.")
+    except OSError as e:
+        logger.error(f"버전 {version_id}의 메타데이터 삭제 중 오류 발생: {e}")
+        return False
 
-    # --- 3. 삭제할 "고아" 객체 식별 ---
-    files_to_delete = []
-
-    # 고아 데이터 파일 찾기
-    data_dir = os.path.join(table_path, 'data')
-    if os.path.isdir(data_dir):
-        for data_file in os.listdir(data_dir):
-            relative_path = os.path.join('data', data_file)
-            if relative_path not in live_data_files:
-                files_to_delete.append(os.path.join(table_path, relative_path))
-
-    # 고아 매니페스트 파일 찾기
-    manifests_to_delete = all_manifest_paths - live_manifests
-    for manifest_path in manifests_to_delete:
-        files_to_delete.append(os.path.join(table_path, manifest_path))
-
-    # 고아 스냅샷 및 버전 메타데이터 파일 찾기
-    for version_id, version_meta in all_versions_meta.items():
-        snapshot_id = version_meta['snapshot_id']
-        if snapshot_id not in live_snapshot_ids:
-            # vX.metadata.json 파일 삭제 대상 추가
-            files_to_delete.append(os.path.join(metadata_dir, f"v{version_id}.metadata.json"))
-            # snapshot-X.json 파일 삭제 대상 추가
-            snapshot_filename = version_meta.get('snapshot_filename') # 이전 단계에서 이 키를 추가했었음
-            if snapshot_filename:
-                 files_to_delete.append(os.path.join(table_path, snapshot_filename))
+    # --- 2단계: 가비지 컬렉션 (Vacuum) 시작 ---
+    logger.info("가비지 컬렉션을 시작합니다 (사용되지 않는 파일 정리)...")
     
-    # 중복 제거
-    files_to_delete = sorted(list(set(files_to_delete)))
+    metadata_dir = os.path.join(table_path, 'metadata')
+    data_dir = os.path.join(table_path, 'data')
 
-    # --- 4. 최종 삭제 실행 ---
+    # "살아있는" 모든 객체(스냅샷, 데이터 해시)의 목록 만들기
+    live_snapshot_files = set()
+    live_data_hashes = set()
+
+    for meta_filename in os.listdir(metadata_dir):
+        if meta_filename.startswith('v') and meta_filename.endswith('.metadata.json'):
+            try:
+                meta = read_json(os.path.join(metadata_dir, meta_filename))
+                snapshot_filename = os.path.basename(meta['snapshot_filename'])
+                live_snapshot_files.add(snapshot_filename)
+                
+                snapshot = read_json(os.path.join(table_path, meta['snapshot_filename']))
+                for col_info in snapshot.get('columns', []):
+                    live_data_hashes.add(col_info['hash'])
+            except (FileNotFoundError, KeyError):
+                continue
+
+    # "고아" 객체(삭제 대상) 식별
+    files_to_delete = []
+    if os.path.isdir(data_dir):
+        for data_filename in os.listdir(data_dir):
+            file_hash = os.path.splitext(data_filename)[0]
+            if file_hash not in live_data_hashes:
+                files_to_delete.append(os.path.join(data_dir, data_filename))
+
+    for snapshot_filename in os.listdir(metadata_dir):
+        if snapshot_filename.startswith('snapshot-') and snapshot_filename not in live_snapshot_files:
+            files_to_delete.append(os.path.join(metadata_dir, snapshot_filename))
+    
+    # 최종 삭제 실행
     if not files_to_delete:
-        logger.info("삭제할 오래된 파일이 없습니다.")
-        return
+        logger.info("정리할 추가 파일이 없습니다.")
+        return True
 
-    logger.info(f"총 {len(files_to_delete)}개의 오래된 파일을 찾았습니다.")
+    logger.info(f"총 {len(files_to_delete)}개의 정리 대상을 찾았습니다.")
     if dry_run:
-        logger.info("[Dry Run] 아래 파일들이 삭제될 예정입니다:")
-        for f in files_to_delete:
-            print(f"  - {f}")
+        print("\n--- [Dry Run] 아래 파일들이 삭제될 예정입니다 ---")
+        for f in sorted(files_to_delete):
+            print(f"  - {os.path.relpath(f, table_path)}")
     else:
-        logger.info("오래된 파일들을 삭제합니다...")
+        logger.info("실제 파일 삭제를 시작합니다...")
+        deleted_count = 0
         for f in files_to_delete:
             try:
                 os.remove(f)
-                logger.debug(f"  - 삭제됨: {f}")
+                deleted_count += 1
             except OSError as e:
-                logger.error(f"  - 삭제 실패: {f}, 오류: {e}")
-        logger.info("삭제 작업이 완료되었습니다.")
+                logger.error(f"파일 삭제 실패: {f}, 오류: {e}")
+        logger.info(f"✅ 총 {deleted_count}개의 파일 삭제 작업이 완료되었습니다.")
+    
+    return True
