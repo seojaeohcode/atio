@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/seojaeohcode/atio/discussions
+    about: Ask questions or discuss topics here
