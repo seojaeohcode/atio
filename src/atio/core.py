@@ -241,7 +241,6 @@ def _execute_write_with_progress(writer, obj, path, **kwargs):
         raise exception_queue.get_nowait()
 
 import uuid
-import time
 import pyarrow as pa
 from .utils import read_json, write_json
 import hashlib
@@ -395,7 +394,6 @@ import pyarrow as pa
 import pyarrow.ipc
 import pandas as pd
 import polars as pl
-from .utils import read_json, setup_logger # 가정
 
 def read_table(table_path, version=None, output_as='pandas'):
     """
@@ -593,6 +591,8 @@ def delete_version(table_path, version_id, dry_run=False, logger=None):
     
     return True
 
+import json
+
 def rollback(table_path, version_id, logger=None):
     """
     테이블의 현재 버전을 지정된 버전 ID로 롤백합니다.
@@ -624,3 +624,115 @@ def rollback(table_path, version_id, logger=None):
     except OSError as e:
         logger(f"롤백 실패: 포인터 파일을 쓰는 중 오류 발생 - {e}", level="error")
         return False
+    
+
+import fastcdc
+
+def _chunk_file_cdc(file_path, data_dir):
+    """
+    fastcdc를 사용하여 단일 파일을 내용 기반 청크로 분해하고,
+    고유한 청크를 data_dir에 저장한 뒤, 청크 해시 목록을 반환합니다.
+    """
+    print(f"    - 처리 중: {os.path.basename(file_path)}")
+    
+    chunk_hashes = []
+    try:
+        # FastCDC 객체 생성. avg_size는 평균 청크 크기를 바이트 단위로 지정합니다.
+        # 이 값은 성능과 중복 제거율에 영향을 미치는 튜닝 가능한 파라미터입니다.
+        cdc = fastcdc.fastcdc(file_path, avg_size=4096, fat=True)
+        
+        for chunk in cdc:
+            chunk_content = chunk.data
+            chunk_hash = hashlib.sha256(chunk_content).hexdigest()
+            chunk_hashes.append(chunk_hash)
+            
+            # 고유한 청크만 디스크에 저장
+            chunk_save_path = os.path.join(data_dir, chunk_hash)
+            if not os.path.exists(chunk_save_path):
+                with open(chunk_save_path, 'wb') as chunk_f:
+                    chunk_f.write(chunk_content)
+
+    except FileNotFoundError:
+        print(f"      [경고] 파일을 찾을 수 없습니다: {file_path}")
+        return []
+
+    return chunk_hashes
+
+def _process_pytorch_model(model_path, data_dir):
+    """PyTorch .pth 파일을 단일 바이너리로 간주하고 CDC를 적용합니다."""
+    print(f"  [PyTorch 모델 처리 시작]")
+    chunks = _chunk_file_cdc(model_path, data_dir)
+    return [{"path": os.path.basename(model_path), "chunks": chunks}]
+
+def _process_tensorflow_model(model_path, data_dir):
+    """TensorFlow SavedModel 디렉토리를 순회하며 개별 파일을 처리합니다."""
+    print(f"  [TensorFlow SavedModel 디렉토리 처리 시작]")
+    processed_files = []
+    for root, _, files in os.walk(model_path):
+        for filename in files:
+            full_path = os.path.join(root, filename)
+            relative_path = os.path.relpath(full_path, model_path)
+            
+            chunks = _chunk_file_cdc(full_path, data_dir)
+            processed_files.append({"path": relative_path.replace('\\', '/'), "chunks": chunks})
+            
+    return processed_files
+
+def write_model_snapshot(model_path: str, table_path: str):
+    """
+    PyTorch 또는 TensorFlow 모델의 스냅샷을 저장합니다.
+    모델 타입은 자동으로 감지합니다.
+
+    Args:
+        model_path (str): 저장할 모델의 경로 (.pth 파일 또는 SavedModel 디렉토리).
+        table_path (str): 스냅샷과 데이터 청크가 저장될 테이블 경로.
+    """
+    logger = setup_logger()
+
+    # --- 1. 경로 설정 및 버전 관리 ---
+    data_dir = os.path.join(table_path, 'data')
+    metadata_dir = os.path.join(table_path, 'metadata')
+    os.makedirs(data_dir, exist_ok=True)
+    os.makedirs(metadata_dir, exist_ok=True)
+    
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    current_version = 0
+    if os.path.exists(pointer_path):
+        current_version = read_json(pointer_path)['version_id']
+    new_version = current_version + 1
+    
+    logger.info(f"모델 스냅샷 v{new_version} 생성을 시작합니다...")
+
+    # --- 2. 모델 타입 감지 및 처리 ---
+    snapshot_files = []
+    if os.path.isfile(model_path) and model_path.endswith(('.pth', '.pt')):
+        snapshot_files = _process_pytorch_model(model_path, data_dir)
+    elif os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, 'saved_model.pb')):
+        snapshot_files = _process_tensorflow_model(model_path, data_dir)
+    else:
+        raise ValueError(f"지원하지 않는 모델 형식입니다: {model_path}")
+
+    # --- 3. 스냅샷 및 메타데이터 생성 ---
+    snapshot_id = int(time.time())
+    snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
+    snapshot_path = os.path.join(metadata_dir, snapshot_filename)
+    
+    new_snapshot = {
+        'snapshot_id': snapshot_id,
+        'timestamp': time.time(),
+        'files': snapshot_files # 처리된 파일/청크 목록
+    }
+    write_json(new_snapshot, snapshot_path)
+    
+    new_metadata = {
+        'version_id': new_version,
+        'snapshot_id': snapshot_id,
+        'snapshot_filename': os.path.join('metadata', snapshot_filename)
+    }
+    metadata_filename = f"v{new_version}.metadata.json"
+    write_json(new_metadata, os.path.join(metadata_dir, metadata_filename))
+
+    new_pointer = {'version_id': new_version}
+    write_json(new_pointer, pointer_path)
+
+    logger.info(f"✅ 모델 스냅샷 v{new_version} 생성이 완료되었습니다.")
