@@ -241,14 +241,48 @@ def _execute_write_with_progress(writer, obj, path, **kwargs):
         raise exception_queue.get_nowait()
 
 import uuid
+import pyarrow as pa
 from .utils import read_json, write_json
+import hashlib
+import io
+import pyarrow.ipc
 
-def write_snapshot(obj, table_path, mode='overwrite', format='parquet', **kwargs):
+def _get_column_hash(arrow_column: pa.Array, column_name: str) -> str:
+    """Arrow 컬럼(ChunkedArray)의 내용을 기반으로 sha256 해시를 계산합니다."""
+    mock_sink = io.BytesIO()
+
+    # (핵심 수정) ChunkedArray를 하나의 Array로 합칩니다.
+    if isinstance(arrow_column, pa.ChunkedArray):
+        array_to_write = arrow_column.combine_chunks()
+    else:
+        array_to_write = arrow_column
+
+    batch = pa.RecordBatch.from_arrays([array_to_write], names=[column_name])
+    
+    with pa.ipc.new_stream(mock_sink, batch.schema) as writer:
+        writer.write_batch(batch)
+    
+    return hashlib.sha256(mock_sink.getvalue()).hexdigest()
+
+def write_snapshot(obj, table_path, mode='overwrite', format='arrow', **kwargs):
+    """
+    데이터 객체를 열 단위 청크로 분해하여 버전 관리(스냅샷) 방식으로 저장합니다.
+
+    Args:
+        obj: 저장할 데이터 객체 (pandas, polars, numpy, pyarrow.Table).
+        table_path (str): 테이블 데이터가 저장될 최상위 디렉토리 경로.
+        mode (str): 'overwrite' (기본값) 또는 'append'.
+                    - 'overwrite': 테이블을 현재 데이터로 완전히 대체합니다.
+                    - 'append': 기존 버전의 데이터에 현재 데이터를 추가(열 기준)합니다.
+        format (str): 내부 청크 파일 포맷. 현재는 'arrow'만 지원.
+    """
     logger = setup_logger(debug_level=False)
 
     # 1. 경로 설정 및 폴더 생성
-    os.makedirs(os.path.join(table_path, 'data'), exist_ok=True)
-    os.makedirs(os.path.join(table_path, 'metadata'), exist_ok=True)
+    data_dir = os.path.join(table_path, 'data')
+    metadata_dir = os.path.join(table_path, 'metadata')
+    os.makedirs(data_dir, exist_ok=True)
+    os.makedirs(metadata_dir, exist_ok=True)
     
     # 2. 현재 버전 확인
     pointer_path = os.path.join(table_path, '_current_version.json')
@@ -257,61 +291,82 @@ def write_snapshot(obj, table_path, mode='overwrite', format='parquet', **kwargs
         current_version = read_json(pointer_path)['version_id']
     new_version = current_version + 1
 
-    # 3. 임시 디렉토리 내에서 모든 작업 수행
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # 3a. 새 데이터 파일 쓰기
-        writer = get_writer(obj, format)
-        data_filename = f"{uuid.uuid4()}.{format}"
-        tmp_data_path = os.path.join(tmpdir, data_filename)
-        _execute_write(writer, obj, tmp_data_path, **kwargs)
-
-       # 3. 임시 디렉토리 내에서 모든 작업 수행
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # 3a. 새 데이터 파일 쓰기
-        writer = get_writer(obj, format)
-        if writer is None:
-            raise ValueError(f"지원하지 않는 format: {format} for object type {type(obj)}")
+    # 3. Arrow Table로 표준화 (NumPy 지원 추가)
+    if isinstance(obj, pa.Table):
+        arrow_table = obj
+    elif hasattr(obj, 'to_arrow'):  # Polars
+        arrow_table = obj.to_arrow()
+    elif hasattr(obj, '__arrow_array__') or hasattr(obj, '__dataframe__'): # Pandas
+        arrow_table = pa.Table.from_pandas(obj)
+    elif "numpy" in str(type(obj)): # NumPy 처리 부분
+        # (핵심 수정) 배열의 차원(ndim)에 따라 다르게 처리
+        if obj.ndim == 1:
+            # 1차원 배열은 기존 방식 그대로 사용
+            arrow_table = pa.Table.from_arrays([obj], names=['_col_0'])
+        else:
+            # 2차원 이상 배열은 "리스트의 리스트"로 변환 후 Arrow Array로 만듦
+            arrow_table = pa.Table.from_arrays([pa.array(obj.tolist())], names=['_col_0'])
             
-        data_filename = f"{uuid.uuid4()}.{format}"
-        tmp_data_path = os.path.join(tmpdir, data_filename)
-        _execute_write(writer, obj, tmp_data_path, **kwargs)
+    else:
+        raise TypeError(f"지원하지 않는 데이터 타입: {type(obj)}")
 
-        # 3b. 새 manifest 생성
-        new_manifest = {
-            'files': [{'path': os.path.join('data', data_filename), 'format': format}]
-        }
-        manifest_filename = f"manifest-{uuid.uuid4()}.json"
-        write_json(new_manifest, os.path.join(tmpdir, manifest_filename))
+    # 4. 임시 디렉토리에서 열 단위 해시 계산 및 중복 없는 쓰기
+    with tempfile.TemporaryDirectory() as tmpdir:
+        new_snapshot_columns = []
+        temp_data_files_to_commit = {}  # {임시경로: 최종경로}
 
-        # 3c. 새 snapshot 생성을 위한 준비
-        all_manifests = [os.path.join('metadata', manifest_filename)]
-
-        if mode.lower() == 'append' and current_version > 0:
-            try:
-                prev_metadata_path = os.path.join(table_path, 'metadata', f'v{current_version}.metadata.json')
-                prev_metadata = read_json(prev_metadata_path)
-                prev_snapshot_filename = prev_metadata['snapshot_filename']
+        for i, col_name in enumerate(arrow_table.column_names):
+            column_array = arrow_table.column(i)
+            col_hash = _get_column_hash(column_array, col_name)
+            chunk_filename = f"{col_hash}.{format}"
+            final_data_path = os.path.join(data_dir, chunk_filename)
+            
+            if not os.path.exists(final_data_path):
+                tmp_data_path = os.path.join(tmpdir, chunk_filename)
                 
-                prev_snapshot_path = os.path.join(table_path, prev_snapshot_filename)
-                prev_snapshot = read_json(prev_snapshot_path)
-                existing_manifests = prev_snapshot['manifests']
+                array_to_write = column_array.combine_chunks()
+                batch_to_write = pa.RecordBatch.from_arrays([array_to_write], names=[col_name])
                 
-                all_manifests.extend(existing_manifests)
-            except (FileNotFoundError, KeyError):
-                logger.warning(f"Append mode: 이전 버전(v{current_version})의 메타데이터를 찾을 수 없거나 형식이 올바르지 않습니다. Overwrite 모드로 동작합니다.")
+                # (핵심 수정) Python의 open()을 사용해 파일 핸들을 직접 관리합니다.
+                with open(tmp_data_path, 'wb') as f:
+                    with pa.ipc.new_file(f, batch_to_write.schema) as writer:
+                        writer.write_batch(batch_to_write)
+                # 바깥쪽 with open() 구문이 끝나면서 파일이 확실하게 닫힙니다.
+                    
+                temp_data_files_to_commit[tmp_data_path] = final_data_path
+            
+            new_snapshot_columns.append({"name": col_name, "hash": col_hash, "format": format})
 
-        # 3d. 최종 manifest 목록으로 새 snapshot 생성
+        # 5. Snapshot 생성 (overwrite/append 모드 분기 처리)
         snapshot_id = int(time.time())
         snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
+        
+        final_columns_for_snapshot = new_snapshot_columns
+
+        # append 모드이고 이전 버전이 존재할 경우, 이전 스냅샷의 컬럼 목록을 가져와 병합
+        if mode.lower() == 'append' and current_version > 0:
+            try:
+                prev_metadata_path = os.path.join(metadata_dir, f'v{current_version}.metadata.json')
+                prev_metadata = read_json(prev_metadata_path)
+                prev_snapshot_filename = prev_metadata['snapshot_filename']
+                prev_snapshot_path = os.path.join(table_path, prev_snapshot_filename)
+                prev_snapshot = read_json(prev_snapshot_path)
+                
+                previous_columns = prev_snapshot.get('columns', [])
+                final_columns_for_snapshot = previous_columns + new_snapshot_columns
+                logger.info(f"Append 모드: v{current_version}의 컬럼 {len(previous_columns)}개에 {len(new_snapshot_columns)}개를 추가합니다.")
+
+            except (FileNotFoundError, KeyError) as e:
+                logger.warning(f"Append 모드 실행 중 이전 버전 정보를 찾을 수 없어 Overwrite 모드로 동작합니다. 오류: {e}")
         
         new_snapshot = {
             'snapshot_id': snapshot_id,
             'timestamp': time.time(),
-            'manifests': all_manifests
+            'columns': final_columns_for_snapshot
         }
         write_json(new_snapshot, os.path.join(tmpdir, snapshot_filename))
         
-        # 3e. 새 version metadata 생성
+        # 6. Metadata 및 포인터 생성
         new_metadata = {
             'version_id': new_version,
             'snapshot_id': snapshot_id,
@@ -320,159 +375,364 @@ def write_snapshot(obj, table_path, mode='overwrite', format='parquet', **kwargs
         metadata_filename = f"v{new_version}.metadata.json"
         write_json(new_metadata, os.path.join(tmpdir, metadata_filename))
 
-        # 3f. 새 포인터 파일 생성
         new_pointer = {'version_id': new_version}
         tmp_pointer_path = os.path.join(tmpdir, '_current_version.json')
         write_json(new_pointer, tmp_pointer_path)
 
-        # 4. 최종 커밋
-        os.rename(tmp_data_path, os.path.join(table_path, 'data', data_filename))
-        os.rename(os.path.join(tmpdir, manifest_filename), os.path.join(table_path, 'metadata', manifest_filename))
-        os.rename(os.path.join(tmpdir, snapshot_filename), os.path.join(table_path, 'metadata', snapshot_filename))
-        os.rename(os.path.join(tmpdir, metadata_filename), os.path.join(table_path, 'metadata', metadata_filename))
-        os.replace(tmp_pointer_path, pointer_path)
-        logger.info(f"스냅샷 쓰기 완료! '{table_path}'가 버전 {new_version}으로 업데이트되었습니다.")
+        # 7. 최종 커밋 (새로 쓰여진 데이터 파일과 메타데이터 파일들을 최종 위치로 이동)
+        for tmp_path, final_path in temp_data_files_to_commit.items():
+            os.rename(tmp_path, final_path)
+        
+        os.rename(os.path.join(tmpdir, snapshot_filename), os.path.join(metadata_dir, snapshot_filename))
+        os.rename(os.path.join(tmpdir, metadata_filename), os.path.join(metadata_dir, metadata_filename))
+        os.replace(tmp_pointer_path, pointer_path) # 원자적 연산으로 포인터 교체
+        
+        logger.info(f"✅ 스냅샷 저장 완료! '{table_path}'가 버전 {new_version}으로 업데이트되었습니다. (모드: {mode})")
 
 
+import pyarrow as pa
+import pyarrow.ipc
+import pandas as pd
+import polars as pl
 
 def read_table(table_path, version=None, output_as='pandas'):
-    # 1. 읽을 버전 결정 및 진입점(metadata.json) 찾기
-    pointer_path = os.path.join(table_path, '_current_version.json')
-    if version is None:
-        version_id = read_json(pointer_path)['version_id']
-    else:
-        version_id = version
-    
-    metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
-    metadata = read_json(metadata_path)
-    snapshot_filepath = metadata['snapshot_filename']
-
-    # 2. metadata -> snapshot -> manifest 순으로 파싱
-    snapshot_path = os.path.join(table_path, snapshot_filepath) # 정확한 경로 사용
-    snapshot = read_json(snapshot_path)
-    
-    # 3. 모든 manifest를 읽어 최종 데이터 파일 목록 취합
-    all_data_files = []
-    for manifest_ref in snapshot['manifests']:
-        manifest_path = os.path.join(table_path, manifest_ref)
-        manifest = read_json(manifest_path)
-        for file_info in manifest['files']:
-            # file_info 에는 path, format 등의 정보가 있음
-            all_data_files.append(os.path.join(table_path, file_info['path']))
-
-    # 4. output_as 옵션에 따라 최종 데이터 객체 생성
-    if not all_data_files:
-        # 데이터가 없는 경우 처리
-        return None # 또는 빈 DataFrame
-
-    if output_as == 'pandas':
-        import pandas as pd
-        return pd.read_parquet(all_data_files)
-    elif output_as == 'polars':
-        import polars as pl
-        return pl.read_parquet(all_data_files)
-    # NumPy 등의 다른 형식 처리 로직 추가
-    
-    raise ValueError(f"지원하지 않는 출력 형식: {output_as}")
-
-
-from datetime import datetime, timedelta
-
-def expire_snapshots(table_path, keep_for=timedelta(days=7), dry_run=True):
     """
-    설정된 보관 기간(keep_for)보다 오래된 스냅샷과
-    더 이상 참조되지 않는 데이터 파일을 삭제합니다.
+    지정된 버전의 스냅샷을 읽어 데이터 객체로 재구성합니다.
+
+    Args:
+        table_path (str): 테이블 데이터가 저장된 최상위 디렉토리 경로.
+        version (int, optional): 불러올 버전 ID. None이면 최신 버전을 불러옵니다.
+        output_as (str): 반환할 데이터 객체 타입 ('pandas', 'polars', 'arrow', 'numpy').
+                         Defaults to 'pandas'.
+    
+    Returns:
+        지정된 포맷의 데이터 객체 (e.g., pandas.DataFrame).
     """
-    logger = setup_logger()
-    now = datetime.now()
-    metadata_dir = os.path.join(table_path, 'metadata')
-    
-    if not os.path.isdir(metadata_dir):
-        logger.info("정리할 테이블이 없거나 메타데이터 폴더를 찾을 수 없습니다.")
-        return
+    logger = setup_logger(debug_level=False)
 
-    # --- 1. 모든 메타데이터 정보와 파일명 수집 ---
-    all_versions_meta = {}      # version_id -> version_meta
-    all_snapshots_meta = {}     # snapshot_id -> snapshot_meta
-    all_manifest_paths = set()  # 모든 manifest 파일 경로
-    
-    for filename in os.listdir(metadata_dir):
-        path = os.path.join(metadata_dir, filename)
-        if filename.startswith('v') and filename.endswith('.metadata.json'):
-            meta = read_json(path)
-            all_versions_meta[meta['version_id']] = meta
-        elif filename.startswith('snapshot-'):
-            snap = read_json(path)
-            all_snapshots_meta[snap['snapshot_id']] = snap
-        elif filename.startswith('manifest-'):
-            all_manifest_paths.add(os.path.join('metadata', filename))
-
-    # --- 2. "살아있는" 객체 식별 ---
-    live_snapshot_ids = set()
-    live_manifests = set()
-    live_data_files = set()
-
-    # 현재 버전을 포함하여 보관 기간 내의 모든 버전을 "살아있는" 것으로 간주
-    for version_meta in all_versions_meta.values():
-        snapshot_id = version_meta['snapshot_id']
-        snapshot = all_snapshots_meta.get(snapshot_id)
+    # --- 1. 읽을 버전의 스냅샷 파일 경로 찾기 ---
+    try:
+        if version is None:
+            pointer_path = os.path.join(table_path, '_current_version.json')
+            version_id = read_json(pointer_path)['version_id']
+            logger.info(f"최신 버전(v{version_id})을 읽습니다.")
+        else:
+            version_id = version
+            logger.info(f"지정된 버전(v{version_id})을 읽습니다.")
         
-        if snapshot and (now - datetime.fromtimestamp(snapshot['timestamp'])) < keep_for:
-            live_snapshot_ids.add(snapshot_id)
-            for manifest_ref in snapshot.get('manifests', []):
-                live_manifests.add(manifest_ref)
-                manifest_path = os.path.join(table_path, manifest_ref)
-                if os.path.exists(manifest_path):
-                    manifest_data = read_json(manifest_path)
-                    for file_info in manifest_data.get('files', []):
-                        live_data_files.add(file_info['path'])
-
-    # --- 3. 삭제할 "고아" 객체 식별 ---
-    files_to_delete = []
-
-    # 고아 데이터 파일 찾기
-    data_dir = os.path.join(table_path, 'data')
-    if os.path.isdir(data_dir):
-        for data_file in os.listdir(data_dir):
-            relative_path = os.path.join('data', data_file)
-            if relative_path not in live_data_files:
-                files_to_delete.append(os.path.join(table_path, relative_path))
-
-    # 고아 매니페스트 파일 찾기
-    manifests_to_delete = all_manifest_paths - live_manifests
-    for manifest_path in manifests_to_delete:
-        files_to_delete.append(os.path.join(table_path, manifest_path))
-
-    # 고아 스냅샷 및 버전 메타데이터 파일 찾기
-    for version_id, version_meta in all_versions_meta.items():
-        snapshot_id = version_meta['snapshot_id']
-        if snapshot_id not in live_snapshot_ids:
-            # vX.metadata.json 파일 삭제 대상 추가
-            files_to_delete.append(os.path.join(metadata_dir, f"v{version_id}.metadata.json"))
-            # snapshot-X.json 파일 삭제 대상 추가
-            snapshot_filename = version_meta.get('snapshot_filename') # 이전 단계에서 이 키를 추가했었음
-            if snapshot_filename:
-                 files_to_delete.append(os.path.join(table_path, snapshot_filename))
+        metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
+        metadata = read_json(metadata_path)
+        snapshot_filename = metadata['snapshot_filename']
+        snapshot_path = os.path.join(table_path, snapshot_filename)
+        snapshot = read_json(snapshot_path)
     
-    # 중복 제거
-    files_to_delete = sorted(list(set(files_to_delete)))
+    except FileNotFoundError as e:
+        logger.error(f"읽기 실패: 필요한 메타데이터 또는 스냅샷 파일을 찾을 수 없습니다. 경로: {e.filename}")
+        raise e
+    except (KeyError, IndexError) as e:
+        logger.error(f"읽기 실패: 메타데이터 파일의 형식이 잘못되었습니다. 오류: {e}")
+        raise e
 
-    # --- 4. 최종 삭제 실행 ---
+    # --- 2. 스냅샷 정보를 기반으로 Arrow 컬럼들을 읽어오기 ---
+    columns_to_load = snapshot.get('columns', [])
+    if not columns_to_load:
+        logger.warning(f"버전 {version_id}은 데이터가 비어있습니다. 빈 객체를 반환합니다.")
+        if output_as == 'pandas': return pd.DataFrame()
+        if output_as == 'polars': return pl.DataFrame()
+        if output_as == 'arrow': return pa.Table.from_pydict({})
+        if output_as == 'numpy': return np.array([])
+        return None
+
+    arrow_arrays = []
+    column_names = []
+    data_dir = os.path.join(table_path, 'data')
+
+    for col_info in columns_to_load:
+        col_name = col_info['name']
+        col_hash = col_info['hash']
+        col_format = col_info.get('format', 'arrow') # 하위 호환성을 위해 format 필드 사용
+        
+        chunk_path = os.path.join(data_dir, f"{col_hash}.{col_format}")
+        
+        # Arrow IPC(Feather V2) 포맷으로 저장된 단일 컬럼 파일 읽기
+        with pa.ipc.open_file(chunk_path) as reader:
+            # 파일에는 컬럼이 하나만 들어있음
+            arrow_table_chunk = reader.read_all()
+            arrow_arrays.append(arrow_table_chunk.column(0))
+            column_names.append(col_name)
+
+    # --- 3. 읽어온 컬럼들을 하나의 Arrow Table로 조합 ---
+    final_arrow_table = pa.Table.from_arrays(arrow_arrays, names=column_names)
+    logger.info(f"데이터 로드 완료. 총 {final_arrow_table.num_rows}행, {final_arrow_table.num_columns}열.")
+
+    # --- 4. 사용자가 요청한 포맷으로 변환하여 반환 ---
+    if output_as.lower() == 'pandas':
+        return final_arrow_table.to_pandas()
+    elif output_as.lower() == 'polars':
+        return pl.from_arrow(final_arrow_table)
+    elif output_as.lower() == 'arrow':
+        return final_arrow_table
+    elif output_as.lower() == 'numpy':
+        # (핵심 수정) NumPy 변환 로직 보강
+        if final_arrow_table.num_columns == 1:
+            column = final_arrow_table.column(0)
+            # 컬럼 타입이 리스트인지(2D+ 배열이었는지) 확인
+            if pa.types.is_list(column.type):
+                # 리스트 컬럼이면, to_pylist()로 파이썬 리스트로 만든 후 np.array로 재조립
+                return np.array(column.to_pylist())
+            else:
+                # 단순 1D 배열이었으면 기존 방식 사용
+                return column.to_numpy()
+        else:
+            logger.warning("NumPy 출력은 컬럼이 하나일 때만 지원됩니다. Arrow 테이블을 반환합니다.")
+            return final_arrow_table
+    
+    raise ValueError(f"지원하지 않는 출력 형식입니다: {output_as}")
+
+
+import shutil
+# (다른 import 문들은 그대로 유지)
+
+def delete_version(table_path, version_id, dry_run=False, logger=None):
+    """
+    특정 버전을 삭제하고, 더 이상 참조되지 않는 데이터 파일(가비지)을 정리합니다.
+
+    Args:
+        table_path (str): 테이블 데이터가 저장된 최상위 디렉토리 경로.
+        version_id (int): 삭제할 버전의 ID.
+        dry_run (bool): True이면 실제로 삭제하지 않고 대상 목록만 출력합니다.
+    """
+    if logger is None:
+        logger = setup_logger()
+
+    # --- 1단계: 버전 메타데이터 삭제 ---
+    logger.info(f"버전 {version_id} 삭제를 시작합니다...")
+    
+    # 안전장치: 현재 활성화된 최신 버전은 삭제할 수 없도록 방지
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    try:
+        current_version = read_json(pointer_path)['version_id']
+        if version_id == current_version:
+            logger.error(f"삭제 실패: 현재 활성화된 최신 버전(v{version_id})은 삭제할 수 없습니다.")
+            logger.error("다른 버전으로 롤백(rollback)한 후 시도해 주세요.")
+            return False
+    except FileNotFoundError:
+        pass
+
+    metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
+    if not os.path.exists(metadata_path):
+        logger.warning(f"삭제할 버전(v{version_id})을 찾을 수 없습니다.")
+        return False
+        
+    try:
+        # vX.metadata.json 파일만 먼저 삭제
+        if not dry_run:
+            os.remove(metadata_path)
+        logger.info(f"버전 {version_id}의 메타데이터를 성공적으로 삭제했습니다.")
+    except OSError as e:
+        logger.error(f"버전 {version_id}의 메타데이터 삭제 중 오류 발생: {e}")
+        return False
+
+    # --- 2단계: 가비지 컬렉션 (Vacuum) 시작 ---
+    logger.info("가비지 컬렉션을 시작합니다 (사용되지 않는 파일 정리)...")
+    
+    metadata_dir = os.path.join(table_path, 'metadata')
+    data_dir = os.path.join(table_path, 'data')
+
+    # "살아있는" 모든 객체(스냅샷, 데이터 해시)의 목록 만들기
+    live_snapshot_files = set()
+    live_data_hashes = set()
+
+    for meta_filename in os.listdir(metadata_dir):
+        if meta_filename.startswith('v') and meta_filename.endswith('.metadata.json'):
+            try:
+                meta = read_json(os.path.join(metadata_dir, meta_filename))
+                snapshot_filename = os.path.basename(meta['snapshot_filename'])
+                live_snapshot_files.add(snapshot_filename)
+                
+                snapshot = read_json(os.path.join(table_path, meta['snapshot_filename']))
+                for col_info in snapshot.get('columns', []):
+                    live_data_hashes.add(col_info['hash'])
+            except (FileNotFoundError, KeyError):
+                continue
+
+    # "고아" 객체(삭제 대상) 식별
+    files_to_delete = []
+    if os.path.isdir(data_dir):
+        for data_filename in os.listdir(data_dir):
+            file_hash = os.path.splitext(data_filename)[0]
+            if file_hash not in live_data_hashes:
+                files_to_delete.append(os.path.join(data_dir, data_filename))
+
+    for snapshot_filename in os.listdir(metadata_dir):
+        if snapshot_filename.startswith('snapshot-') and snapshot_filename not in live_snapshot_files:
+            files_to_delete.append(os.path.join(metadata_dir, snapshot_filename))
+    
+    # 최종 삭제 실행
     if not files_to_delete:
-        logger.info("삭제할 오래된 파일이 없습니다.")
-        return
+        logger.info("정리할 추가 파일이 없습니다.")
+        return True
 
-    logger.info(f"총 {len(files_to_delete)}개의 오래된 파일을 찾았습니다.")
+    logger.info(f"총 {len(files_to_delete)}개의 정리 대상을 찾았습니다.")
     if dry_run:
-        logger.info("[Dry Run] 아래 파일들이 삭제될 예정입니다:")
-        for f in files_to_delete:
-            print(f"  - {f}")
+        print("\n--- [Dry Run] 아래 파일들이 삭제될 예정입니다 ---")
+        for f in sorted(files_to_delete):
+            print(f"  - {os.path.relpath(f, table_path)}")
     else:
-        logger.info("오래된 파일들을 삭제합니다...")
+        logger.info("실제 파일 삭제를 시작합니다...")
+        deleted_count = 0
         for f in files_to_delete:
             try:
                 os.remove(f)
-                logger.debug(f"  - 삭제됨: {f}")
+                deleted_count += 1
             except OSError as e:
-                logger.error(f"  - 삭제 실패: {f}, 오류: {e}")
-        logger.info("삭제 작업이 완료되었습니다.")
+                logger.error(f"파일 삭제 실패: {f}, 오류: {e}")
+        logger.info(f"✅ 총 {deleted_count}개의 파일 삭제 작업이 완료되었습니다.")
+    
+    return True
+
+import json
+
+def rollback(table_path, version_id, logger=None):
+    """
+    테이블의 현재 버전을 지정된 버전 ID로 롤백합니다.
+
+    Args:
+        table_path (str): 테이블 데이터가 저장된 최상위 디렉토리 경로.
+        version_id (int): 롤백할 목표 버전의 ID.
+
+    Returns:
+        bool: 성공 시 True, 실패 시 False를 반환합니다.
+    """
+    if logger is None:
+        # 이 부분은 라이브러리의 로거 설정에 맞게 수정하세요.
+        logger = lambda msg, level="info": print(f"[{level.upper()}] {msg}")
+
+    # 1. 롤백하려는 버전이 실제로 존재하는지 확인
+    metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
+    if not os.path.exists(metadata_path):
+        logger(f"롤백 실패: 버전 {version_id}이(가) 존재하지 않습니다.", level="error")
+        return False
+
+    # 2. _current_version.json 포인터 파일의 내용을 수정
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    try:
+        with open(pointer_path, 'w', encoding='utf-8') as f:
+            json.dump({'version_id': version_id}, f)
+        logger(f"✅ 롤백 성공! 현재 버전이 v{version_id}(으)로 설정되었습니다.")
+        return True
+    except OSError as e:
+        logger(f"롤백 실패: 포인터 파일을 쓰는 중 오류 발생 - {e}", level="error")
+        return False
+    
+
+import fastcdc
+
+def _chunk_file_cdc(file_path, data_dir):
+    """
+    fastcdc를 사용하여 단일 파일을 내용 기반 청크로 분해하고,
+    고유한 청크를 data_dir에 저장한 뒤, 청크 해시 목록을 반환합니다.
+    """
+    print(f"    - 처리 중: {os.path.basename(file_path)}")
+    
+    chunk_hashes = []
+    try:
+        # FastCDC 객체 생성. avg_size는 평균 청크 크기를 바이트 단위로 지정합니다.
+        # 이 값은 성능과 중복 제거율에 영향을 미치는 튜닝 가능한 파라미터입니다.
+        cdc = fastcdc.fastcdc(file_path, avg_size=4096, fat=True)
+        
+        for chunk in cdc:
+            chunk_content = chunk.data
+            chunk_hash = hashlib.sha256(chunk_content).hexdigest()
+            chunk_hashes.append(chunk_hash)
+            
+            # 고유한 청크만 디스크에 저장
+            chunk_save_path = os.path.join(data_dir, chunk_hash)
+            if not os.path.exists(chunk_save_path):
+                with open(chunk_save_path, 'wb') as chunk_f:
+                    chunk_f.write(chunk_content)
+
+    except FileNotFoundError:
+        print(f"      [경고] 파일을 찾을 수 없습니다: {file_path}")
+        return []
+
+    return chunk_hashes
+
+def _process_pytorch_model(model_path, data_dir):
+    """PyTorch .pth 파일을 단일 바이너리로 간주하고 CDC를 적용합니다."""
+    print(f"  [PyTorch 모델 처리 시작]")
+    chunks = _chunk_file_cdc(model_path, data_dir)
+    return [{"path": os.path.basename(model_path), "chunks": chunks}]
+
+def _process_tensorflow_model(model_path, data_dir):
+    """TensorFlow SavedModel 디렉토리를 순회하며 개별 파일을 처리합니다."""
+    print(f"  [TensorFlow SavedModel 디렉토리 처리 시작]")
+    processed_files = []
+    for root, _, files in os.walk(model_path):
+        for filename in files:
+            full_path = os.path.join(root, filename)
+            relative_path = os.path.relpath(full_path, model_path)
+            
+            chunks = _chunk_file_cdc(full_path, data_dir)
+            processed_files.append({"path": relative_path.replace('\\', '/'), "chunks": chunks})
+            
+    return processed_files
+
+def write_model_snapshot(model_path: str, table_path: str):
+    """
+    PyTorch 또는 TensorFlow 모델의 스냅샷을 저장합니다.
+    모델 타입은 자동으로 감지합니다.
+
+    Args:
+        model_path (str): 저장할 모델의 경로 (.pth 파일 또는 SavedModel 디렉토리).
+        table_path (str): 스냅샷과 데이터 청크가 저장될 테이블 경로.
+    """
+    logger = setup_logger()
+
+    # --- 1. 경로 설정 및 버전 관리 ---
+    data_dir = os.path.join(table_path, 'data')
+    metadata_dir = os.path.join(table_path, 'metadata')
+    os.makedirs(data_dir, exist_ok=True)
+    os.makedirs(metadata_dir, exist_ok=True)
+    
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    current_version = 0
+    if os.path.exists(pointer_path):
+        current_version = read_json(pointer_path)['version_id']
+    new_version = current_version + 1
+    
+    logger.info(f"모델 스냅샷 v{new_version} 생성을 시작합니다...")
+
+    # --- 2. 모델 타입 감지 및 처리 ---
+    snapshot_files = []
+    if os.path.isfile(model_path) and model_path.endswith(('.pth', '.pt')):
+        snapshot_files = _process_pytorch_model(model_path, data_dir)
+    elif os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, 'saved_model.pb')):
+        snapshot_files = _process_tensorflow_model(model_path, data_dir)
+    else:
+        raise ValueError(f"지원하지 않는 모델 형식입니다: {model_path}")
+
+    # --- 3. 스냅샷 및 메타데이터 생성 ---
+    snapshot_id = int(time.time())
+    snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
+    snapshot_path = os.path.join(metadata_dir, snapshot_filename)
+    
+    new_snapshot = {
+        'snapshot_id': snapshot_id,
+        'timestamp': time.time(),
+        'files': snapshot_files # 처리된 파일/청크 목록
+    }
+    write_json(new_snapshot, snapshot_path)
+    
+    new_metadata = {
+        'version_id': new_version,
+        'snapshot_id': snapshot_id,
+        'snapshot_filename': os.path.join('metadata', snapshot_filename)
+    }
+    metadata_filename = f"v{new_version}.metadata.json"
+    write_json(new_metadata, os.path.join(metadata_dir, metadata_filename))
+
+    new_pointer = {'version_id': new_version}
+    write_json(new_pointer, pointer_path)
+
+    logger.info(f"✅ 모델 스냅샷 v{new_version} 생성이 완료되었습니다.")
