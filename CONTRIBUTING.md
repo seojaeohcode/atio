@@ -1,43 +1,55 @@
+# Contributing to atio
+
+🎉 Thank you for your interest in atio!
+<br>
+Below is a basic guide to help you contribute to the project.
+
 ---
-# This is a YAML front matter block. 
-# You can copy the 'content' value and paste it directly into a .md file.
 
-content: |
-  # Contributing to atio
+## Development Environment Setup
 
-  🎉 Thank you for your interest in atio!
-  <br>
-  Below is the basic guide for contributing to the project.
+1.  **Fork the repository and clone it:**
+    ```bash
+    git clone [https://github.com/](https://github.com/)<your-username>/atio.git
+    cd atio
+    ```
 
-  ---
+2.  **Install development dependencies:**
+    ```bash
+    pip install -e '.[dev]'
+    ```
 
-  ## Development Environment Setup
+3.  **Run the tests:**
+    ```bash
+    pytest
+    ```
+    > **Note**: All Pull Requests must pass the tests.
 
-  1.  **Fork and clone the repository.**
-      ```bash
-      git clone [https://github.com/](https://github.com/)<your-username>/atio.git
-      cd atio
-      ```
+## Code Style
 
-  2.  **Install development dependencies.**
-      ```bash
-      pip install -e '.[dev]'
-      ```
+We use `black` and `isort` to maintain consistent code style.
+<br>
+Please run the following commands before committing:
+```bash
+black .
+isort .
+Pull Request Guidelines
+Make sure your branch is up-to-date with main.
 
-  3.  **Run the tests.**
-      ```bash
-      pytest
-      ```
-      > **Note**: All PRs must pass the tests.
+Include clear commit messages.
 
-  ---
+Follow the code style and run tests before submitting.
 
-  ## Code Style
+Open a Pull Request describing what changes you made and why.
 
-  We use `black` and `isort` to unify our code style.
-  <br>
-  Please run the following commands before you commit:
+Reporting Issues
+If you find a bug or want to suggest a feature, please use our Issue Templates to create a report.
 
-  ```bash
-  black .
-  isort .
+Bug Report
+
+Feature Request
+
+Code of Conduct
+All contributors are expected to follow our Code of Conduct.
+<br>
+Please be respectful, inclusive, and constructive in all interactions.
