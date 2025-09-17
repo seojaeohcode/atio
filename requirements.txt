@@ -1,12 +1,17 @@
 # 핵심 의존성
-pandas>=2.3.1
-pyarrow>=17.0
+pandas>=2.2.0
+pyarrow>=15.0
 polars>=1.0
-numpy>=2.0,<3.0
+numpy>=1.26, <2.0
 sqlalchemy>=2.0
 openpyxl>=3.1
 connectorx>=0.3.0
 fsspec>=2024.5.0
+fastcdc>=2.2.0
+
+# 선택적 의존성
+# torch>=2.0
+# tensorflow>=2.12
 
 # 개발용 의존성
 pytest~=8.4
