@@ -30,7 +30,7 @@ dependencies = [
     "openpyxl>=3.1",
     "connectorx>=0.3.0",
     "fsspec>=2024.5.0",
-    "fastcdc>=2.2.0"
+    "fastcdc>=1.7.0"
 ]
 
 [project.optional-dependencies]

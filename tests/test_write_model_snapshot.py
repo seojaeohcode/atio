@@ -6,7 +6,6 @@ import torch
 import tensorflow as tf
 import numpy as np
 
-# atio 라이브러리에서 테스트할 모든 함수를 가져옵니다.
 from atio import (
     write_model_snapshot,
     read_model_snapshot,

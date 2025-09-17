@@ -42,27 +42,27 @@ def capture_logs(func):
     return wrapper
 
 @capture_logs
-def test_basic_success():
+def test_basic_success(tmp_path):
     """기본 사용법에서 성공 시 진단 정보 확인"""
     df = pd.DataFrame({
         'A': np.random.randn(10000),
         'B': np.random.randn(10000),
     })
-    
-    write(df, 'test_basic_success.parquet', format='parquet')
+
+    write(df, tmp_path/'test_basic_success.parquet', format='parquet')
 
 @capture_logs
-def test_verbose_success():
+def test_verbose_success(tmp_path):
     """verbose 모드에서 성공 시 진단 정보 확인"""
     df = pd.DataFrame({
         'A': np.random.randn(10000),
         'B': np.random.randn(10000),
     })
-    
-    write(df, 'test_verbose_success.parquet', format='parquet', verbose=True)
+
+    write(df, tmp_path/'test_verbose_success.parquet', format='parquet', verbose=True)
 
 @capture_logs
-def test_basic_error():
+def test_basic_error(tmp_path):
     """기본 사용법에서 오류 시 진단 정보 확인"""
     df = pd.DataFrame({
         'A': np.random.randn(1000),
@@ -70,12 +70,12 @@ def test_basic_error():
     })
     
     try:
-        write(df, 'test_basic_error.xyz', format='xyz')
+        write(df, tmp_path/'test_basic_error.xyz', format='xyz')
     except Exception:
         pass
 
 @capture_logs
-def test_verbose_error():
+def test_verbose_error(tmp_path):
     """verbose 모드에서 오류 시 진단 정보 확인"""
     df = pd.DataFrame({
         'A': np.random.randn(1000),
@@ -83,12 +83,12 @@ def test_verbose_error():
     })
     
     try:
-        write(df, 'test_verbose_error.xyz', format='xyz', verbose=True)
+        write(df, tmp_path/'test_verbose_error.xyz', format='xyz', verbose=True)
     except Exception:
         pass
 
 @capture_logs
-def test_large_data_success():
+def test_large_data_success(tmp_path):
     """대용량 데이터에서 성공 시 진단 정보 확인"""
     df = pd.DataFrame({
         'A': np.random.randn(100000),  # 10만 행
@@ -96,11 +96,11 @@ def test_large_data_success():
         'C': np.random.randn(100000),
         'D': np.random.randn(100000),
     })
-    
-    write(df, 'test_large_data_success.parquet', format='parquet')
+
+    write(df, tmp_path/'test_large_data_success.parquet', format='parquet')
 
 @capture_logs
-def test_large_data_verbose():
+def test_large_data_verbose(tmp_path):
     """대용량 데이터에서 verbose 모드 진단 정보 확인"""
     df = pd.DataFrame({
         'A': np.random.randn(100000),  # 10만 행
@@ -108,8 +108,8 @@ def test_large_data_verbose():
         'C': np.random.randn(100000),
         'D': np.random.randn(100000),
     })
-    
-    write(df, 'test_large_data_verbose.parquet', format='parquet', verbose=True)
+
+    write(df, tmp_path/'test_large_data_verbose.parquet', format='parquet', verbose=True)
 
 def analyze_logs(logs, test_name):
     """로그 분석 및 진단 정보 확인"""
@@ -151,30 +151,3 @@ def analyze_logs(logs, test_name):
         'step_info': "setup=" in logs or "write_call=" in logs or "replace=" in logs
     }
 
-def main():
-    """메인 테스트 실행"""
-    print("라이브러리 기본 진단 로깅 테스트 시작")
-    print("=" * 60)
-    
-    # 1. 기본 사용법 성공 테스트
-    test_basic_success()
-    
-    # 2. verbose 모드 성공 테스트
-    test_verbose_success()
-    
-    # 3. 기본 사용법 오류 테스트
-    test_basic_error()
-    
-    # 4. verbose 모드 오류 테스트
-    test_verbose_error()
-    
-    # 5. 대용량 데이터 기본 테스트
-    test_large_data_success()
-    
-    # 6. 대용량 데이터 verbose 테스트
-    test_large_data_verbose()
-    
-    print("\n✅ 모든 진단 로깅 테스트 완료")
-
-if __name__ == "__main__":
-    main() 
