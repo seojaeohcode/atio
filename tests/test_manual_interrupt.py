@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from atio import write
 
-def main():
+def test_manual_interrupt(tmp_path):
     print("=== 수동 인터럽트 테스트 ===")
     print("이 스크립트는 대용량 데이터를 쓰는 동안 Ctrl+C를 눌러서 테스트할 수 있습니다.")
     print("실행 중에 Ctrl+C를 눌러보세요!")
@@ -34,7 +34,7 @@ def main():
     
     try:
         # 성능 진단 로깅 활성화
-        write(df, 'manual_interrupt_test.parquet', format='parquet', debug_level=True)
+        write(df, tmp_path / 'manual_interrupt_test.parquet', format='parquet', debug_level=True)
         print("✅ 쓰기 작업이 성공적으로 완료되었습니다!")
         print("  → 인터럽트 없이 모든 단계가 완료되었습니다.")
         
@@ -48,6 +48,3 @@ def main():
     except Exception as e:
         print(f"\n❌ 다른 예외 발생: {e}")
         print("  → 예상치 못한 오류가 발생했습니다.")
-
-if __name__ == "__main__":
-    main() 

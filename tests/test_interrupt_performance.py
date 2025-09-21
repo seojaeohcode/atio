@@ -75,7 +75,7 @@ def test_interrupt_during_setup(tmp_path):
     # 1초 후 인터럽트 시뮬레이션 (설정 단계에서)
     def simulate_early_interrupt():
         time.sleep(1)
-        print("\n🔄 설정 단계에서 인터럽트 시뮬레이션...")
+        # 🔄 설정 단계에서 인터럽트 시뮬레이션...
         import os
         os.kill(os.getpid(), signal.SIGINT)
     
@@ -107,7 +107,7 @@ def test_interrupt_during_replace(tmp_path):
     # 2초 후 인터럽트 시뮬레이션 (교체 단계에서)
     def simulate_replace_interrupt():
         time.sleep(2)
-        print("\n🔄 파일 교체 단계에서 인터럽트 시뮬레이션...")
+        # 🔄 파일 교체 단계에서 인터럽트 시뮬레이션...
         import os
         os.kill(os.getpid(), signal.SIGINT)
     

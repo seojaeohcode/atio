@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import atomicwriter as aw
+import atio as aw
 import os
 
 print("[INFO] 대용량 DataFrame 생성 중...")
