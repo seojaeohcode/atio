@@ -2,7 +2,7 @@ import pandas as pd
 import time
 import signal
 import sys
-import atomicwriter as aw
+import atio as aw
 
 # Ctrl+C 감지 시 사용자 메시지 출력
 def handler(signum, frame):

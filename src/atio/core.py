@@ -736,3 +736,152 @@ def write_model_snapshot(model_path: str, table_path: str):
     write_json(new_pointer, pointer_path)
 
     logger.info(f"✅ 모델 스냅샷 v{new_version} 생성이 완료되었습니다.")
+
+
+import io
+import os
+import shutil
+import tempfile
+
+try:
+    import torch
+    _PYTORCH_AVAILABLE = True
+except ImportError:
+    _PYTORCH_AVAILABLE = False
+
+try:
+    import tensorflow as tf
+    _TENSORFLOW_AVAILABLE = True
+except ImportError:
+    _TENSORFLOW_AVAILABLE = False
+
+def _reassemble_from_chunks(table_path, snapshot, destination_path=None):
+    """
+    스냅샷 정보를 바탕으로 청크들을 조합하여 모델을 복원하는 내부 헬퍼 함수.
+    destination_path가 None이면 인메모리(io.BytesIO)로, 아니면 해당 경로에 파일로 복원.
+    """
+    data_dir = os.path.join(table_path, 'data')
+    files_info = snapshot.get('files', [])
+
+    # --- PyTorch 단일 파일 처리 ---
+    if len(files_info) == 1 and not os.path.dirname(files_info[0]['path']):
+        file_info = files_info[0]
+        # 1. 인메모리 복원
+        if destination_path is None:
+            in_memory_file = io.BytesIO()
+            for chunk_hash in file_info['chunks']:
+                chunk_path = os.path.join(data_dir, chunk_hash)
+                with open(chunk_path, 'rb') as f_in:
+                    in_memory_file.write(f_in.read())
+            in_memory_file.seek(0)
+            return in_memory_file # 파일 객체 반환
+        
+        # 2. 디스크 파일로 복원
+        else:
+            output_path = os.path.join(destination_path, file_info['path'])
+            with open(output_path, 'wb') as f_out:
+                for chunk_hash in file_info['chunks']:
+                    chunk_path = os.path.join(data_dir, chunk_hash)
+                    with open(chunk_path, 'rb') as f_in:
+                        f_out.write(f_in.read())
+            return destination_path # 경로 반환
+            
+    # --- TensorFlow 디렉토리 구조 처리 ---
+    else:
+        if destination_path is None:
+            # TensorFlow 인메모리 로딩은 임시 디렉토리가 필요
+            destination_path = tempfile.mkdtemp()
+        
+        os.makedirs(destination_path, exist_ok=True)
+
+        # 폴더 구조부터 생성
+        for file_info in files_info:
+            dir_name = os.path.dirname(file_info['path'])
+            if dir_name:
+                os.makedirs(os.path.join(destination_path, dir_name), exist_ok=True)
+        
+        # 파일 내용 채우기
+        for file_info in files_info:
+            output_path = os.path.join(destination_path, file_info['path'])
+            with open(output_path, 'wb') as f_out:
+                for chunk_hash in file_info['chunks']:
+                    chunk_path = os.path.join(data_dir, chunk_hash)
+                    with open(chunk_path, 'rb') as f_in:
+                        f_out.write(f_in.read())
+        
+        return destination_path # 항상 경로 반환
+
+def read_model_snapshot(table_path, version=None, mode='auto', destination_path=None):
+    """
+    모델 스냅샷을 읽어옵니다. mode에 따라 동작 방식이 달라집니다.
+
+    Args:
+        table_path (str): 테이블 경로.
+        version (int, optional): 읽어올 버전. None이면 최신 버전.
+        mode (str): 읽기 모드. 'auto'(인메모리 로딩) 또는 'restore'(파일 복원).
+        destination_path (str, optional): mode='restore'일 때 필수. 모델을 복원할 경로.
+
+    Returns:
+        - mode='auto': 로드된 모델 객체 (PyTorch 모델, TensorFlow 모델 등)
+        - mode='restore': 모델이 복원된 경로 (str)
+    """
+    logger = setup_logger()
+
+    # --- 1. 읽을 버전의 스냅샷 파일 찾기 ---
+    try:
+        if version is None:
+            pointer_path = os.path.join(table_path, '_current_version.json')
+            version_id = read_json(pointer_path)['version_id']
+        else:
+            version_id = version
+        
+        metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
+        metadata = read_json(metadata_path)
+        snapshot_path = os.path.join(table_path, metadata['snapshot_filename'])
+        snapshot = read_json(snapshot_path)
+    except FileNotFoundError as e:
+        logger.error(f"읽기 실패: 버전 {version or '(latest)'}의 메타데이터/스냅샷을 찾을 수 없습니다.")
+        raise e
+
+    # --- 2. 모드에 따라 처리 분기 ---
+    
+    # [복원 모드]
+    if mode == 'restore':
+        if not destination_path:
+            raise ValueError("mode='restore'를 사용하려면 destination_path를 반드시 지정해야 합니다.")
+        logger.info(f"v{version_id} 모델을 '{destination_path}' 경로에 복원합니다...")
+        result_path = _reassemble_from_chunks(table_path, snapshot, destination_path)
+        logger.info(f"✅ 복원 완료: {result_path}")
+        return result_path
+
+    # [자동 인메모리 로딩 모드]
+    elif mode == 'auto':
+        logger.info(f"v{version_id} 모델을 메모리로 로딩합니다...")
+        
+        # 스냅샷 정보를 보고 PyTorch/TensorFlow 구분
+        is_pytorch = len(snapshot['files']) == 1 and snapshot['files'][0]['path'].endswith(('.pth', '.pt'))
+        
+        if is_pytorch:
+            if not _PYTORCH_AVAILABLE:
+                raise ImportError("PyTorch 모델을 로드하려면 'torch' 라이브러리가 필요합니다.")
+            
+            in_memory_file = _reassemble_from_chunks(table_path, snapshot)
+            model_obj = torch.load(in_memory_file)
+            logger.info("✅ PyTorch 모델 로딩 완료.")
+            return model_obj
+        else: # TensorFlow 또는 기타 디렉토리 기반
+            if not _TENSORFLOW_AVAILABLE:
+                raise ImportError("TensorFlow 모델을 로드하려면 'tensorflow' 라이브러리가 필요합니다.")
+
+            temp_dir = _reassemble_from_chunks(table_path, snapshot)
+            try:
+                model_obj = tf.saved_model.load(temp_dir)
+                logger.info("✅ TensorFlow 모델 로딩 완료.")
+                return model_obj
+            finally:
+                # 모델 로드 후 임시 디렉토리 정리
+                shutil.rmtree(temp_dir)
+                logger.info(f"임시 디렉토리({temp_dir})를 정리했습니다.")
+    
+    else:
+        raise ValueError(f"지원하지 않는 mode입니다: '{mode}'. 'auto' 또는 'restore'를 사용하세요.")

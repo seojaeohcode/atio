@@ -27,7 +27,7 @@ def create_slow_dataframe():
     print(f"생성된 데이터 크기: {large_df.shape}")
     return large_df
 
-def test_slow_write():
+def test_slow_write(tmp_path):
     """느린 쓰기 작업 테스트"""
     print("\n=== 느린 쓰기 작업 테스트 ===")
     
@@ -35,12 +35,12 @@ def test_slow_write():
     
     try:
         print("DEBUG 모드로 느린 쓰기 시작...")
-        write(df, 'slow_output.parquet', format='parquet', debug_level=True)
+        write(df, tmp_path/'slow_output.parquet', format='parquet', debug_level=True)
         print("✅ 느린 쓰기 테스트 성공")
     except Exception as e:
         print(f"❌ 느린 쓰기 테스트 실패: {e}")
 
-def test_io_bottleneck():
+def test_io_bottleneck(tmp_path):
     """I/O 병목 상황 시뮬레이션"""
     print("\n=== I/O 병목 테스트 ===")
     
@@ -54,14 +54,14 @@ def test_io_bottleneck():
         print("DEBUG 모드로 I/O 병목 테스트 시작...")
         # 여러 번 연속으로 쓰기 (I/O 경합 시뮬레이션)
         for i in range(5):
-            write(df, f'io_test_{i}.parquet', format='parquet', debug_level=True)
+            write(df, tmp_path/f'io_test_{i}.parquet', format='parquet', debug_level=True)
             print(f"  - {i+1}번째 파일 완료")
         
         print("✅ I/O 병목 테스트 성공")
     except Exception as e:
         print(f"❌ I/O 병목 테스트 실패: {e}")
 
-def test_memory_pressure():
+def test_memory_pressure(tmp_path):
     """메모리 압박 상황 테스트"""
     print("\n=== 메모리 압박 테스트 ===")
     
@@ -79,14 +79,14 @@ def test_memory_pressure():
     try:
         print("DEBUG 모드로 메모리 압박 테스트 시작...")
         for i, df in enumerate(large_data):
-            write(df, f'memory_test_{i}.parquet', format='parquet', debug_level=True)
+            write(df, tmp_path/f'memory_test_{i}.parquet', format='parquet', debug_level=True)
             print(f"  - {i+1}번째 파일 저장 완료")
         
         print("✅ 메모리 압박 테스트 성공")
     except Exception as e:
         print(f"❌ 메모리 압박 테스트 실패: {e}")
 
-def test_disk_space_issue():
+def test_disk_space_issue(tmp_path):
     """디스크 공간 부족 상황 시뮬레이션"""
     print("\n=== 디스크 공간 테스트 ===")
     
@@ -106,26 +106,7 @@ def test_disk_space_issue():
     
     try:
         print("DEBUG 모드로 디스크 공간 테스트 시작...")
-        write(huge_df, 'huge_output.parquet', format='parquet', debug_level=True)
+        write(huge_df, tmp_path/'huge_output.parquet', format='parquet', debug_level=True)
         print("✅ 디스크 공간 테스트 성공")
     except Exception as e:
         print(f"❌ 디스크 공간 테스트 실패: {e}")
-
-if __name__ == "__main__":
-    print("실패 상황에서 성능 진단 로깅 테스트 시작")
-    print("=" * 50)
-    
-    # 1. 느린 쓰기 테스트
-    test_slow_write()
-    
-    # 2. I/O 병목 테스트
-    test_io_bottleneck()
-    
-    # 3. 메모리 압박 테스트
-    test_memory_pressure()
-    
-    # 4. 디스크 공간 테스트
-    test_disk_space_issue()
-    
-    print("\n" + "=" * 50)
-    print("모든 테스트 완료!") 

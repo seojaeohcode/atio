@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from atio import write
 
-def show_actual_logs():
+def show_actual_logs(tmp_path):
     """실제 사용자가 보는 로그들을 보여줍니다"""
     
     print("=" * 80)
@@ -24,7 +24,7 @@ def show_actual_logs():
     print("\n📋 시나리오 1: 기본 사용법 (성공)")
     print("사용자 코드: write(df, 'test1.parquet', format='parquet')")
     print("-" * 50)
-    write(df, 'test1.parquet', format='parquet')
+    write(df, tmp_path/'test1.parquet', format='parquet')
     
     print("\n📋 시나리오 2: 기본 사용법 (오류)")
     print("사용자 코드: write(df, 'test2.xyz', format='xyz')")
@@ -37,7 +37,7 @@ def show_actual_logs():
     print("\n📋 시나리오 3: verbose 모드 (성공)")
     print("사용자 코드: write(df, 'test3.parquet', format='parquet', verbose=True)")
     print("-" * 50)
-    write(df, 'test3.parquet', format='parquet', verbose=True)
+    write(df, tmp_path/'test3.parquet', format='parquet', verbose=True)
     
     print("\n📋 시나리오 4: verbose 모드 (오류)")
     print("사용자 코드: write(df, 'test4.xyz', format='xyz', verbose=True)")
@@ -55,12 +55,12 @@ def show_actual_logs():
         'B': np.random.randn(50000),
         'C': np.random.randn(50000),
     })
-    write(large_df, 'large.parquet', format='parquet')
+    write(large_df, tmp_path/'large.parquet', format='parquet')
     
     print("\n📋 시나리오 6: 대용량 데이터 (verbose)")
     print("사용자 코드: write(large_df, 'large_verbose.parquet', format='parquet', verbose=True)")
     print("-" * 50)
-    write(large_df, 'large_verbose.parquet', format='parquet', verbose=True)
+    write(large_df, tmp_path/'large_verbose.parquet', format='parquet', verbose=True)
     
     print("\n" + "=" * 80)
     print("✅ 테스트 완료!")
@@ -69,6 +69,3 @@ def show_actual_logs():
     print("  - verbose 모드: 상세한 단계별 성능 정보")
     print("  - 오류 발생 시: 원인과 소요 시간 정보")
     print("  - 대용량 데이터: 성능 추적 가능")
-
-if __name__ == "__main__":
-    show_actual_logs() 

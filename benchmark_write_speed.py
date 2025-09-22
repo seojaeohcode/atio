@@ -12,248 +12,155 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import polars as pl
-from src.atio.core import write, write_snapshot
 
-def create_test_data(rows=100000, cols=10):
+# src 폴더가 현재 위치의 상위 폴더에 있다고 가정하고 경로 추가
+# 이 스크립트가 프로젝트 루트에 있다면 아래 줄은 필요 없을 수 있습니다.
+try:
+    from src.atio.core import write, write_snapshot
+except ImportError:
+    print("atio 라이브러리를 찾을 수 없습니다. 경로를 확인해주세요.")
+    # 개발 환경을 위해 경로를 동적으로 추가
+    import sys
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    from src.atio.core import write, write_snapshot
+
+
+def create_test_data(rows=10, cols=100000):
     """테스트용 데이터 생성"""
     print(f"테스트 데이터 생성 중... ({rows:,} 행 x {cols} 열)")
-    
-    # NumPy 배열
     np_data = np.random.randn(rows, cols)
-    
-    # Pandas DataFrame
     columns = [f'col_{i}' for i in range(cols)]
     pd_data = pd.DataFrame(np_data, columns=columns)
-    
-    # Polars DataFrame
     pl_data = pl.DataFrame(np_data, schema=columns)
-    
     return np_data, pd_data, pl_data
 
 def benchmark_numpy_write(data, format_type, temp_dir):
     """NumPy 쓰기 벤치마크"""
+    file_path = os.path.join(temp_dir, f'numpy_test.{format_type}')
+    start_time = time.perf_counter()
     if format_type == 'csv':
-        start_time = time.perf_counter()
-        np.savetxt(os.path.join(temp_dir, 'numpy_test.csv'), data, delimiter=',')
-        end_time = time.perf_counter()
-        return end_time - start_time
+        np.savetxt(file_path, data, delimiter=',')
     elif format_type == 'parquet':
-        # NumPy는 parquet을 직접 지원하지 않으므로 pandas를 통해 변환
-        start_time = time.perf_counter()
-        df = pd.DataFrame(data)
-        df.to_parquet(os.path.join(temp_dir, 'numpy_test.parquet'))
-        end_time = time.perf_counter()
-        return end_time - start_time
-    return None
+        pd.DataFrame(data).to_parquet(file_path)
+    return time.perf_counter() - start_time
 
 def benchmark_pandas_write(data, format_type, temp_dir):
     """Pandas 쓰기 벤치마크"""
+    file_path = os.path.join(temp_dir, f'pandas_test.{format_type}')
     start_time = time.perf_counter()
     if format_type == 'csv':
-        data.to_csv(os.path.join(temp_dir, 'pandas_test.csv'), index=False)
+        data.to_csv(file_path, index=False)
     elif format_type == 'parquet':
-        data.to_parquet(os.path.join(temp_dir, 'pandas_test.parquet'))
-    end_time = time.perf_counter()
-    return end_time - start_time
+        data.to_parquet(file_path)
+    return time.perf_counter() - start_time
 
 def benchmark_polars_write(data, format_type, temp_dir):
     """Polars 쓰기 벤치마크"""
+    file_path = os.path.join(temp_dir, f'polars_test.{format_type}')
     start_time = time.perf_counter()
     if format_type == 'csv':
-        data.write_csv(os.path.join(temp_dir, 'polars_test.csv'))
+        data.write_csv(file_path)
     elif format_type == 'parquet':
-        data.write_parquet(os.path.join(temp_dir, 'polars_test.parquet'))
-    end_time = time.perf_counter()
-    return end_time - start_time
+        data.write_parquet(file_path)
+    return time.perf_counter() - start_time
 
 def benchmark_atio_write(data, format_type, temp_dir):
     """Atio write 벤치마크"""
+    file_path = os.path.join(temp_dir, f'atio_test.{format_type}')
     start_time = time.perf_counter()
-    if format_type == 'csv':
-        write(data, os.path.join(temp_dir, 'atio_test.csv'), format='csv')
-    elif format_type == 'parquet':
-        write(data, os.path.join(temp_dir, 'atio_test.parquet'), format='parquet')
-    end_time = time.perf_counter()
-    return end_time - start_time
+    write(data, file_path, format=format_type)
+    return time.perf_counter() - start_time
 
-def benchmark_atio_snapshot(data, format_type, temp_dir):
+def benchmark_atio_snapshot(data, temp_dir):
     """Atio write_snapshot 벤치마크"""
+    snapshot_dir = os.path.join(temp_dir, 'snapshot_test_table')
     start_time = time.perf_counter()
-    snapshot_dir = os.path.join(temp_dir, 'snapshot_test')
-    write_snapshot(data, snapshot_dir, format=format_type)
-    end_time = time.perf_counter()
-    return end_time - start_time
+    write_snapshot(data, snapshot_dir)
+    return time.perf_counter() - start_time
+
+def _run_single_benchmark(results, name, func, *args):
+    """단일 벤치마크를 실행하고 결과를 저장하는 헬퍼 함수"""
+    try:
+        duration = func(*args)
+        results[name] = duration
+        print(f"{name:<20}: {duration:.4f}s")
+    except Exception as e:
+        results[name] = None
+        print(f"{name:<20}: FAILED ({e})")
 
 def run_benchmark(data_size='medium'):
-    """벤치마크 실행"""
-    # 데이터 크기 설정
-    if data_size == 'small':
-        rows, cols = 10000, 10
-    elif data_size == 'medium':
-        rows, cols = 100000, 10
-    elif data_size == 'large':
-        rows, cols = 1000000, 10
-    else:
-        rows, cols = 100000, 10
+    """벤치마크 실행 (리팩토링됨)"""
+    rows_cols_map = {
+        'small': (10_000, 10),
+        'medium': (100_000, 10),
+        'large': (1_000_000, 10)
+    }
+    rows, cols = rows_cols_map.get(data_size, (100_000, 10))
     
     print(f"\n=== {data_size.upper()} 데이터셋 벤치마크 ({rows:,} 행 x {cols} 열) ===")
     
-    # 테스트 데이터 생성
     np_data, pd_data, pl_data = create_test_data(rows, cols)
     
-    # 임시 디렉토리 생성
     with tempfile.TemporaryDirectory() as temp_dir:
         results = {}
         
-        # CSV 포맷 벤치마크
         print("\n--- CSV 포맷 벤치마크 ---")
-        
-        # NumPy CSV
-        try:
-            np_csv_time = benchmark_numpy_write(np_data, 'csv', temp_dir)
-            results['NumPy CSV'] = np_csv_time
-            print(f"NumPy CSV: {np_csv_time:.4f}s")
-        except Exception as e:
-            print(f"NumPy CSV 오류: {e}")
-            results['NumPy CSV'] = None
-        
-        # Pandas CSV
-        try:
-            pd_csv_time = benchmark_pandas_write(pd_data, 'csv', temp_dir)
-            results['Pandas CSV'] = pd_csv_time
-            print(f"Pandas CSV: {pd_csv_time:.4f}s")
-        except Exception as e:
-            print(f"Pandas CSV 오류: {e}")
-            results['Pandas CSV'] = None
-        
-        # Polars CSV
-        try:
-            pl_csv_time = benchmark_polars_write(pl_data, 'csv', temp_dir)
-            results['Polars CSV'] = pl_csv_time
-            print(f"Polars CSV: {pl_csv_time:.4f}s")
-        except Exception as e:
-            print(f"Polars CSV 오류: {e}")
-            results['Polars CSV'] = None
-        
-        # Atio CSV
-        try:
-            atio_csv_time = benchmark_atio_write(pd_data, 'csv', temp_dir)
-            results['Atio CSV'] = atio_csv_time
-            print(f"Atio CSV: {atio_csv_time:.4f}s")
-        except Exception as e:
-            print(f"Atio CSV 오류: {e}")
-            results['Atio CSV'] = None
-        
-        # Parquet 포맷 벤치마크
+        _run_single_benchmark(results, 'NumPy CSV', benchmark_numpy_write, np_data, 'csv', temp_dir)
+        _run_single_benchmark(results, 'Pandas CSV', benchmark_pandas_write, pd_data, 'csv', temp_dir)
+        _run_single_benchmark(results, 'Polars CSV', benchmark_polars_write, pl_data, 'csv', temp_dir)
+        _run_single_benchmark(results, 'Atio CSV', benchmark_atio_write, pd_data, 'csv', temp_dir)
+
         print("\n--- Parquet 포맷 벤치마크 ---")
-        
-        # NumPy Parquet (pandas를 통해)
-        try:
-            np_parquet_time = benchmark_numpy_write(np_data, 'parquet', temp_dir)
-            results['NumPy Parquet'] = np_parquet_time
-            print(f"NumPy Parquet: {np_parquet_time:.4f}s")
-        except Exception as e:
-            print(f"NumPy Parquet 오류: {e}")
-            results['NumPy Parquet'] = None
-        
-        # Pandas Parquet
-        try:
-            pd_parquet_time = benchmark_pandas_write(pd_data, 'parquet', temp_dir)
-            results['Pandas Parquet'] = pd_parquet_time
-            print(f"Pandas Parquet: {pd_parquet_time:.4f}s")
-        except Exception as e:
-            print(f"Pandas Parquet 오류: {e}")
-            results['Pandas Parquet'] = None
-        
-        # Polars Parquet
-        try:
-            pl_parquet_time = benchmark_polars_write(pl_data, 'parquet', temp_dir)
-            results['Polars Parquet'] = pl_parquet_time
-            print(f"Polars Parquet: {pl_parquet_time:.4f}s")
-        except Exception as e:
-            print(f"Polars Parquet 오류: {e}")
-            results['Polars Parquet'] = None
-        
-        # Atio Parquet
-        try:
-            atio_parquet_time = benchmark_atio_write(pd_data, 'parquet', temp_dir)
-            results['Atio Parquet'] = atio_parquet_time
-            print(f"Atio Parquet: {atio_parquet_time:.4f}s")
-        except Exception as e:
-            print(f"Atio Parquet 오류: {e}")
-            results['Atio Parquet'] = None
-        
-        # Atio Snapshot 벤치마크
+        _run_single_benchmark(results, 'NumPy Parquet', benchmark_numpy_write, np_data, 'parquet', temp_dir)
+        _run_single_benchmark(results, 'Pandas Parquet', benchmark_pandas_write, pd_data, 'parquet', temp_dir)
+        _run_single_benchmark(results, 'Polars Parquet', benchmark_polars_write, pl_data, 'parquet', temp_dir)
+        _run_single_benchmark(results, 'Atio Parquet', benchmark_atio_write, pd_data, 'parquet', temp_dir)
+
         print("\n--- Atio Snapshot 벤치마크 ---")
-        
-        try:
-            atio_snapshot_csv_time = benchmark_atio_snapshot(pd_data, 'csv', temp_dir)
-            results['Atio Snapshot CSV'] = atio_snapshot_csv_time
-            print(f"Atio Snapshot CSV: {atio_snapshot_csv_time:.4f}s")
-        except Exception as e:
-            print(f"Atio Snapshot CSV 오류: {e}")
-            results['Atio Snapshot CSV'] = None
-        
-        try:
-            atio_snapshot_parquet_time = benchmark_atio_snapshot(pd_data, 'parquet', temp_dir)
-            results['Atio Snapshot Parquet'] = atio_snapshot_parquet_time
-            print(f"Atio Snapshot Parquet: {atio_snapshot_parquet_time:.4f}s")
-        except Exception as e:
-            print(f"Atio Snapshot Parquet 오류: {e}")
-            results['Atio Snapshot Parquet'] = None
-        
+        _run_single_benchmark(results, 'Atio Snapshot', benchmark_atio_snapshot, pd_data, temp_dir)
+
         return results
 
 def print_results_table(results, data_size):
-    """결과를 표 형태로 출력"""
+    """결과를 표 형태로 출력 (수정됨)"""
     print(f"\n{'='*80}")
     print(f"벤치마크 결과 요약 - {data_size.upper()} 데이터셋")
     print(f"{'='*80}")
     
-    # CSV 결과
-    print("\n📊 CSV 포맷 성능 비교")
-    print("-" * 50)
+    def print_sorted_results(title, filtered_results):
+        print(f"\n📊 {title}")
+        print("-" * 65)
+        if not filtered_results:
+            print("결과 없음")
+            return
+            
+        fastest_time = min(filtered_results.values())
+        for method, time_taken in sorted(filtered_results.items(), key=lambda item: item[1]):
+            speedup = time_taken / fastest_time if fastest_time > 0 else 0
+            print(f"{method:<25} | {time_taken:>8.4f}s | (Fastest 대비 {speedup:.2f}x 느림)")
+
     csv_results = {k: v for k, v in results.items() if 'CSV' in k and v is not None}
-    if csv_results:
-        fastest_csv = min(csv_results.values())
-        for method, time_taken in csv_results.items():
-            speedup = fastest_csv / time_taken if time_taken > 0 else 0
-            print(f"{method:<25} | {time_taken:>8.4f}s | {speedup:>6.2f}x")
-    
-    # Parquet 결과
-    print("\n📊 Parquet 포맷 성능 비교")
-    print("-" * 50)
+    print_sorted_results("CSV 포맷 성능 비교", csv_results)
+
     parquet_results = {k: v for k, v in results.items() if 'Parquet' in k and v is not None}
-    if parquet_results:
-        fastest_parquet = min(parquet_results.values())
-        for method, time_taken in parquet_results.items():
-            speedup = fastest_parquet / time_taken if time_taken > 0 else 0
-            print(f"{method:<25} | {time_taken:>8.4f}s | {speedup:>6.2f}x")
+    print_sorted_results("Parquet 포맷 성능 비교", parquet_results)
     
-    # Snapshot 결과
-    print("\n📊 Atio Snapshot 성능 비교")
-    print("-" * 50)
-    snapshot_results = {k: v for k, v in results.items() if 'Snapshot' in k and v is not None}
-    if snapshot_results:
-        fastest_snapshot = min(snapshot_results.values())
-        for method, time_taken in snapshot_results.items():
-            speedup = fastest_snapshot / time_taken if time_taken > 0 else 0
-            print(f"{method:<25} | {time_taken:>8.4f}s | {speedup:>6.2f}x")
+    snapshot_time = results.get('Atio Snapshot')
+    if snapshot_time is not None:
+        print("\n📊 Atio Snapshot 성능")
+        print("-" * 65)
+        print(f"{'Atio Snapshot':<25} | {snapshot_time:>8.4f}s | (버전 관리 기능 포함)")
 
 def main():
     """메인 함수"""
     print("🚀 Atio 쓰기 속도 벤치마크 시작")
     print("=" * 50)
     
-    # 여러 데이터 크기로 테스트
     data_sizes = ['small', 'medium', 'large']
-    
-    all_results = {}
     
     for size in data_sizes:
         try:
             results = run_benchmark(size)
-            all_results[size] = results
             print_results_table(results, size)
         except Exception as e:
             print(f"❌ {size} 데이터셋 벤치마크 실패: {e}")
@@ -262,9 +169,9 @@ def main():
     print(f"\n{'='*80}")
     print("🎯 벤치마크 완료!")
     print("💡 참고사항:")
-    print("   - Atio는 원자적 쓰기를 보장하므로 약간의 오버헤드가 있을 수 있습니다")
-    print("   - Snapshot은 버전 관리 기능이 포함되어 있어 추가 시간이 소요됩니다")
-    print("   - 실제 성능은 하드웨어, 데이터 크기, 파일 시스템에 따라 달라질 수 있습니다")
+    print("  - Atio의 `write` 함수는 원자적 쓰기를 보장하므로 약간의 오버헤드가 있을 수 있습니다.")
+    print("  - Atio의 `write_snapshot` 함수는 열 단위 중복 제거 및 버전 관리 기능이 포함되어 있어 추가 시간이 소요됩니다.")
+    print("  - 실제 성능은 하드웨어, 데이터 크기, 파일 시스템에 따라 달라질 수 있습니다.")
     print(f"{'='*80}")
 
 if __name__ == "__main__":

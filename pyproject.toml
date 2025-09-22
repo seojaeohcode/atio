@@ -22,14 +22,15 @@ classifiers = [
 
 
 dependencies = [
-    "pandas>=2.3.1",
-    "pyarrow>=17.0",
+    "pandas>=2.2.0",
+    "pyarrow>=15.0",
     "polars>=1.0",
-    "numpy>=2.0,<3.0",
+    "numpy>=1.26, <2.0",
     "sqlalchemy>=2.0",
     "openpyxl>=3.1",
     "connectorx>=0.3.0",
-    "fsspec>=2024.5.0"
+    "fsspec>=2024.5.0",
+    "fastcdc>=1.7.0"
 ]
 
 [project.optional-dependencies]
@@ -39,6 +40,10 @@ dev = [
     "twine~=5.1",
     "sphinx_rtd_theme==1.0.0",
     "myst-parser==0.18.0"
+]
+ml = [
+    "torch>=2.0",
+    "tensorflow>=2.12"
 ]
 
 # `find_packages()` 역할을 하는 부분 (src 레이아웃 사용 시)

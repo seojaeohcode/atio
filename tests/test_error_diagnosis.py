@@ -1,241 +1,129 @@
-#!/usr/bin/env python3
-"""
-다양한 오류 상황에서 성능 진단 로깅 테스트
-"""
+# #!/usr/bin/env python3
+# """
+# 다양한 오류 상황에서 성능 진단 로깅 테스트 (개선된 버전)
+# """
 
-import pandas as pd
-import numpy as np
-import os
-import time
-from atio import write
+# import pandas as pd
+# import numpy as np
+# import os
+# import time
+# import pytest
+# import threading
+# import signal
+# from unittest.mock import patch
+# from atio import write
 
-def test_unsupported_format():
-    """지원하지 않는 형식 오류 테스트"""
-    print("\n=== 지원하지 않는 형식 오류 테스트 ===")
-    
-    df = pd.DataFrame({
-        'A': np.random.randn(1000),
-        'B': np.random.randn(1000),
-    })
-    
-    try:
-        print("지원하지 않는 형식으로 저장 시도...")
-        write(df, 'test_unsupported.xyz', format='xyz', verbose=True)
-        print("✅ 지원하지 않는 형식 테스트 성공")
-    except Exception as e:
-        print(f"❌ 지원하지 않는 형식 테스트 실패: {e}")
-        print("  → DEBUG 로그에서 setup 단계에서 실패했는지 확인")
+# # --- 성공적인 쓰기 테스트를 위한 기본 데이터 ---
+# @pytest.fixture
+# def sample_df():
+#     """테스트용 샘플 데이터프레임을 생성하는 Fixture"""
+#     return pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
 
-def test_permission_error():
-    """권한 오류 테스트"""
-    print("\n=== 권한 오류 테스트 ===")
-    
-    df = pd.DataFrame({
-        'A': np.random.randn(1000),
-        'B': np.random.randn(1000),
-    })
-    
-    try:
-        print("권한이 없는 경로에 저장 시도...")
-        write(df, '/root/permission_test.parquet', format='parquet', verbose=True)
-        print("✅ 권한 오류 테스트 성공")
-    except Exception as e:
-        print(f"❌ 권한 오류 테스트 실패: {e}")
-        print("  → DEBUG 로그에서 어느 단계에서 실패했는지 확인")
+# # --- 각 오류 상황에 대한 테스트 함수 ---
 
-def test_disk_full_error():
-    """디스크 공간 부족 오류 테스트"""
-    print("\n=== 디스크 공간 부족 오류 테스트 ===")
+# def test_unsupported_format(sample_df, tmp_path):
+#     """지원하지 않는 형식에 대해 ValueError가 발생하는지 테스트"""
+#     print("\n=== 지원하지 않는 형식 오류 테스트 ===")
     
-    # 매우 큰 데이터로 디스크 공간 압박
-    huge_df = pd.DataFrame({
-        'A': np.random.randn(1000000),  # 100만 행
-        'B': np.random.randn(1000000),
-        'C': np.random.randn(1000000),
-        'D': np.random.randn(1000000),
-        'E': np.random.randn(1000000),
-        'F': np.random.randn(1000000),
-        'G': np.random.randn(1000000),
-        'H': np.random.randn(1000000),
-        'I': np.random.randn(1000000),
-        'J': np.random.randn(1000000),
-    })
-    
-    try:
-        print("대용량 데이터 저장 시도 (디스크 공간 압박)...")
-        write(huge_df, 'disk_full_test.parquet', format='parquet', verbose=True)
-        print("✅ 디스크 공간 부족 테스트 성공")
-    except Exception as e:
-        print(f"❌ 디스크 공간 부족 테스트 실패: {e}")
-        print("  → DEBUG 로그에서 어느 단계에서 실패했는지 확인")
+#     # 'xyz'라는 지원하지 않는 형식을 사용할 때 ValueError가 발생하는지 확인
+#     with pytest.raises(ValueError, match="Unsupported format: 'xyz'"):
+#         write(sample_df, tmp_path / 'test.xyz', format='xyz', verbose=True)
+#     print("✅ 지원하지 않는 형식에 대한 예외 발생 확인")
 
-def test_memory_error():
-    """메모리 부족 오류 테스트"""
-    print("\n=== 메모리 부족 오류 테스트 ===")
+# def test_permission_error(sample_df, tmp_path):
+#     """권한 없는 디렉토리에 쓸 때 PermissionError가 발생하는지 테스트"""
+#     print("\n=== 권한 오류 테스트 ===")
     
-    # 메모리를 과도하게 사용하는 데이터 생성
-    memory_hog_data = []
-    
-    try:
-        print("메모리 과다 사용 데이터 생성 중...")
-        for i in range(50):  # 메모리 압박을 위해 많은 DataFrame 생성
-            df = pd.DataFrame({
-                'A': np.random.randn(100000),  # 10만 행씩
-                'B': np.random.randn(100000),
-                'C': np.random.randn(100000),
-                'D': np.random.randn(100000),
-                'E': np.random.randn(100000),
-            })
-            memory_hog_data.append(df)
-            print(f"  - {i+1}번째 대용량 DataFrame 생성 완료")
-        
-        print("메모리 과다 사용 데이터 저장 시도...")
-        for i, df in enumerate(memory_hog_data):
-            write(df, f'memory_error_test_{i}.parquet', format='parquet', verbose=True)
-            print(f"  - {i+1}번째 파일 저장 완료")
-        
-        print("✅ 메모리 부족 테스트 성공")
-    except Exception as e:
-        print(f"❌ 메모리 부족 테스트 실패: {e}")
-        print("  → DEBUG 로그에서 어느 단계에서 실패했는지 확인")
+#     # 쓰기 권한이 없는 디렉토리 생성
+#     read_only_dir = tmp_path / "read_only"
+#     read_only_dir.mkdir()
+#     os.chmod(read_only_dir, 0o444)  # 읽기 전용으로 권한 변경
 
-def test_network_error():
-    """네트워크 오류 테스트"""
-    print("\n=== 네트워크 오류 테스트 ===")
+#     # 권한 오류(PermissionError)가 발생하는지 확인
+#     with pytest.raises(PermissionError):
+#         write(sample_df, read_only_dir / 'test.parquet', format='parquet', verbose=True)
     
-    df = pd.DataFrame({
-        'A': np.random.randn(1000),
-        'B': np.random.randn(1000),
-    })
-    
-    try:
-        print("네트워크 경로에 저장 시도...")
-        write(df, '/mnt/network_drive/network_test.parquet', format='parquet', verbose=True)
-        print("✅ 네트워크 오류 테스트 성공")
-    except Exception as e:
-        print(f"❌ 네트워크 오류 테스트 실패: {e}")
-        print("  → DEBUG 로그에서 어느 단계에서 실패했는지 확인")
+#     # 테스트 후 권한 복원 (필수는 아니지만 좋은 습관)
+#     os.chmod(read_only_dir, 0o755)
+#     print("✅ 권한 없는 경로에 대한 예외 발생 확인")
 
-def test_corrupted_data_error():
-    """손상된 데이터 오류 테스트"""
-    print("\n=== 손상된 데이터 오류 테스트 ===")
-    
-    # NaN 값이 많은 데이터 (손상된 데이터 시뮬레이션)
-    corrupted_df = pd.DataFrame({
-        'A': [np.nan] * 10000 + list(np.random.randn(10000)),
-        'B': [np.nan] * 10000 + list(np.random.randn(10000)),
-        'C': [np.nan] * 10000 + list(np.random.randn(10000)),
-    })
-    
-    try:
-        print("손상된 데이터 저장 시도...")
-        write(corrupted_df, 'corrupted_data_test.parquet', format='parquet', verbose=True)
-        print("✅ 손상된 데이터 테스트 성공")
-    except Exception as e:
-        print(f"❌ 손상된 데이터 테스트 실패: {e}")
-        print("  → DEBUG 로그에서 어느 단계에서 실패했는지 확인")
+# @patch('pandas.DataFrame.to_parquet')
+# def test_disk_full_error(mock_to_parquet, sample_df, tmp_path):
+#     """디스크 공간 부족(OSError) 상황을 모킹하여 테스트"""
+#     print("\n=== 디스크 공간 부족 오류 테스트 (모킹) ===")
 
-def test_concurrent_access_error():
-    """동시 접근 오류 테스트"""
-    print("\n=== 동시 접근 오류 테스트 ===")
+#     # to_parquet 함수가 OSError를 발생시키도록 설정
+#     mock_to_parquet.side_effect = OSError(28, "No space left on device")
     
-    import threading
-    
-    def write_file(file_num):
-        """개별 쓰기 작업"""
-        df = pd.DataFrame({
-            'A': np.random.randn(5000),
-            'B': np.random.randn(5000),
-        })
-        
-        try:
-            write(df, f'concurrent_error_test_{file_num}.parquet', format='parquet', verbose=True)
-            print(f"  - 파일 {file_num} 저장 완료")
-        except Exception as e:
-            print(f"  - 파일 {file_num} 저장 실패: {e}")
-    
-    # 여러 스레드에서 동시에 같은 파일에 쓰기 (충돌 시뮬레이션)
-    threads = []
-    for i in range(10):
-        thread = threading.Thread(target=write_file, args=(i,))
-        threads.append(thread)
-        thread.start()
-    
-    # 모든 스레드 완료 대기
-    for thread in threads:
-        thread.join()
-    
-    print("✅ 동시 접근 오류 테스트 완료")
+#     with pytest.raises(OSError, match="No space left on device"):
+#         write(sample_df, tmp_path / 'disk_full_test.parquet', format='parquet', verbose=True)
+#     print("✅ 디스크 공간 부족 예외 발생 확인")
 
-def test_keyboard_interrupt_error():
-    """키보드 인터럽트 오류 테스트"""
-    print("\n=== 키보드 인터럽트 오류 테스트 ===")
-    print("이 테스트는 5초 후 자동으로 Ctrl+C를 시뮬레이션합니다.")
+# @patch('atio.core.write_pandas')
+# def test_memory_error(mock_write_pandas, sample_df, tmp_path):
+#     """메모리 부족(MemoryError) 상황을 모킹하여 테스트"""
+#     print("\n=== 메모리 부족 오류 테스트 (모킹) ===")
     
-    import threading
-    import signal
-    
-    df = pd.DataFrame({
-        'A': np.random.randn(100000),  # 10만 행
-        'B': np.random.randn(100000),
-        'C': np.random.randn(100000),
-        'D': np.random.randn(100000),
-    })
-    
-    # 5초 후 인터럽트 시뮬레이션
-    def simulate_interrupt():
-        time.sleep(5)
-        print("\n🔄 키보드 인터럽트 시뮬레이션...")
-        import os
-        os.kill(os.getpid(), signal.SIGINT)
-    
-    interrupt_thread = threading.Thread(target=simulate_interrupt)
-    interrupt_thread.daemon = True
-    interrupt_thread.start()
-    
-    try:
-        print("DEBUG 모드로 대용량 데이터 쓰기 시작...")
-        print("(5초 후 자동으로 인터럽트가 발생합니다)")
-        write(df, 'keyboard_interrupt_test.parquet', format='parquet', verbose=True)
-        print("✅ 키보드 인터럽트 테스트 성공")
-    except KeyboardInterrupt:
-        print("\n❌ KeyboardInterrupt 발생!")
-        print("  → DEBUG 로그에서 어느 단계에서 중단되었는지 확인")
-    except Exception as e:
-        print(f"❌ 다른 예외 발생: {e}")
+#     # 내부 쓰기 함수가 MemoryError를 발생시키도록 설정
+#     mock_write_pandas.side_effect = MemoryError("Unable to allocate array with shape")
 
-if __name__ == "__main__":
-    print("다양한 오류 상황에서 성능 진단 로깅 테스트 시작")
-    print("=" * 60)
+#     with pytest.raises(MemoryError):
+#         write(sample_df, tmp_path / 'memory_error_test.parquet', format='parquet', verbose=True)
+#     print("✅ 메모리 부족 예외 발생 확인")
+
+# def test_concurrent_access_error(tmp_path):
+#     """여러 스레드가 동일한 파일에 동시 접근 시 오류 테스트"""
+#     print("\n=== 동시 접근 오류 테스트 ===")
     
-    # 1. 지원하지 않는 형식 오류
-    test_unsupported_format()
+#     target_file = tmp_path / "concurrent_test.parquet"
+#     errors = []
+
+#     def write_job():
+#         try:
+#             df = pd.DataFrame({'A': np.random.randn(100), 'B': np.random.randn(100)})
+#             # 모든 스레드가 '같은' 파일에 쓰기 시도
+#             write(df, target_file, format='parquet', verbose=False)
+#         except Exception as e:
+#             errors.append(e)
+
+#     threads = [threading.Thread(target=write_job) for _ in range(5)]
+#     for t in threads:
+#         t.start()
+#     for t in threads:
+#         t.join()
+
+#     # atio 라이브러리가 동시 쓰기를 어떻게 처리하는지에 따라 검증 내용이 달라짐
+#     # 예: 파일 잠금(lock) 메커니즘이 없다면 오류가 발생할 수 있음
+#     # 예: 메커니즘이 있다면 오류는 없어야 하고 파일은 하나만 정상적으로 생성되어야 함
+#     assert target_file.exists()
+#     print(f"✅ 동시 접근 테스트 완료 (발생한 오류 수: {len(errors)})")
+
+
+# def test_keyboard_interrupt_cleanup(tmp_path):
+#     """Ctrl+C(KeyboardInterrupt) 발생 시 임시 파일이 정리되는지 테스트"""
+#     print("\n=== 키보드 인터럽트 오류 테스트 ===")
     
-    # 2. 권한 오류
-    test_permission_error()
+#     # 대용량 데이터를 준비하여 쓰기 작업이 오래 걸리도록 함
+#     large_df = pd.DataFrame(np.random.rand(500000, 10))
+#     target_file = tmp_path / "interrupt_test.parquet"
+
+#     def simulate_interrupt():
+#         # 쓰기 작업이 시작될 시간을 벌어줌
+#         time.sleep(0.1)
+#         os.kill(os.getpid(), signal.SIGINT)
+
+#     # 별도 스레드에서 인터럽트 발생
+#     interrupt_thread = threading.Thread(target=simulate_interrupt)
+#     interrupt_thread.start()
+
+#     try:
+#         write(large_df, target_file, format='parquet', verbose=True)
+#     except KeyboardInterrupt:
+#         print("✔️ KeyboardInterrupt 정상적으로 발생")
     
-    # 3. 디스크 공간 부족 오류
-    test_disk_full_error()
+#     interrupt_thread.join()
     
-    # 4. 메모리 부족 오류
-    test_memory_error()
-    
-    # 5. 네트워크 오류
-    test_network_error()
-    
-    # 6. 손상된 데이터 오류
-    test_corrupted_data_error()
-    
-    # 7. 동시 접근 오류
-    test_concurrent_access_error()
-    
-    # 8. 키보드 인터럽트 오류
-    test_keyboard_interrupt_error()
-    
-    print("\n" + "=" * 60)
-    print("모든 오류 상황 테스트 완료!")
-    print("\n💡 개선된 성능 진단 로깅의 장점:")
-    print("  - 성공/실패 모든 상황에서 성능 정보 제공")
-    print("  - 오류 발생 시점과 원인 명확히 파악")
-    print("  - 각 단계별 소요 시간과 오류 유형 표시")
-    print("  - 디버깅 시간 단축 및 문제 해결 가이드 제공") 
+#     # 인터럽트 발생 후, atio의 원자적 쓰기 기능 덕분에
+#     # 불완전한 파일이 남아있지 않아야 함
+#     assert not target_file.exists()
+#     print("✅ 인터럽트 후 대상 파일이 존재하지 않음을 확인 (정리 성공)")

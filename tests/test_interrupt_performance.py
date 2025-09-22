@@ -29,7 +29,7 @@ def create_large_dataframe():
     print(f"생성된 데이터 크기: {large_df.shape}")
     return large_df
 
-def test_interrupt_during_write():
+def test_interrupt_during_write(tmp_path):
     """쓰기 중간에 인터럽트 발생 시뮬레이션"""
     print("\n=== 쓰기 중 인터럽트 테스트 ===")
     print("이 테스트는 3초 후 자동으로 Ctrl+C를 시뮬레이션합니다.")
@@ -52,7 +52,7 @@ def test_interrupt_during_write():
     try:
         print("DEBUG 모드로 대용량 데이터 쓰기 시작...")
         print("(3초 후 자동으로 인터럽트가 발생합니다)")
-        write(df, 'interrupt_test.parquet', format='parquet', debug_level=True)
+        write(df, tmp_path/'interrupt_test.parquet', format='parquet', debug_level=True)
         print("✅ 인터럽트 테스트 성공 (인터럽트 없이 완료)")
     except KeyboardInterrupt:
         print("\n❌ KeyboardInterrupt 발생!")
@@ -62,7 +62,7 @@ def test_interrupt_during_write():
     except Exception as e:
         print(f"❌ 다른 예외 발생: {e}")
 
-def test_interrupt_during_setup():
+def test_interrupt_during_setup(tmp_path):
     """설정 단계에서 인터럽트 발생 시뮬레이션"""
     print("\n=== 설정 단계 인터럽트 테스트 ===")
     print("이 테스트는 설정 단계에서 인터럽트를 시뮬레이션합니다.")
@@ -75,7 +75,7 @@ def test_interrupt_during_setup():
     # 1초 후 인터럽트 시뮬레이션 (설정 단계에서)
     def simulate_early_interrupt():
         time.sleep(1)
-        print("\n🔄 설정 단계에서 인터럽트 시뮬레이션...")
+        # 🔄 설정 단계에서 인터럽트 시뮬레이션...
         import os
         os.kill(os.getpid(), signal.SIGINT)
     
@@ -85,7 +85,7 @@ def test_interrupt_during_setup():
     
     try:
         print("DEBUG 모드로 쓰기 시작 (1초 후 인터럽트)...")
-        write(df, 'early_interrupt_test.parquet', format='parquet', debug_level=True)
+        write(df, tmp_path/'early_interrupt_test.parquet', format='parquet', debug_level=True)
         print("✅ 초기 인터럽트 테스트 성공")
     except KeyboardInterrupt:
         print("\n❌ 설정 단계에서 KeyboardInterrupt 발생!")
@@ -94,7 +94,7 @@ def test_interrupt_during_setup():
     except Exception as e:
         print(f"❌ 다른 예외 발생: {e}")
 
-def test_interrupt_during_replace():
+def test_interrupt_during_replace(tmp_path):
     """파일 교체 단계에서 인터럽트 발생 시뮬레이션"""
     print("\n=== 파일 교체 단계 인터럽트 테스트 ===")
     print("이 테스트는 파일 교체 단계에서 인터럽트를 시뮬레이션합니다.")
@@ -107,7 +107,7 @@ def test_interrupt_during_replace():
     # 2초 후 인터럽트 시뮬레이션 (교체 단계에서)
     def simulate_replace_interrupt():
         time.sleep(2)
-        print("\n🔄 파일 교체 단계에서 인터럽트 시뮬레이션...")
+        # 🔄 파일 교체 단계에서 인터럽트 시뮬레이션...
         import os
         os.kill(os.getpid(), signal.SIGINT)
     
@@ -117,7 +117,7 @@ def test_interrupt_during_replace():
     
     try:
         print("DEBUG 모드로 쓰기 시작 (2초 후 인터럽트)...")
-        write(df, 'replace_interrupt_test.parquet', format='parquet', debug_level=True)
+        write(df, tmp_path/'replace_interrupt_test.parquet', format='parquet', debug_level=True)
         print("✅ 파일 교체 인터럽트 테스트 성공")
     except KeyboardInterrupt:
         print("\n❌ 파일 교체 단계에서 KeyboardInterrupt 발생!")
@@ -140,28 +140,3 @@ def test_manual_interrupt():
     print("\"")
     print()
     print("실행 중에 Ctrl+C를 누르면 성능 진단 로깅이 어떻게 작동하는지 확인할 수 있습니다.")
-
-if __name__ == "__main__":
-    print("키보드 인터럽트 시뮬레이션 테스트 시작")
-    print("=" * 60)
-    
-    # 1. 쓰기 중 인터럽트 테스트
-    test_interrupt_during_write()
-    
-    # 2. 설정 단계 인터럽트 테스트
-    test_interrupt_during_setup()
-    
-    # 3. 파일 교체 단계 인터럽트 테스트
-    test_interrupt_during_replace()
-    
-    # 4. 수동 인터럽트 테스트 안내
-    test_manual_interrupt()
-    
-    print("\n" + "=" * 60)
-    print("인터럽트 시뮬레이션 테스트 완료!")
-    print("\n💡 성능 진단 로깅의 인터럽트 대응:")
-    print("  - 인터럽트 발생 시점에 따라 다른 동작")
-    print("  - 설정 단계: 원본 파일 보존")
-    print("  - 쓰기 단계: 임시 파일 자동 정리")
-    print("  - 교체 단계: 원본 파일 보존, 임시 파일 정리")
-    print("  - DEBUG 로그로 어느 단계에서 중단되었는지 확인 가능") 
