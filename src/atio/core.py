@@ -246,6 +246,7 @@ from .utils import read_json, write_json
 import hashlib
 import io
 import pyarrow.ipc
+from tqdm import tqdm
 
 def _get_column_hash(arrow_column: pa.Array, column_name: str) -> str:
     """Arrow 컬럼(ChunkedArray)의 내용을 기반으로 sha256 해시를 계산합니다."""
@@ -264,7 +265,7 @@ def _get_column_hash(arrow_column: pa.Array, column_name: str) -> str:
     
     return hashlib.sha256(mock_sink.getvalue()).hexdigest()
 
-def write_snapshot(obj, table_path, mode='overwrite', format='arrow', **kwargs):
+def write_snapshot(obj, table_path, mode='overwrite', format='arrow', show_progress=False, **kwargs):
     """
     데이터 객체를 열 단위 청크로 분해하여 버전 관리(스냅샷) 방식으로 저장합니다.
 
@@ -275,6 +276,7 @@ def write_snapshot(obj, table_path, mode='overwrite', format='arrow', **kwargs):
                     - 'overwrite': 테이블을 현재 데이터로 완전히 대체합니다.
                     - 'append': 기존 버전의 데이터에 현재 데이터를 추가(열 기준)합니다.
         format (str): 내부 청크 파일 포맷. 현재는 'arrow'만 지원.
+        show_progress (bool): 진행률 표시 여부. Defaults to False.
     """
     logger = setup_logger(debug_level=False)
 
@@ -315,7 +317,14 @@ def write_snapshot(obj, table_path, mode='overwrite', format='arrow', **kwargs):
         new_snapshot_columns = []
         temp_data_files_to_commit = {}  # {임시경로: 최종경로}
 
-        for i, col_name in enumerate(arrow_table.column_names):
+        iterable = tqdm(
+            arrow_table.column_names,
+            desc="Saving snapshot columns",
+            disable=not show_progress
+        )
+
+        for col_name in iterable:
+            i = arrow_table.schema.get_field_index(col_name)
             column_array = arrow_table.column(i)
             col_hash = _get_column_hash(column_array, col_name)
             chunk_filename = f"{col_hash}.{format}"
@@ -628,64 +637,41 @@ def rollback(table_path, version_id, logger=None):
 
 import fastcdc
 
-def _chunk_file_cdc(file_path, data_dir):
-    """
-    fastcdc를 사용하여 단일 파일을 내용 기반 청크로 분해하고,
-    고유한 청크를 data_dir에 저장한 뒤, 청크 해시 목록을 반환합니다.
-    """
-    print(f"    - 처리 중: {os.path.basename(file_path)}")
+def _process_file_task(args):
+    """(수정) 스레드에서 실행될 단일 파일 처리 작업. lock 객체를 인자로 받음"""
+    file_path, model_path_base, data_dir, tmp_dir, lock = args  # lock 추가
     
-    chunk_hashes = []
-    try:
-        # FastCDC 객체 생성. avg_size는 평균 청크 크기를 바이트 단위로 지정합니다.
-        # 이 값은 성능과 중복 제거율에 영향을 미치는 튜닝 가능한 파라미터입니다.
-        cdc = fastcdc.fastcdc(file_path, avg_size=4096, fat=True)
+    relative_path = os.path.relpath(file_path, model_path_base).replace('\\', '/')
+    processed_file_info = {"path": relative_path, "chunks": []}
+    
+    cdc = fastcdc.fastcdc(file_path, avg_size=65536, fat=True)
+    for chunk in cdc:
+        chunk_content = chunk.data
+        chunk_hash = hashlib.sha256(chunk_content).hexdigest()
+        processed_file_info["chunks"].append(chunk_hash)
         
-        for chunk in cdc:
-            chunk_content = chunk.data
-            chunk_hash = hashlib.sha256(chunk_content).hexdigest()
-            chunk_hashes.append(chunk_hash)
-            
-            # 고유한 청크만 디스크에 저장
-            chunk_save_path = os.path.join(data_dir, chunk_hash)
+        chunk_save_path = os.path.join(data_dir, chunk_hash)
+        
+        # 새로운 청크인지 확인하고 임시 디렉토리에 쓰는 '위험 구간'
+        # 이 구간은 lock을 통해 한번에 하나의 스레드만 접근하도록 보호합니다.
+        with lock:
             if not os.path.exists(chunk_save_path):
-                with open(chunk_save_path, 'wb') as chunk_f:
-                    chunk_f.write(chunk_content)
+                temp_chunk_path = os.path.join(tmp_dir, chunk_hash)
+                if not os.path.exists(temp_chunk_path):
+                    with open(temp_chunk_path, 'wb') as chunk_f:
+                        chunk_f.write(chunk_content)
+                        
+    return processed_file_info
 
-    except FileNotFoundError:
-        print(f"      [경고] 파일을 찾을 수 없습니다: {file_path}")
-        return []
-
-    return chunk_hashes
-
-def _process_pytorch_model(model_path, data_dir):
-    """PyTorch .pth 파일을 단일 바이너리로 간주하고 CDC를 적용합니다."""
-    print(f"  [PyTorch 모델 처리 시작]")
-    chunks = _chunk_file_cdc(model_path, data_dir)
-    return [{"path": os.path.basename(model_path), "chunks": chunks}]
-
-def _process_tensorflow_model(model_path, data_dir):
-    """TensorFlow SavedModel 디렉토리를 순회하며 개별 파일을 처리합니다."""
-    print(f"  [TensorFlow SavedModel 디렉토리 처리 시작]")
-    processed_files = []
-    for root, _, files in os.walk(model_path):
-        for filename in files:
-            full_path = os.path.join(root, filename)
-            relative_path = os.path.relpath(full_path, model_path)
-            
-            chunks = _chunk_file_cdc(full_path, data_dir)
-            processed_files.append({"path": relative_path.replace('\\', '/'), "chunks": chunks})
-            
-    return processed_files
-
-def write_model_snapshot(model_path: str, table_path: str):
+def write_model_snapshot(model_path: str, table_path: str, max_workers: int = None, show_progress: bool = False):
     """
     PyTorch 또는 TensorFlow 모델의 스냅샷을 저장합니다.
-    모델 타입은 자동으로 감지합니다.
+    모델 타입은 자동으로 감지됩니다.
 
     Args:
         model_path (str): 저장할 모델의 경로 (.pth 파일 또는 SavedModel 디렉토리).
         table_path (str): 스냅샷과 데이터 청크가 저장될 테이블 경로.
+        show_progress (bool): 진행률 표시 여부. Defaults to False.
     """
     logger = setup_logger()
 
@@ -703,45 +689,84 @@ def write_model_snapshot(model_path: str, table_path: str):
     
     logger.info(f"모델 스냅샷 v{new_version} 생성을 시작합니다...")
 
-    # --- 2. 모델 타입 감지 및 처리 ---
-    snapshot_files = []
-    if os.path.isfile(model_path) and model_path.endswith(('.pth', '.pt')):
-        snapshot_files = _process_pytorch_model(model_path, data_dir)
-    elif os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, 'saved_model.pb')):
-        snapshot_files = _process_tensorflow_model(model_path, data_dir)
-    else:
-        raise ValueError(f"지원하지 않는 모델 형식입니다: {model_path}")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # --- 2. 모델 타입 감지 및 처리할 파일 목록 생성 ---
+        is_pytorch = os.path.isfile(model_path) and model_path.endswith(('.pth', '.pt'))
+        is_tensorflow = os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, 'saved_model.pb'))
 
-    # --- 3. 스냅샷 및 메타데이터 생성 ---
-    snapshot_id = int(time.time())
-    snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
-    snapshot_path = os.path.join(metadata_dir, snapshot_filename)
-    
-    new_snapshot = {
-        'snapshot_id': snapshot_id,
-        'timestamp': time.time(),
-        'files': snapshot_files # 처리된 파일/청크 목록
-    }
-    write_json(new_snapshot, snapshot_path)
-    
-    new_metadata = {
-        'version_id': new_version,
-        'snapshot_id': snapshot_id,
-        'snapshot_filename': os.path.join('metadata', snapshot_filename)
-    }
-    metadata_filename = f"v{new_version}.metadata.json"
-    write_json(new_metadata, os.path.join(metadata_dir, metadata_filename))
+        files_to_process = []
+        if is_pytorch:
+            files_to_process.append(model_path)
+            model_path_base = os.path.dirname(model_path)
+        elif is_tensorflow:
+            for root, _, files in os.walk(model_path):
+                for filename in files:
+                    files_to_process.append(os.path.join(root, filename))
+            model_path_base = model_path
+        else:
+            raise ValueError(f"지원하지 않는 모델 형식입니다: {model_path}")
 
-    new_pointer = {'version_id': new_version}
-    write_json(new_pointer, pointer_path)
+        # --- 3. 병렬 청킹 및 임시 저장 ---
+        snapshot_files = []
+        if max_workers is None:
+            max_workers = min(32, (os.cpu_count() or 1) + 4) # I/O 바운드 작업에 적합한 기본값
+
+        lock = threading.Lock()
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            args_list = [(fp, model_path_base, data_dir, tmpdir, lock) for fp in files_to_process]
+            
+            futures = [executor.submit(_process_file_task, args) for args in args_list]
+            
+            progress = tqdm(as_completed(futures), total=len(futures), desc="Processing model files", disable=not show_progress, unit="file")
+            
+            for future in progress:
+                try:
+                    result = future.result()
+                    if is_pytorch:
+                        result['path'] = os.path.basename(result['path'])
+                    snapshot_files.append(result)
+                except Exception as e:
+                    logger.error(f"파일 처리 중 오류 발생: {e}")
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    # 오류 발생 시 다른 스레드도 중단하고 싶다면 executor.shutdown(wait=False) 등을 고려할 수 있습니다.
+                    raise
+
+        # --- 4. 최종 커밋: 임시 청크 파일들을 data 디렉토리로 이동 ---
+        temp_chunks = os.listdir(tmpdir)
+        for chunk_filename in tqdm(temp_chunks, desc="Committing chunks", disable=not show_progress or len(temp_chunks) < 100):
+            os.rename(os.path.join(tmpdir, chunk_filename), os.path.join(data_dir, chunk_filename))
+
+        # --- 5. 스냅샷 및 메타데이터 생성 ---
+        snapshot_id = int(time.time())
+        snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
+        snapshot_path = os.path.join(metadata_dir, snapshot_filename)
+        
+        new_snapshot = {
+            'snapshot_id': snapshot_id,
+            'timestamp': time.time(),
+            'files': sorted(snapshot_files, key=lambda x: x['path']) # 경로 순으로 정렬하여 일관성 유지
+        }
+        write_json(new_snapshot, snapshot_path)
+        
+        new_metadata = {
+            'version_id': new_version,
+            'snapshot_id': snapshot_id,
+            'snapshot_filename': os.path.join('metadata', snapshot_filename)
+        }
+        metadata_filename = f"v{new_version}.metadata.json"
+        write_json(new_metadata, os.path.join(metadata_dir, metadata_filename))
+
+        new_pointer = {'version_id': new_version}
+        # 포인터는 모든 작업이 성공한 후 마지막에 원자적으로 교체합니다.
+        tmp_pointer_path = os.path.join(metadata_dir, f"_pointer_{uuid.uuid4()}.json")
+        write_json(new_pointer, tmp_pointer_path)
+        os.replace(tmp_pointer_path, pointer_path)
 
     logger.info(f"✅ 모델 스냅샷 v{new_version} 생성이 완료되었습니다.")
 
 
-import io
-import os
-import shutil
-import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     import torch
@@ -755,79 +780,93 @@ try:
 except ImportError:
     _TENSORFLOW_AVAILABLE = False
 
-def _reassemble_from_chunks(table_path, snapshot, destination_path=None):
+def _read_chunk(chunk_path: str) -> bytes:
+    """단일 청크 파일을 읽어 내용을 반환하는 간단한 함수 (스레드에서 실행될 작업)"""
+    with open(chunk_path, 'rb') as f:
+        return f.read()
+
+def _reassemble_from_chunks_threaded(table_path, snapshot, destination_path=None, max_workers=None, show_progress=False):
     """
-    스냅샷 정보를 바탕으로 청크들을 조합하여 모델을 복원하는 내부 헬퍼 함수.
-    destination_path가 None이면 인메모리(io.BytesIO)로, 아니면 해당 경로에 파일로 복원.
+    스냅샷 정보를 바탕으로 청크들을 'ThreadPoolExecutor'를 사용해 병렬로 조합하여 모델을 복원합니다.
+    max_workers: 사용할 스레드의 최대 개수 (None이면 기본값 사용)
     """
     data_dir = os.path.join(table_path, 'data')
     files_info = snapshot.get('files', [])
 
-    # --- PyTorch 단일 파일 처리 ---
-    if len(files_info) == 1 and not os.path.dirname(files_info[0]['path']):
-        file_info = files_info[0]
-        # 1. 인메모리 복원
-        if destination_path is None:
-            in_memory_file = io.BytesIO()
-            for chunk_hash in file_info['chunks']:
-                chunk_path = os.path.join(data_dir, chunk_hash)
-                with open(chunk_path, 'rb') as f_in:
-                    in_memory_file.write(f_in.read())
-            in_memory_file.seek(0)
-            return in_memory_file # 파일 객체 반환
-        
-        # 2. 디스크 파일로 복원
-        else:
-            output_path = os.path.join(destination_path, file_info['path'])
-            with open(output_path, 'wb') as f_out:
-                for chunk_hash in file_info['chunks']:
-                    chunk_path = os.path.join(data_dir, chunk_hash)
-                    with open(chunk_path, 'rb') as f_in:
-                        f_out.write(f_in.read())
-            return destination_path # 경로 반환
+    # ThreadPoolExecutor를 with문과 함께 사용해 안전하게 스레드 풀을 관리합니다.
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # --- PyTorch 단일 파일 처리 ---
+        if len(files_info) == 1 and not os.path.dirname(files_info[0]['path']):
+            file_info = files_info[0]
+            chunk_paths = [os.path.join(data_dir, h) for h in file_info['chunks']]
             
-    # --- TensorFlow 디렉토리 구조 처리 ---
-    else:
-        if destination_path is None:
-            # TensorFlow 인메모리 로딩은 임시 디렉토리가 필요
-            destination_path = tempfile.mkdtemp()
-        
-        os.makedirs(destination_path, exist_ok=True)
+            chunk_iterator = executor.map(_read_chunk, chunk_paths)
+            
+            all_chunk_data_iterator = tqdm(
+                chunk_iterator,
+                total=len(chunk_paths),
+                desc=f"Reassembling {os.path.basename(file_info['path'])}",
+                disable=not show_progress,
+                unit=' chunks'
+            )
 
-        # 폴더 구조부터 생성
-        for file_info in files_info:
-            dir_name = os.path.dirname(file_info['path'])
-            if dir_name:
-                os.makedirs(os.path.join(destination_path, dir_name), exist_ok=True)
-        
-        # 파일 내용 채우기
-        for file_info in files_info:
-            output_path = os.path.join(destination_path, file_info['path'])
-            with open(output_path, 'wb') as f_out:
-                for chunk_hash in file_info['chunks']:
-                    chunk_path = os.path.join(data_dir, chunk_hash)
-                    with open(chunk_path, 'rb') as f_in:
-                        f_out.write(f_in.read())
-        
-        return destination_path # 항상 경로 반환
+            # 1. 인메모리 복원
+            if destination_path is None:
+                in_memory_file = io.BytesIO(b"".join(all_chunk_data_iterator))
+                in_memory_file.seek(0)
+                return in_memory_file
+            
+            # 2. 디스크 파일로 복원
+            else:
+                if os.path.isdir(destination_path):
+                    output_path = os.path.join(destination_path, file_info['path'])
+                else:
+                    output_path = destination_path
+                
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-def read_model_snapshot(table_path, version=None, mode='auto', destination_path=None):
+                with open(output_path, 'wb') as f_out:
+                    for chunk_data in all_chunk_data_iterator:
+                        f_out.write(chunk_data)
+                return output_path
+                
+        # --- TensorFlow 디렉토리 구조 처리 ---
+        else:
+            if destination_path is None:
+                destination_path = tempfile.mkdtemp()
+            
+            os.makedirs(destination_path, exist_ok=True)
+
+            iterable = tqdm(files_info, desc="Reassembling TensorFlow model", disable=not show_progress, unit=" file")
+            for file_info in iterable:
+                dir_name = os.path.dirname(file_info['path'])
+                if dir_name:
+                    os.makedirs(os.path.join(destination_path, dir_name), exist_ok=True)
+                
+                chunk_paths = [os.path.join(data_dir, h) for h in file_info['chunks']]
+                
+                # 각 파일의 청크를 병렬로 읽기
+                all_chunk_data = executor.map(_read_chunk, chunk_paths)
+                
+                output_path = os.path.join(destination_path, file_info['path'])
+                with open(output_path, 'wb') as f_out:
+                    # 파일 쓰기 시에는 내부 tqdm 없이 바로 조합
+                    f_out.write(b"".join(all_chunk_data))
+            
+            return destination_path
+
+def read_model_snapshot(table_path, version=None, mode='auto', destination_path=None, max_workers=None, show_progress=False):
     """
-    모델 스냅샷을 읽어옵니다. mode에 따라 동작 방식이 달라집니다.
-
+    모델 스냅샷을 읽어옵니다. 내부적으로 멀티스레딩을 사용하여 I/O를 병렬 처리합니다.
+    
     Args:
-        table_path (str): 테이블 경로.
-        version (int, optional): 읽어올 버전. None이면 최신 버전.
-        mode (str): 읽기 모드. 'auto'(인메모리 로딩) 또는 'restore'(파일 복원).
-        destination_path (str, optional): mode='restore'일 때 필수. 모델을 복원할 경로.
-
-    Returns:
-        - mode='auto': 로드된 모델 객체 (PyTorch 모델, TensorFlow 모델 등)
-        - mode='restore': 모델이 복원된 경로 (str)
+        max_workers (int, optional): 병렬 I/O에 사용할 스레드 개수. 
+                                     None이면 파이썬 기본값(보통 CPU 코어 수 * 5)을 사용합니다.
+        show_progress (bool): 진행률 표시 여부. Defaults to False.
     """
     logger = setup_logger()
 
-    # --- 1. 읽을 버전의 스냅샷 파일 찾기 ---
+    # (메타데이터 읽는 부분은 기존과 동일)
     try:
         if version is None:
             pointer_path = os.path.join(table_path, '_current_version.json')
@@ -843,45 +882,41 @@ def read_model_snapshot(table_path, version=None, mode='auto', destination_path=
         logger.error(f"읽기 실패: 버전 {version or '(latest)'}의 메타데이터/스냅샷을 찾을 수 없습니다.")
         raise e
 
-    # --- 2. 모드에 따라 처리 분기 ---
+    # --- 2. 모드에 따라 '스레드 버전'의 재조립 함수 호출 ---
     
     # [복원 모드]
     if mode == 'restore':
         if not destination_path:
             raise ValueError("mode='restore'를 사용하려면 destination_path를 반드시 지정해야 합니다.")
-        logger.info(f"v{version_id} 모델을 '{destination_path}' 경로에 복원합니다...")
-        result_path = _reassemble_from_chunks(table_path, snapshot, destination_path)
+        logger.info(f"v{version_id} 모델을 '{destination_path}' 경로에 병렬로 복원합니다...")
+        result_path = _reassemble_from_chunks_threaded(table_path, snapshot, destination_path, max_workers, show_progress)
         logger.info(f"✅ 복원 완료: {result_path}")
         return result_path
 
     # [자동 인메모리 로딩 모드]
     elif mode == 'auto':
-        logger.info(f"v{version_id} 모델을 메모리로 로딩합니다...")
+        logger.info(f"v{version_id} 모델을 메모리로 병렬 로딩합니다...")
         
-        # 스냅샷 정보를 보고 PyTorch/TensorFlow 구분
         is_pytorch = len(snapshot['files']) == 1 and snapshot['files'][0]['path'].endswith(('.pth', '.pt'))
         
         if is_pytorch:
             if not _PYTORCH_AVAILABLE:
                 raise ImportError("PyTorch 모델을 로드하려면 'torch' 라이브러리가 필요합니다.")
             
-            in_memory_file = _reassemble_from_chunks(table_path, snapshot)
+            in_memory_file = _reassemble_from_chunks_threaded(table_path, snapshot, None, max_workers, show_progress)
             model_obj = torch.load(in_memory_file)
             logger.info("✅ PyTorch 모델 로딩 완료.")
             return model_obj
-        else: # TensorFlow 또는 기타 디렉토리 기반
+        else: # TensorFlow
             if not _TENSORFLOW_AVAILABLE:
                 raise ImportError("TensorFlow 모델을 로드하려면 'tensorflow' 라이브러리가 필요합니다.")
 
-            temp_dir = _reassemble_from_chunks(table_path, snapshot)
+            temp_dir = _reassemble_from_chunks_threaded(table_path, snapshot, None, max_workers, show_progress)
             try:
                 model_obj = tf.saved_model.load(temp_dir)
                 logger.info("✅ TensorFlow 모델 로딩 완료.")
                 return model_obj
             finally:
-                # 모델 로드 후 임시 디렉토리 정리
                 shutil.rmtree(temp_dir)
-                logger.info(f"임시 디렉토리({temp_dir})를 정리했습니다.")
-    
     else:
         raise ValueError(f"지원하지 않는 mode입니다: '{mode}'. 'auto' 또는 'restore'를 사용하세요.")
