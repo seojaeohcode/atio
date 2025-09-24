@@ -1,4 +1,3 @@
-"""progress 적용 후 write 함수"""
 import os
 import tempfile
 import threading
@@ -243,7 +242,7 @@ def _execute_write_with_progress(writer, obj, path, **kwargs):
 import uuid
 import pyarrow as pa
 from .utils import read_json, write_json
-import hashlib
+import xxhash
 import io
 import pyarrow.ipc
 from tqdm import tqdm
@@ -262,8 +261,8 @@ def _get_column_hash(arrow_column: pa.Array, column_name: str) -> str:
     
     with pa.ipc.new_stream(mock_sink, batch.schema) as writer:
         writer.write_batch(batch)
-    
-    return hashlib.sha256(mock_sink.getvalue()).hexdigest()
+
+    return xxhash.xxh64(mock_sink.getvalue()).hexdigest()
 
 def write_snapshot(obj, table_path, mode='overwrite', format='arrow', show_progress=False, **kwargs):
     """
@@ -636,42 +635,33 @@ def rollback(table_path, version_id, logger=None):
     
 
 import fastcdc
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from .utils import get_process_pool
 
-def _process_file_task(args):
-    """(수정) 스레드에서 실행될 단일 파일 처리 작업. lock 객체를 인자로 받음"""
-    file_path, model_path_base, data_dir, tmp_dir, lock = args  # lock 추가
-    
-    relative_path = os.path.relpath(file_path, model_path_base).replace('\\', '/')
-    processed_file_info = {"path": relative_path, "chunks": []}
-    
-    cdc = fastcdc.fastcdc(file_path, avg_size=65536, fat=True)
-    for chunk in cdc:
-        chunk_content = chunk.data
-        chunk_hash = hashlib.sha256(chunk_content).hexdigest()
-        processed_file_info["chunks"].append(chunk_hash)
-        
-        chunk_save_path = os.path.join(data_dir, chunk_hash)
-        
-        # 새로운 청크인지 확인하고 임시 디렉토리에 쓰는 '위험 구간'
-        # 이 구간은 lock을 통해 한번에 하나의 스레드만 접근하도록 보호합니다.
-        with lock:
-            if not os.path.exists(chunk_save_path):
-                temp_chunk_path = os.path.join(tmp_dir, chunk_hash)
-                if not os.path.exists(temp_chunk_path):
-                    with open(temp_chunk_path, 'wb') as chunk_f:
-                        chunk_f.write(chunk_content)
-                        
-    return processed_file_info
-
-def write_model_snapshot(model_path: str, table_path: str, max_workers: int = None, show_progress: bool = False):
+def _process_chunk_from_file_task(args):
     """
-    PyTorch 또는 TensorFlow 모델의 스냅샷을 저장합니다.
-    모델 타입은 자동으로 감지됩니다.
+    '작업 지시서'를 받아 파일을 직접 읽고 처리하는 함수
+    """
+    file_path, offset, length, data_dir = args
+    
+    # 파일을 직접 열고, 해당 위치로 이동(seek)하여 필요한 만큼만 읽음
+    with open(file_path, 'rb') as f:
+        f.seek(offset)
+        chunk_content = f.read(length)
+    
+    chunk_hash = xxhash.xxh64(chunk_content).hexdigest()
+    
+    chunk_save_path = os.path.join(data_dir, chunk_hash)
+    if not os.path.exists(chunk_save_path):
+        return (chunk_hash, chunk_content)
+    
+    return (chunk_hash, None)
 
-    Args:
-        model_path (str): 저장할 모델의 경로 (.pth 파일 또는 SavedModel 디렉토리).
-        table_path (str): 스냅샷과 데이터 청크가 저장될 테이블 경로.
-        show_progress (bool): 진행률 표시 여부. Defaults to False.
+def write_model_snapshot(model_path: str, table_path: str, show_progress: bool = False):
+    """
+    - PyTorch 또는 TensorFlow 모델의 스냅샷을 저장합니다.
+    - 생산자-소비자 패턴으로 메모리 사용량을 최적화합니다.
+    - 다중 파일 모델(TensorFlow) 처리를 지원합니다.
     """
     logger = setup_logger()
 
@@ -689,82 +679,83 @@ def write_model_snapshot(model_path: str, table_path: str, max_workers: int = No
     
     logger.info(f"모델 스냅샷 v{new_version} 생성을 시작합니다...")
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # --- 2. 모델 타입 감지 및 처리할 파일 목록 생성 ---
-        is_pytorch = os.path.isfile(model_path) and model_path.endswith(('.pth', '.pt'))
-        is_tensorflow = os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, 'saved_model.pb'))
+    # --- 2. 모델 타입 감지 및 처리할 파일 목록 생성 ---
+    is_pytorch = os.path.isfile(model_path) and model_path.endswith(('.pth', '.pt'))
+    is_tensorflow = os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, 'saved_model.pb'))
 
-        files_to_process = []
-        if is_pytorch:
-            files_to_process.append(model_path)
-            model_path_base = os.path.dirname(model_path)
-        elif is_tensorflow:
-            for root, _, files in os.walk(model_path):
-                for filename in files:
-                    files_to_process.append(os.path.join(root, filename))
-            model_path_base = model_path
-        else:
-            raise ValueError(f"지원하지 않는 모델 형식입니다: {model_path}")
+    files_to_process = []
+    if is_pytorch:
+        files_to_process.append(model_path)
+        model_path_base = os.path.dirname(model_path)
+    elif is_tensorflow:
+        for root, _, files in os.walk(model_path):
+            for filename in files:
+                files_to_process.append(os.path.join(root, filename))
+        model_path_base = model_path
+    else:
+        raise ValueError(f"지원하지 않는 모델 형식입니다: {model_path}")
 
-        # --- 3. 병렬 청킹 및 임시 저장 ---
-        snapshot_files = []
-        if max_workers is None:
-            max_workers = min(32, (os.cpu_count() or 1) + 4) # I/O 바운드 작업에 적합한 기본값
+    # --- 3. 생산자-소비자 패턴으로 병렬 처리 ---
+    all_files_info = []
+    new_chunks_to_write = {}
+    executor = get_process_pool()
 
-        lock = threading.Lock()
-
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            args_list = [(fp, model_path_base, data_dir, tmpdir, lock) for fp in files_to_process]
-            
-            futures = [executor.submit(_process_file_task, args) for args in args_list]
-            
-            progress = tqdm(as_completed(futures), total=len(futures), desc="Processing model files", disable=not show_progress, unit="file")
-            
-            for future in progress:
-                try:
-                    result = future.result()
-                    if is_pytorch:
-                        result['path'] = os.path.basename(result['path'])
-                    snapshot_files.append(result)
-                except Exception as e:
-                    logger.error(f"파일 처리 중 오류 발생: {e}")
-                    executor.shutdown(wait=False, cancel_futures=True)
-                    # 오류 발생 시 다른 스레드도 중단하고 싶다면 executor.shutdown(wait=False) 등을 고려할 수 있습니다.
-                    raise
-
-        # --- 4. 최종 커밋: 임시 청크 파일들을 data 디렉토리로 이동 ---
-        temp_chunks = os.listdir(tmpdir)
-        for chunk_filename in tqdm(temp_chunks, desc="Committing chunks", disable=not show_progress or len(temp_chunks) < 100):
-            os.rename(os.path.join(tmpdir, chunk_filename), os.path.join(data_dir, chunk_filename))
-
-        # --- 5. 스냅샷 및 메타데이터 생성 ---
-        snapshot_id = int(time.time())
-        snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
-        snapshot_path = os.path.join(metadata_dir, snapshot_filename)
+    # 파일 목록을 순회 (TensorFlow의 경우 여러 파일, PyTorch는 1개)
+    for file_path in tqdm(files_to_process, desc="Total Progress", disable=not show_progress or len(files_to_process) == 1):
+        relative_path = os.path.relpath(file_path, model_path_base).replace('\\', '/')
+        file_info = {"path": relative_path, "chunks": []}
+    
+    with open(file_path, 'rb') as f:
+        # 생산자: fastcdc가 청크 '정보'를 하나씩 생성하는 제너레이터
+        cdc = fastcdc.fastcdc(f, avg_size=65536, fat=True)
         
-        new_snapshot = {
-            'snapshot_id': snapshot_id,
-            'timestamp': time.time(),
-            'files': sorted(snapshot_files, key=lambda x: x['path']) # 경로 순으로 정렬하여 일관성 유지
-        }
-        write_json(new_snapshot, snapshot_path)
+        # [핵심] 청크 정보를 만들면서 '동시에' 작업을 제출하는 future 제너레이터를 생성
+        def submit_tasks_generator():
+            for chunk in cdc:
+                job_ticket = (file_path, chunk.offset, chunk.length, data_dir)
+                yield executor.submit(_process_chunk_from_file_task, job_ticket)
+
+        # 총 청크 수를 알 수 없으므로 파일 크기를 기준으로 진행률 표시
+        file_size = os.path.getsize(file_path)
+        progress_desc = os.path.basename(file_path)
         
-        new_metadata = {
-            'version_id': new_version,
-            'snapshot_id': snapshot_id,
-            'snapshot_filename': os.path.join('metadata', snapshot_filename)
-        }
-        metadata_filename = f"v{new_version}.metadata.json"
-        write_json(new_metadata, os.path.join(metadata_dir, metadata_filename))
+        with tqdm(total=file_size, desc=f"Processing {progress_desc}", unit='B', unit_scale=True, disable=not show_progress, leave=False) as pbar:
+            # as_completed는 future가 완료되는 대로 결과를 반환
+            for future in as_completed(submit_tasks_generator()):
+                chunk_hash, chunk_content = future.result()
+                file_info["chunks"].append(chunk_hash)
+                if chunk_content is not None:
+                    new_chunks_to_write[chunk_hash] = chunk_content
+                
+                # 대략적인 청크 크기만큼 진행률 업데이트
+                pbar.update(65536)
 
-        new_pointer = {'version_id': new_version}
-        # 포인터는 모든 작업이 성공한 후 마지막에 원자적으로 교체합니다.
-        tmp_pointer_path = os.path.join(metadata_dir, f"_pointer_{uuid.uuid4()}.json")
-        write_json(new_pointer, tmp_pointer_path)
-        os.replace(tmp_pointer_path, pointer_path)
+    all_files_info.append(file_info)
 
+    logger.info(f"데이터 병렬 처리 완료")
+
+    # --- 4. 최종 커밋 및 메타데이터 생성 ---
+    for chunk_hash, chunk_content in tqdm(new_chunks_to_write.items(), desc="Committing new chunks", disable=not show_progress):
+        with open(os.path.join(data_dir, chunk_hash), 'wb') as f:
+            f.write(chunk_content)
+
+    snapshot_id = int(time.time())
+    snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
+    
+    new_snapshot = {'snapshot_id': snapshot_id, 'timestamp': time.time(), 'files': sorted(all_files_info, key=lambda x: x['path'])}
+    write_json(new_snapshot, os.path.join(metadata_dir, snapshot_filename))
+    
+    new_metadata = {'version_id': new_version, 'snapshot_id': snapshot_id, 'snapshot_filename': os.path.join('metadata', snapshot_filename)}
+    metadata_filename = f"v{new_version}.metadata.json"
+    write_json(new_metadata, os.path.join(metadata_dir, metadata_filename))
+
+    new_pointer = {'version_id': new_version}
+    tmp_pointer_path = os.path.join(metadata_dir, f"_pointer_{uuid.uuid4()}.json")
+    write_json(new_pointer, tmp_pointer_path)
+    os.replace(tmp_pointer_path, pointer_path)
+
+    end_time = time.perf_counter()
     logger.info(f"✅ 모델 스냅샷 v{new_version} 생성이 완료되었습니다.")
-
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 

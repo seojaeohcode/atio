@@ -115,3 +115,25 @@ def read_json(path: str):
 def write_json(data: dict, path: str):
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4)
+
+import os
+from concurrent.futures import ProcessPoolExecutor
+import atexit
+
+_MAX_WORKERS = os.cpu_count() or 4
+_PROCESS_POOL = ProcessPoolExecutor(max_workers=_MAX_WORKERS)
+print(f"--- ATIO Global Process Pool created (workers: {_MAX_WORKERS}) ---")
+
+def _shutdown_pool():
+    """프로그램 종료 시 풀을 안전하게 종료하는 함수"""
+    global _PROCESS_POOL
+    if _PROCESS_POOL:
+        print("--- Shutting down ATIO Global Process Pool ---")
+        _PROCESS_POOL.shutdown(wait=True)
+        _PROCESS_POOL = None
+
+atexit.register(_shutdown_pool)
+
+def get_process_pool():
+    """단순히 생성된 전역 풀을 반환하는 함수"""
+    return _PROCESS_POOL

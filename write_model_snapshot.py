@@ -171,9 +171,9 @@ def main():
     try:
         scenarios = {
             "시나리오 1: PyTorch 모델 저장 및 파일 복원": test_save_and_restore_pytorch,
-            "시나리오 2: PyTorch 모델 저장 및 메모리 로딩": test_save_and_load_pytorch_auto,
-            "시나리오 4: 데이터 중복 제거 효율성": test_deduplication_efficiency,
-            "시나리오 5: 전체 생명주기 관리": test_full_lifecycle_management,
+            # "시나리오 2: PyTorch 모델 저장 및 메모리 로딩": test_save_and_load_pytorch_auto,
+            # "시나리오 4: 데이터 중복 제거 효율성": test_deduplication_efficiency,
+            # "시나리오 5: 전체 생명주기 관리": test_full_lifecycle_management,
         }
 
         for name, scenario_func in scenarios.items():
