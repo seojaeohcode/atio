@@ -242,29 +242,11 @@ def _execute_write_with_progress(writer, obj, path, **kwargs):
 import uuid
 import pyarrow as pa
 from .utils import read_json, write_json
-import xxhash
 import io
-import pyarrow.ipc
+import pyarrow.parquet as pq
 from tqdm import tqdm
 
-def _get_column_hash(arrow_column: pa.Array, column_name: str) -> str:
-    """Arrow 컬럼(ChunkedArray)의 내용을 기반으로 sha256 해시를 계산합니다."""
-    mock_sink = io.BytesIO()
-
-    # (핵심 수정) ChunkedArray를 하나의 Array로 합칩니다.
-    if isinstance(arrow_column, pa.ChunkedArray):
-        array_to_write = arrow_column.combine_chunks()
-    else:
-        array_to_write = arrow_column
-
-    batch = pa.RecordBatch.from_arrays([array_to_write], names=[column_name])
-    
-    with pa.ipc.new_stream(mock_sink, batch.schema) as writer:
-        writer.write_batch(batch)
-
-    return xxhash.xxh64(mock_sink.getvalue()).hexdigest()
-
-def write_snapshot(obj, table_path, mode='overwrite', format='arrow', show_progress=False, **kwargs):
+def write_snapshot(obj, table_path, mode='overwrite', show_progress=False, **kwargs):
     """
     데이터 객체를 열 단위 청크로 분해하여 버전 관리(스냅샷) 방식으로 저장합니다.
 
@@ -274,10 +256,11 @@ def write_snapshot(obj, table_path, mode='overwrite', format='arrow', show_progr
         mode (str): 'overwrite' (기본값) 또는 'append'.
                     - 'overwrite': 테이블을 현재 데이터로 완전히 대체합니다.
                     - 'append': 기존 버전의 데이터에 현재 데이터를 추가(열 기준)합니다.
-        format (str): 내부 청크 파일 포맷. 현재는 'arrow'만 지원.
         show_progress (bool): 진행률 표시 여부. Defaults to False.
     """
     logger = setup_logger(debug_level=False)
+
+    format='parquet'
 
     # 1. 경로 설정 및 폴더 생성
     data_dir = os.path.join(table_path, 'data')
@@ -332,13 +315,9 @@ def write_snapshot(obj, table_path, mode='overwrite', format='arrow', show_progr
             if not os.path.exists(final_data_path):
                 tmp_data_path = os.path.join(tmpdir, chunk_filename)
                 
-                array_to_write = column_array.combine_chunks()
-                batch_to_write = pa.RecordBatch.from_arrays([array_to_write], names=[col_name])
-                
-                # (핵심 수정) Python의 open()을 사용해 파일 핸들을 직접 관리합니다.
-                with open(tmp_data_path, 'wb') as f:
-                    with pa.ipc.new_file(f, batch_to_write.schema) as writer:
-                        writer.write_batch(batch_to_write)
+                table_to_write = pa.Table.from_arrays([column_array], names=[col_name])
+
+                pq.write_table(table_to_write, tmp_data_path)
                 # 바깥쪽 with open() 구문이 끝나면서 파일이 확실하게 닫힙니다.
                     
                 temp_data_files_to_commit[tmp_data_path] = final_data_path
@@ -399,7 +378,6 @@ def write_snapshot(obj, table_path, mode='overwrite', format='arrow', show_progr
 
 
 import pyarrow as pa
-import pyarrow.ipc
 import pandas as pd
 import polars as pl
 
@@ -463,11 +441,10 @@ def read_table(table_path, version=None, output_as='pandas'):
         chunk_path = os.path.join(data_dir, f"{col_hash}.{col_format}")
         
         # Arrow IPC(Feather V2) 포맷으로 저장된 단일 컬럼 파일 읽기
-        with pa.ipc.open_file(chunk_path) as reader:
-            # 파일에는 컬럼이 하나만 들어있음
-            arrow_table_chunk = reader.read_all()
-            arrow_arrays.append(arrow_table_chunk.column(0))
-            column_names.append(col_name)
+        arrow_table_chunk = pq.read_table(chunk_path)
+        # 파일에는 컬럼이 하나만 들어있으므로 로직은 동일
+        arrow_arrays.append(arrow_table_chunk.column(0))
+        column_names.append(col_name)
 
     # --- 3. 읽어온 컬럼들을 하나의 Arrow Table로 조합 ---
     final_arrow_table = pa.Table.from_arrays(arrow_arrays, names=column_names)
@@ -633,10 +610,20 @@ def rollback(table_path, version_id, logger=None):
         logger(f"롤백 실패: 포인터 파일을 쓰는 중 오류 발생 - {e}", level="error")
         return False
     
+def export_to_datalake(table_path, version, output_path, **kwargs):
+    """지정된 버전의 atio 스냅샷을 단일 Parquet 파일로 내보냅니다."""
+
+    # 1. atio의 read_table을 사용해 완전한 테이블을 메모리로 불러옵니다.
+    full_table = read_table(table_path, version=version, output_as='arrow')
+
+    # 2. 이 테이블을 '하나의' 표준 Parquet 파일로 저장합니다.
+    import pyarrow.parquet as pq
+    pq.write_table(full_table, output_path, **kwargs)
 
 import fastcdc
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from .utils import get_process_pool
+import xxhash
 
 def _process_chunk_from_file_task(args):
     """
@@ -656,6 +643,25 @@ def _process_chunk_from_file_task(args):
         return (chunk_hash, chunk_content)
     
     return (chunk_hash, None)
+
+
+def _get_column_hash(arrow_column: pa.Array, column_name: str) -> str:
+    """Arrow 컬럼(ChunkedArray)의 내용을 기반으로 sha256 해시를 계산합니다."""
+    mock_sink = io.BytesIO()
+
+    # (핵심 수정) ChunkedArray를 하나의 Array로 합칩니다.
+    if isinstance(arrow_column, pa.ChunkedArray):
+        array_to_write = arrow_column.combine_chunks()
+    else:
+        array_to_write = arrow_column
+
+    batch = pa.RecordBatch.from_arrays([array_to_write], names=[column_name])
+    
+    with pa.ipc.new_stream(mock_sink, batch.schema) as writer:
+        writer.write_batch(batch)
+
+    return xxhash.xxh64(mock_sink.getvalue()).hexdigest()
+
 
 def write_model_snapshot(model_path: str, table_path: str, show_progress: bool = False):
     """
