@@ -317,7 +317,7 @@ def write_snapshot(obj, table_path, mode='overwrite', show_progress=False, **kwa
                 
                 table_to_write = pa.Table.from_arrays([column_array], names=[col_name])
 
-                pq.write_table(table_to_write, tmp_data_path)
+                pq.write_table(table_to_write, tmp_data_path, compression='zstd')
                 # 바깥쪽 with open() 구문이 끝나면서 파일이 확실하게 닫힙니다.
                     
                 temp_data_files_to_commit[tmp_data_path] = final_data_path
