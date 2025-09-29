@@ -250,8 +250,8 @@ print("✅ NumPy 배열 저장 완료!")</pre>
                 <h4>실행 결과:</h4>
 <pre>NumPy 배열 크기: (1000, 10)
 데이터 타입: float64
-평균값: 0.0123
-표준편차: 1.0045
+평균값: -0.0021
+표준편차: 0.9937
 ✅ NumPy 배열 저장 완료!</pre>
             </div>
         </div>
@@ -307,10 +307,10 @@ print("\n=== 최신 데이터 읽기 ===")
 latest_data = atio.read_table("customers")
 print(latest_data)
 
-# 4. 롤백 테스트
-print("\n=== v1으로 롤백 ===")
-atio.rollback("customers", "v1")
-rolled_back_data = atio.read_table("customers")
+    # 4. 롤백 테스트
+    print("\n=== 버전 1으로 롤백 ===")
+    atio.rollback("customers", 1)
+    rolled_back_data = atio.read_table("customers")
 print(rolled_back_data)
 
 # 5. 롤백 검증
@@ -553,11 +553,11 @@ print("✅ 대용량 데이터 저장 완료!")</pre>
             <div class="output">
                 <h4>실행 결과:</h4>
 <pre>대용량 데이터 생성 중...
-생성된 데이터: 100,000행
-데이터 저장: 100%|██████████| 100000/100000 [00:02<00:00, 45,234.56it/s]
+생성된 데이터: 10,000행
+✔︎ Finished Writing large_dataset.parquet. (224.4 KB in 0s)
 
-처리 시간: 2.34초
-처리 속도: 42,735행/초
+처리 시간: 0.11초
+처리 속도: 94,941행/초
 ✅ 대용량 데이터 저장 완료!</pre>
             </div>
         </div>
@@ -607,7 +607,7 @@ def safe_data_processing():
         print("🔄 자동 롤백 실행...")
         
         # 자동 롤백
-        atio.rollback("safe_table", "v1")
+        atio.rollback("safe_table", 1)
         recovered_data = atio.read_table("safe_table")
         
         print("✅ 롤백 완료!")

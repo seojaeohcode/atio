@@ -1,0 +1,31 @@
+{
+    "snapshot_id": 1759112391,
+    "timestamp": 1759112391.877027,
+    "columns": [
+        {
+            "name": "customer_id",
+            "hash": "1291831009c060e3",
+            "format": "arrow"
+        },
+        {
+            "name": "name",
+            "hash": "034e3c3731312e03",
+            "format": "arrow"
+        },
+        {
+            "name": "age",
+            "hash": "ba2b657881fff385",
+            "format": "arrow"
+        },
+        {
+            "name": "city",
+            "hash": "78532ec5fa631e92",
+            "format": "arrow"
+        },
+        {
+            "name": "purchase_amount",
+            "hash": "c4c2e40b0b36a7db",
+            "format": "arrow"
+        }
+    ]
+}

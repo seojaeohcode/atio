@@ -375,8 +375,8 @@ def test_rollback_safety():
     print("✅ 업데이트된 스냅샷 저장 완료")
     
     # 롤백 테스트
-    atio.rollback("test_table", "v1")
-    print("✅ v1으로 롤백 완료")
+    atio.rollback("test_table", 1)
+    print("✅ 버전 1으로 롤백 완료")
     
     # 롤백 검증
     rolled_back_data = atio.read_table("test_table")
@@ -414,29 +414,29 @@ def test_rollback_safety():
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="excellent">
+                    <tr class="good">
                         <td>1,000행</td>
-                        <td>0.045초</td>
-                        <td>22,222행/초</td>
+                        <td>1.253초</td>
+                        <td>798행/초</td>
                         <td>2.3MB</td>
-                        <td>⭐⭐⭐⭐⭐</td>
-                        <td style="color: #155724; font-weight: bold;">매우 권장</td>
+                        <td>⭐⭐⭐⭐</td>
+                        <td style="color: #0c5460; font-weight: bold;">권장</td>
                     </tr>
                     <tr class="excellent">
                         <td>10,000행</td>
-                        <td>0.156초</td>
-                        <td>64,103행/초</td>
+                        <td>0.005초</td>
+                        <td>1,914,211행/초</td>
                         <td>8.7MB</td>
                         <td>⭐⭐⭐⭐⭐</td>
                         <td style="color: #155724; font-weight: bold;">매우 권장</td>
                     </tr>
-                    <tr class="good">
+                    <tr class="excellent">
                         <td>100,000행</td>
-                        <td>1.234초</td>
-                        <td>81,037행/초</td>
+                        <td>0.024초</td>
+                        <td>4,263,112행/초</td>
                         <td>45.2MB</td>
-                        <td>⭐⭐⭐⭐</td>
-                        <td style="color: #0c5460; font-weight: bold;">권장</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td style="color: #155724; font-weight: bold;">매우 권장</td>
                     </tr>
                     <tr class="average">
                         <td>1,000,000행</td>
@@ -467,7 +467,7 @@ def test_rollback_safety():
                 <tbody>
                     <tr class="excellent">
                         <td>1개</td>
-                        <td>2.456초</td>
+                        <td>0.037초</td>
                         <td>1.00x</td>
                         <td>100%</td>
                         <td>⭐⭐⭐⭐⭐</td>
@@ -475,39 +475,39 @@ def test_rollback_safety():
                     </tr>
                     <tr class="excellent">
                         <td>2개</td>
-                        <td>1.234초</td>
-                        <td>1.99x</td>
-                        <td>99.5%</td>
+                        <td>0.005초</td>
+                        <td>7.54x</td>
+                        <td>377%</td>
                         <td>⭐⭐⭐⭐⭐</td>
                         <td style="color: #155724; font-weight: bold;">매우 권장</td>
                     </tr>
                     <tr class="excellent">
                         <td>4개</td>
-                        <td>0.678초</td>
-                        <td>3.62x</td>
-                        <td>90.5%</td>
+                        <td>0.008초</td>
+                        <td>4.78x</td>
+                        <td>119.5%</td>
                         <td>⭐⭐⭐⭐⭐</td>
                         <td style="color: #155724; font-weight: bold;">매우 권장</td>
                     </tr>
                     <tr class="good">
                         <td>8개</td>
-                        <td>0.456초</td>
-                        <td>5.39x</td>
-                        <td>67.4%</td>
+                        <td>0.016초</td>
+                        <td>2.23x</td>
+                        <td>27.9%</td>
                         <td>⭐⭐⭐⭐</td>
                         <td style="color: #0c5460; font-weight: bold;">권장</td>
                     </tr>
                     <tr class="average">
                         <td>10개</td>
-                        <td>0.389초</td>
-                        <td>6.31x</td>
-                        <td>63.1%</td>
-                        <td>⭐⭐⭐</td>
-                        <td style="color: #856404; font-weight: bold;">보통</td>
+                        <td>0.050초</td>
+                        <td>0.74x</td>
+                        <td>7.4%</td>
+                        <td>⭐⭐</td>
+                        <td style="color: #dc3545; font-weight: bold;">비권장</td>
                     </tr>
                 </tbody>
             </table>
-            <p><strong>📊 요약:</strong> 4개 스레드까지는 높은 효율성을 보이며, 8개 이상에서는 효율성이 감소하지만 여전히 성능 향상이 있습니다.</p>
+            <p><strong>📊 요약:</strong> 2개 스레드에서 최고 성능(7.54x)을 보이며, 4개 스레드까지는 높은 효율성을 유지합니다. 8개 이상에서는 오히려 성능이 저하됩니다.</p>
         </div>
         
         <div class="result">
@@ -528,7 +528,7 @@ def test_rollback_safety():
                         <td>원자적 쓰기</td>
                         <td>✅ 성공</td>
                         <td>100%</td>
-                        <td>즉시</td>
+                        <td>0.072초</td>
                         <td>⭐⭐⭐⭐⭐</td>
                         <td style="color: #155724; font-weight: bold;">매우 권장</td>
                     </tr>
@@ -536,7 +536,7 @@ def test_rollback_safety():
                         <td>롤백 기능</td>
                         <td>✅ 성공</td>
                         <td>100%</td>
-                        <td>0.1초</td>
+                        <td>0.001초</td>
                         <td>⭐⭐⭐⭐⭐</td>
                         <td style="color: #155724; font-weight: bold;">매우 권장</td>
                     </tr>

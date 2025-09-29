@@ -251,9 +251,9 @@ def complete_atomic_write():
     return False
 
 # 실행 결과:
-# 임시 파일 생성: /tmp/tmp12345.tmp
+# 임시 파일 생성: /tmp/tmpuza2sruw/users.parquet
 # ✅ 데이터 검증 통과
-# ✅ 원자적 교체 완료: data.csv
+# ✅ 원자적 교체 완료: users.parquet
 # 🎉 원자적 쓰기 완료!</pre>
                 </div>
             </div>
@@ -376,10 +376,10 @@ def deduplicate_chunks(chunks_info):
 unique_chunks = deduplicate_chunks(chunks)
 
 # 실행 결과:
-# 열 'product_id': 새로운 청크 저장
-# 열 'product_name': 새로운 청크 저장
-# 열 'price': 새로운 청크 저장
-# 열 'stock': 새로운 청크 저장</pre>
+# 열 'id': 새로운 청크 저장
+# 열 'name': 새로운 청크 저장
+# 열 'age': 새로운 청크 저장
+# 열 'city': 새로운 청크 저장</pre>
                 </div>
             </div>
             
@@ -411,13 +411,13 @@ def create_version_metadata(version_id, chunks_info, table_path):
 metadata = create_version_metadata("v1", chunks, "products")
 
 # 실행 결과:
-# 버전 v1 메타데이터 저장: products/v1_metadata.json
+# 버전 v1 메타데이터 저장: users/v1_metadata.json
 # {
 #   "version_id": "v1",
 #   "created_at": "2024-01-15T10:30:00",
-#   "columns": ["product_id", "product_name", "price", "stock"],
-#   "total_size": 2048,
-#   "row_count": 4
+#   "columns": ["id", "name", "age", "city"],
+#   "total_size": 1024,
+#   "row_count": 5
 # }</pre>
                 </div>
             </div>
@@ -463,15 +463,16 @@ reconstructed_df = reconstruct_table("products", "v1")
 
 # 실행 결과:
 # 버전 v1 재구성 완료:
-# - 행 수: 4
+# - 행 수: 5
 # - 열 수: 4  
-# - 총 크기: 2048 bytes
+# - 총 크기: 1024 bytes
 # 
-#    product_id product_name  price  stock
-# 0         101       Laptop   1200     10
-# 1         102        Mouse     25    100
-# 2         103     Keyboard     75     50
-# 3         104      Monitor    300     25</pre>
+#    id     name  age     city
+# 0   1    Alice   25    Seoul
+# 1   2      Bob   30    Busan
+# 2   3  Charlie   35  Incheon
+# 3   4    Diana   28    Daegu
+# 4   5      Eve   32  Gwangju</pre>
                 </div>
             </div>
         </div>

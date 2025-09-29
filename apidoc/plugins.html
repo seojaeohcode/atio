@@ -159,15 +159,17 @@ import atio
 
 # Pandas DataFrame 생성
 df = pd.DataFrame({
-    'name': ['Alice', 'Bob', 'Charlie'],
-    'age': [25, 30, 35],
-    'city': ['Seoul', 'Busan', 'Incheon']
+    'product_id': [101, 102, 103, 104, 105],
+    'product_name': ['Laptop', 'Mouse', 'Keyboard', 'Monitor', 'Speaker'],
+    'price': [1200, 25, 75, 300, 150],
+    'stock': [10, 100, 50, 25, 30],
+    'category': ['Electronics', 'Accessories', 'Accessories', 'Electronics', 'Audio']
 })
 
 # 다양한 포맷으로 저장
-atio.write(df, 'data.csv', format='csv')
-atio.write(df, 'data.parquet', format='parquet')
-atio.write(df, 'data.xlsx', format='excel')</pre>
+atio.write(df, 'products.parquet', format='parquet')  # 0.0478초
+atio.write(df, 'products.csv', format='csv')          # 0.0025초
+atio.write(df, 'products.json', format='json')       # 0.0010초</pre>
                 </div>
             </div>
             
@@ -180,14 +182,16 @@ import atio
 
 # Polars DataFrame 생성
 df = pl.DataFrame({
-    'product_id': [101, 102, 103],
-    'product_name': ['Laptop', 'Mouse', 'Keyboard'],
-    'price': [1200, 25, 75]
+    'customer_id': [1, 2, 3, 4, 5],
+    'customer_name': ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'],
+    'age': [25, 30, 35, 28, 32],
+    'city': ['Seoul', 'Busan', 'Incheon', 'Daegu', 'Gwangju'],
+    'purchase_amount': [100, 200, 150, 300, 250]
 })
 
 # 고성능 저장
-atio.write(df, 'products.parquet', format='parquet')
-atio.write(df, 'products.csv', format='csv')</pre>
+atio.write(df, 'customers.parquet', format='parquet')  # 0.0257초
+atio.write(df, 'customers.csv', format='csv')          # 0.0031초</pre>
                 </div>
             </div>
             
@@ -199,11 +203,14 @@ atio.write(df, 'products.csv', format='csv')</pre>
 import atio
 
 # NumPy 배열 생성
-arr = np.random.randn(1000, 100)
+arr = np.random.randn(1000, 10)
+print(f'배열 크기: {arr.shape}')
+print(f'평균값: {arr.mean():.4f}')
+print(f'표준편차: {arr.std():.4f}')
 
 # 다양한 포맷으로 저장
-atio.write(arr, 'data.npy', format='npy')
-atio.write(arr, 'data.csv', format='csv')</pre>
+atio.write(arr, 'data.npy', format='npy')   # 0.0016초
+atio.write(arr, 'data.csv', format='csv')   # 0.0094초</pre>
                 </div>
             </div>
         </div>

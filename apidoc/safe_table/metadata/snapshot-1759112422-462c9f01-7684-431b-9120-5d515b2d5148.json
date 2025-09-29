@@ -1,0 +1,16 @@
+{
+    "snapshot_id": 1759112422,
+    "timestamp": 1759112422.56888,
+    "columns": [
+        {
+            "name": "id",
+            "hash": "f8582bdadf226618",
+            "format": "arrow"
+        },
+        {
+            "name": "value",
+            "hash": "aa2ee906770c9b1f",
+            "format": "arrow"
+        }
+    ]
+}
