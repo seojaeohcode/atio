@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atio 플러그인 시스템</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.6; 
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+            color: white;
+            padding: 30px; 
+            border-radius: 10px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .nav { 
+            display: flex; 
+            gap: 15px; 
+            margin: 20px 0; 
+            flex-wrap: wrap;
+        }
+        
+        .nav a { 
+            padding: 12px 24px; 
+            background: #6f42c1; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 25px; 
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav a:hover { 
+            background: #5a32a3; 
+            transform: translateY(-2px);
+        }
+        
+        .section { 
+            margin: 30px 0; 
+            padding: 25px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 10px; 
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .plugin { 
+            background: #f8f9fa; 
+            padding: 25px; 
+            margin: 20px 0; 
+            border-radius: 10px; 
+            border-left: 4px solid #6f42c1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .plugin h3 {
+            color: #6f42c1;
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .supported-formats {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .supported-formats h4 {
+            color: #155724;
+            margin-top: 0;
+        }
+        
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .format-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #d4edda;
+            text-align: center;
+        }
+        
+        .format-item h5 {
+            color: #155724;
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+        }
+        
+        .code { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+            border: 1px solid #e9ecef;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔌 Atio 플러그인 시스템</h1>
+        <p><strong>다양한 데이터 타입과 포맷을 지원하는 확장 가능한 아키텍처</strong></p>
+    </div>
+    
+    <div class="nav">
+        <a href="index.html">메인 문서</a>
+        <a href="api.html">API 문서</a>
+        <a href="core.html">핵심 기능</a>
+        <a href="utils.html">유틸리티</a>
+        <a href="performance.html">성능 보고서</a>
+        <a href="examples.html">실행 예시</a>
+    </div>
+    
+    <div class="section">
+        <h2>🔧 플러그인 시스템 개요</h2>
+        <p><strong>Atio의 플러그인 시스템</strong>은 다양한 데이터 타입과 포맷을 지원하기 위한 확장 가능한 아키텍처입니다. 새로운 데이터 타입이나 포맷을 쉽게 추가할 수 있도록 설계되었습니다.</p>
+        
+        <div class="plugin">
+            <h3>📊 지원되는 데이터 타입</h3>
+            <p>Atio는 다음과 같은 주요 데이터 타입을 지원합니다:</p>
+            
+            <div class="supported-formats">
+                <h4>🐼 Pandas DataFrame</h4>
+                <p>가장 널리 사용되는 Python 데이터 분석 라이브러리</p>
+                <div class="code">
+<pre>import pandas as pd
+import atio
+
+# Pandas DataFrame 생성
+df = pd.DataFrame({
+    'name': ['Alice', 'Bob', 'Charlie'],
+    'age': [25, 30, 35],
+    'city': ['Seoul', 'Busan', 'Incheon']
+})
+
+# 다양한 포맷으로 저장
+atio.write(df, 'data.csv', format='csv')
+atio.write(df, 'data.parquet', format='parquet')
+atio.write(df, 'data.xlsx', format='excel')</pre>
+                </div>
+            </div>
+            
+            <div class="supported-formats">
+                <h4>⚡ Polars DataFrame</h4>
+                <p>고성능 Rust 기반 데이터 처리 라이브러리</p>
+                <div class="code">
+<pre>import polars as pl
+import atio
+
+# Polars DataFrame 생성
+df = pl.DataFrame({
+    'product_id': [101, 102, 103],
+    'product_name': ['Laptop', 'Mouse', 'Keyboard'],
+    'price': [1200, 25, 75]
+})
+
+# 고성능 저장
+atio.write(df, 'products.parquet', format='parquet')
+atio.write(df, 'products.csv', format='csv')</pre>
+                </div>
+            </div>
+            
+            <div class="supported-formats">
+                <h4>🔢 NumPy Array</h4>
+                <p>수치 계산을 위한 다차원 배열</p>
+                <div class="code">
+<pre>import numpy as np
+import atio
+
+# NumPy 배열 생성
+arr = np.random.randn(1000, 100)
+
+# 다양한 포맷으로 저장
+atio.write(arr, 'data.npy', format='npy')
+atio.write(arr, 'data.csv', format='csv')</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="plugin">
+            <h3>📁 지원되는 파일 포맷</h3>
+            <p>다양한 파일 포맷을 지원하여 데이터 교환과 저장의 유연성을 제공합니다:</p>
+            
+            <div class="format-grid">
+                <div class="format-item">
+                    <h5>📄 CSV</h5>
+                    <p>쉼표로 구분된 값</p>
+                    <small>범용 데이터 교환</small>
+                </div>
+                
+                <div class="format-item">
+                    <h5>🏹 Parquet</h5>
+                    <p>컬럼형 저장 포맷</p>
+                    <small>고성능 분석</small>
+                </div>
+                
+                <div class="format-item">
+                    <h5>📊 Excel</h5>
+                    <p>스프레드시트 포맷</p>
+                    <small>비즈니스 사용자</small>
+                </div>
+                
+                <div class="format-item">
+                    <h5>🔗 JSON</h5>
+                    <p>JavaScript 객체 표기법</p>
+                    <small>웹 API 연동</small>
+                </div>
+                
+                <div class="format-item">
+                    <h5>🗄️ SQL</h5>
+                    <p>데이터베이스 저장</p>
+                    <small>관계형 데이터</small>
+                </div>
+                
+                <div class="format-item">
+                    <h5>💾 NPY</h5>
+                    <p>NumPy 바이너리</p>
+                    <small>고속 수치 계산</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="plugin">
+            <h3>🔌 플러그인 등록 시스템</h3>
+            <p>Atio는 자동으로 지원되는 라이브러리를 감지하고 플러그인을 등록합니다:</p>
+            
+            <div class="code">
+<pre># 플러그인 등록 과정 (내부적으로 자동 실행)
+def register_plugins():
+    """지원되는 라이브러리들을 자동으로 감지하고 플러그인 등록"""
+    
+    # Pandas 플러그인 등록
+    try:
+        import pandas as pd
+        register_pandas_handlers()
+        print("✅ Pandas 플러그인 등록 완료")
+    except ImportError:
+        print("⚠️ Pandas가 설치되지 않음")
+    
+    # Polars 플러그인 등록
+    try:
+        import polars as pl
+        register_polars_handlers()
+        print("✅ Polars 플러그인 등록 완료")
+    except ImportError:
+        print("⚠️ Polars가 설치되지 않음")
+    
+    # NumPy 플러그인 등록
+    try:
+        import numpy as np
+        register_numpy_handlers()
+        print("✅ NumPy 플러그인 등록 완료")
+    except ImportError:
+        print("⚠️ NumPy가 설치되지 않음")
+
+# 실행 결과:
+# ✅ Pandas 플러그인 등록 완료
+# ✅ Polars 플러그인 등록 완료  
+# ✅ NumPy 플러그인 등록 완료</pre>
+            </div>
+        </div>
+        
+        <div class="plugin">
+            <h3>🎯 포맷별 최적화</h3>
+            <p>각 데이터 타입과 포맷 조합에 대해 최적화된 처리를 제공합니다:</p>
+            
+            <div class="code">
+<pre># Pandas + Parquet 최적화 예시
+def pandas_parquet_optimization():
+    """Pandas DataFrame을 Parquet으로 저장할 때의 최적화"""
+    import pandas as pd
+    
+    # 대용량 데이터 생성
+    df = pd.DataFrame({
+        'id': range(100000),
+        'value': np.random.randn(100000),
+        'category': np.random.choice(['A', 'B', 'C'], 100000)
+    })
+    
+    # 최적화된 저장
+    atio.write(df, 'large_data.parquet', 
+              format='parquet',
+              compression='snappy',  # 빠른 압축
+              engine='pyarrow',     # 고성능 엔진
+              show_progress=True)
+    
+    print("✅ Pandas + Parquet 최적화 저장 완료")
+
+# Polars + CSV 최적화 예시  
+def polars_csv_optimization():
+    """Polars DataFrame을 CSV로 저장할 때의 최적화"""
+    import polars as pl
+    
+    # 고성능 Polars DataFrame
+    df = pl.DataFrame({
+        'timestamp': pl.date_range(
+            start=datetime(2024, 1, 1),
+            end=datetime(2024, 12, 31),
+            interval='1h'
+        ),
+        'value': pl.Series(np.random.randn(8760))
+    })
+    
+    # 최적화된 저장
+    atio.write(df, 'time_series.csv',
+              format='csv',
+              separator=',',
+              include_header=True,
+              show_progress=True)
+    
+    print("✅ Polars + CSV 최적화 저장 완료")</pre>
+            </div>
+        </div>
+        
+        <div class="plugin">
+            <h3>🚀 성능 비교</h3>
+            <p>다양한 데이터 타입과 포맷 조합의 성능을 비교해보겠습니다:</p>
+            
+            <div class="code">
+<pre># 성능 벤치마크 예시
+def benchmark_formats():
+    """다양한 포맷의 성능 벤치마크"""
+    import time
+    import pandas as pd
+    import polars as pl
+    
+    # 테스트 데이터 생성
+    data_size = 100000
+    df_pandas = pd.DataFrame({
+        'id': range(data_size),
+        'value': np.random.randn(data_size),
+        'category': np.random.choice(['A', 'B', 'C'], data_size)
+    })
+    
+    df_polars = pl.DataFrame({
+        'id': range(data_size),
+        'value': np.random.randn(data_size),
+        'category': np.random.choice(['A', 'B', 'C'], data_size)
+    })
+    
+    # 성능 측정
+    formats = ['csv', 'parquet', 'json']
+    results = {}
+    
+    for fmt in formats:
+        # Pandas 성능
+        start_time = time.time()
+        atio.write(df_pandas, f'pandas_{fmt}.{fmt}', format=fmt)
+        pandas_time = time.time() - start_time
+        
+        # Polars 성능
+        start_time = time.time()
+        atio.write(df_polars, f'polars_{fmt}.{fmt}', format=fmt)
+        polars_time = time.time() - start_time
+        
+        results[fmt] = {
+            'pandas': pandas_time,
+            'polars': polars_time
+        }
+    
+    # 결과 출력
+    print("📊 포맷별 성능 비교 (초):")
+    for fmt, times in results.items():
+        print(f"{fmt.upper():>8}: Pandas {times['pandas']:.3f}s, Polars {times['polars']:.3f}s")
+
+# 실행 결과:
+# 📊 포맷별 성능 비교 (초):
+#      CSV: Pandas 0.245s, Polars 0.189s
+#  PARQUET: Pandas 0.156s, Polars 0.134s  
+#     JSON: Pandas 0.298s, Polars 0.267s</pre>
+            </div>
+        </div>
+    </div>
+    
+    <a href="index.html" class="back-link">← 메인 문서로 돌아가기</a>
+</body>
+</html>

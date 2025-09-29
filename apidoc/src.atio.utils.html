@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.atio.utils</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.atio.html" class="white">atio</a>.utils</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/jujangchoi/atio/atio/src/atio/utils.py">/Users/jujangchoi/atio/atio/src/atio/utils.py</a></td></tr></table>
+    <p></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="atexit.html">atexit</a><br>
+<a href="json.html">json</a><br>
+</td><td class="multicolumn"><a href="logging.html">logging</a><br>
+<a href="os.html">os</a><br>
+</td><td class="multicolumn"><a href="threading.html">threading</a><br>
+<a href="time.html">time</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor index-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Classes</strong></td></tr>
+    
+<tr><td class="decor index-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl>
+<dt class="heading-text"><a href="builtins.html#object">builtins.object</a>
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="src.atio.utils.html#ProgressBar">ProgressBar</a>
+</dt></dl>
+</dd>
+</dl>
+ <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="ProgressBar">class <strong>ProgressBar</strong></a>(<a href="builtins.html#object">builtins.object</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#ProgressBar">ProgressBar</a>(filepath:&nbsp;str,&nbsp;stop_event:&nbsp;threading.Event,&nbsp;description:&nbsp;str&nbsp;=&nbsp;'Writing')<br>
+&nbsp;<br>
+파일&nbsp;쓰기&nbsp;진행&nbsp;상황을&nbsp;콘솔에&nbsp;표시하는&nbsp;클래스.<br>
+스피너,&nbsp;처리된&nbsp;용량,&nbsp;처리&nbsp;속도,&nbsp;경과&nbsp;시간을&nbsp;표시합니다.<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn">Methods defined here:<br>
+<dl><dt><a name="ProgressBar-__init__"><strong>__init__</strong></a>(self, filepath: str, stop_event: threading.Event, description: str = 'Writing')</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="ProgressBar-run"><strong>run</strong></a>(self)</dt><dd><span class="code">진행도&nbsp;막대를&nbsp;실행하는&nbsp;메인&nbsp;루프.<br>
+이&nbsp;함수가&nbsp;모니터링&nbsp;스레드에서&nbsp;실행됩니다.</span></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-check_file_exists"><strong>check_file_exists</strong></a>(path)</dt></dl>
+ <dl><dt><a name="-get_process_pool"><strong>get_process_pool</strong></a>()</dt><dd><span class="code">단순히&nbsp;생성된&nbsp;전역&nbsp;풀을&nbsp;반환하는&nbsp;함수</span></dd></dl>
+ <dl><dt><a name="-read_json"><strong>read_json</strong></a>(path: str)</dt></dl>
+ <dl><dt><a name="-setup_logger"><strong>setup_logger</strong></a>(name='atio', debug_level=False)</dt></dl>
+ <dl><dt><a name="-write_json"><strong>write_json</strong></a>(data: dict, path: str)</dt></dl>
+</td></tr></table>
+</body></html>

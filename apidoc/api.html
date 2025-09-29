@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atio API 문서</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.6; 
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px; 
+            border-radius: 10px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .nav { 
+            display: flex; 
+            gap: 15px; 
+            margin: 20px 0; 
+            flex-wrap: wrap;
+        }
+        
+        .nav a { 
+            padding: 12px 24px; 
+            background: #28a745; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 25px; 
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav a:hover { 
+            background: #218838; 
+            transform: translateY(-2px);
+        }
+        
+        .section { 
+            margin: 30px 0; 
+            padding: 25px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 10px; 
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .function { 
+            background: #f8f9fa; 
+            padding: 25px; 
+            margin: 20px 0; 
+            border-radius: 10px; 
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .function h3 {
+            color: #007bff;
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .function h4 {
+            color: #495057;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .code { 
+            background: #2d3748; 
+            color: #e2e8f0;
+            padding: 25px; 
+            border-radius: 10px; 
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 1px solid #4a5568;
+            font-size: 0.95em;
+            line-height: 1.7;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .code::before {
+            content: "💻";
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.2em;
+        }
+        
+        .code pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        
+        .param-list {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        .param-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .param-list li {
+            margin: 8px 0;
+        }
+        
+        .param-list code {
+            background: #d4edda;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 Atio API 문서</h1>
+        <p><strong>모든 함수와 클래스의 상세한 사용법</strong></p>
+    </div>
+    
+    <div class="nav">
+        <a href="index.html">메인 문서</a>
+        <a href="core.html">핵심 기능</a>
+        <a href="plugins.html">플러그인 시스템</a>
+        <a href="utils.html">유틸리티</a>
+        <a href="performance.html">성능 보고서</a>
+        <a href="examples.html">실행 예시</a>
+    </div>
+    
+    <div class="section">
+        <h2>🔧 주요 함수들</h2>
+        
+        <div class="function">
+            <h3>write(obj, target_path=None, format=None, show_progress=False, verbose=False, **kwargs)</h3>
+            <p><strong>데이터 객체를 안전하게 파일 또는 데이터베이스에 저장합니다.</strong></p>
+            
+            <div class="param-list">
+                <h4>📋 매개변수:</h4>
+                <ul>
+                    <li><code>obj</code>: 저장할 데이터 객체 (pandas.DataFrame, polars.DataFrame, np.ndarray)</li>
+                    <li><code>target_path</code>: 파일 저장 경로 (파일 기반 쓰기 시 필수)</li>
+                    <li><code>format</code>: 저장 포맷 ('csv', 'parquet', 'excel', 'json', 'sql', 'database')</li>
+                    <li><code>show_progress</code>: 진행률 표시 여부</li>
+                    <li><code>verbose</code>: 상세한 성능 진단 정보 출력 여부</li>
+                </ul>
+            </div>
+            
+            <h4>💡 기본 사용법:</h4>
+            <div class="code">
+<pre># 기본 파일 저장
+import atio
+import pandas as pd
+
+# 샘플 데이터 생성
+df = pd.DataFrame({
+    "name": ["Alice", "Bob", "Charlie"],
+    "age": [25, 30, 35],
+    "city": ["Seoul", "Busan", "Incheon"]
+})
+
+# 다양한 포맷으로 저장
+atio.write(df, "users.parquet", format="parquet")
+atio.write(df, "users.csv", format="csv", index=False)
+atio.write(df, "users.xlsx", format="excel", sheet_name="Users")
+atio.write(df, "users.json", format="json", orient="records")</pre>
+            </div>
+            
+            <h4>🗄️ 데이터베이스 저장:</h4>
+            <div class="code">
+<pre># SQL 데이터베이스 저장 (Pandas)
+from sqlalchemy import create_engine
+
+engine = create_engine('postgresql://user:password@localhost/dbname')
+atio.write(df, format="sql", name="users", con=engine, if_exists="replace")</pre>
+            </div>
+            
+            <div class="code">
+<pre># 데이터베이스 저장 (Polars)
+import polars as pl
+
+polars_df = pl.DataFrame({
+    "product_id": [101, 102, 103],
+    "product_name": ["Laptop", "Mouse", "Keyboard"],
+    "price": [1200, 25, 75]
+})
+
+atio.write(polars_df, format="database", 
+          table_name="products", 
+          connection_uri="postgresql://user:password@localhost/dbname")</pre>
+            </div>
+            
+            <h4>⚡ 고급 기능:</h4>
+            <div class="code">
+<pre># 진행률 표시와 성능 모니터링
+atio.write(large_df, "big_data.parquet", 
+          format="parquet", 
+          show_progress=True, 
+          verbose=True)</pre>
+            </div>
+            
+            <div class="code">
+<pre># NumPy 배열 저장
+import numpy as np
+
+arr = np.random.randn(1000, 100)
+atio.write(arr, "data.npy", format="npy")
+atio.write(arr, "data.csv", format="csv", delimiter=",")</pre>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>write_snapshot(obj, table_path, mode='overwrite', format='arrow', show_progress=False, **kwargs)</h3>
+            <p><strong>데이터 객체를 열 단위 청크로 분해하여 버전 관리 방식으로 저장합니다.</strong></p>
+            
+            <div class="param-list">
+                <h4>📋 매개변수:</h4>
+                <ul>
+                    <li><code>obj</code>: 저장할 데이터 객체</li>
+                    <li><code>table_path</code>: 테이블 데이터가 저장될 최상위 디렉토리 경로</li>
+                    <li><code>mode</code>: 'overwrite' (기본값) 또는 'append'</li>
+                    <li><code>format</code>: 내부 청크 파일 포맷 (현재는 'arrow'만 지원)</li>
+                </ul>
+            </div>
+            
+            <h4>💡 스냅샷 저장 예시:</h4>
+            <div class="code">
+<pre># 1. 초기 스냅샷 저장
+df_v1 = pd.DataFrame({
+    'product': ['Laptop', 'Mouse', 'Keyboard'],
+    'price': [1000, 20, 50],
+    'stock': [10, 100, 50]
+})
+
+atio.write_snapshot(df_v1, "products", mode='overwrite')
+print("버전 1 저장 완료")
+
+# 2. 업데이트된 스냅샷 저장
+df_v2 = df_v1.copy()
+df_v2.loc[0, 'price'] = 1200  # Laptop 가격 상승
+df_v2.loc[1, 'stock'] = 80       # Mouse 재고 감소
+
+atio.write_snapshot(df_v2, "products", mode='overwrite')
+print("버전 2 저장 완료")</pre>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>read_table(table_path, version=None, output_as='pandas')</h3>
+            <p><strong>지정된 버전의 스냅샷을 읽어 데이터 객체로 재구성합니다.</strong></p>
+            
+            <div class="param-list">
+                <h4>📋 매개변수:</h4>
+                <ul>
+                    <li><code>table_path</code>: 테이블 데이터가 저장된 최상위 디렉토리 경로</li>
+                    <li><code>version</code>: 불러올 버전 ID (None이면 최신 버전)</li>
+                    <li><code>output_as</code>: 반환할 데이터 객체 타입 ('pandas', 'polars', 'arrow', 'numpy')</li>
+                </ul>
+            </div>
+            
+            <h4>💡 테이블 읽기 예시:</h4>
+            <div class="code">
+<pre># 1. 최신 데이터 읽기
+latest_data = atio.read_table("products", output_as="pandas")
+print("최신 데이터:")
+print(latest_data)
+
+# 2. 특정 버전 읽기
+v1_data = atio.read_table("products", version="v1", output_as="pandas")
+print("\\n버전 1 데이터:")
+print(v1_data)
+
+# 3. Polars로 읽기
+polars_data = atio.read_table("products", output_as="polars")
+print("\\nPolars 데이터:")
+print(polars_data)</pre>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>write_model_snapshot(model, model_path, metadata=None, **kwargs)</h3>
+            <p><strong>머신러닝 모델을 안전하게 저장합니다.</strong></p>
+            
+            <h4>💡 모델 저장 예시:</h4>
+            <div class="code">
+<pre>import joblib
+from sklearn.ensemble import RandomForestClassifier
+
+# 모델 생성
+model = RandomForestClassifier(n_estimators=100)
+model.fit(X_train, y_train)
+
+# 모델 저장
+metadata = {
+    'model_type': 'RandomForest',
+    'n_estimators': 100,
+    'accuracy': 0.95
+}
+
+atio.write_model_snapshot(model, "my_model", metadata=metadata)
+print("모델 저장 완료")</pre>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>read_model_snapshot(model_path, version=None)</h3>
+            <p><strong>저장된 머신러닝 모델을 불러옵니다.</strong></p>
+            
+            <h4>💡 모델 읽기 예시:</h4>
+            <div class="code">
+<pre># 모델 불러오기
+loaded_model = atio.read_model_snapshot("my_model")
+print("모델 불러오기 완료")
+
+# 예측 수행
+predictions = loaded_model.predict(X_test)
+print(f"예측 결과: {predictions[:5]}")</pre>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>delete_version(table_path, version)</h3>
+            <p><strong>지정된 버전의 스냅샷을 삭제합니다.</strong></p>
+            
+            <h4>💡 버전 삭제 예시:</h4>
+            <div class="code">
+<pre># 특정 버전 삭제
+atio.delete_version("products", "v1")
+print("버전 v1 삭제 완료")</pre>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>rollback(table_path, target_version)</h3>
+            <p><strong>테이블을 지정된 버전으로 롤백합니다.</strong></p>
+            
+            <h4>💡 롤백 예시:</h4>
+            <div class="code">
+<pre># 버전 v1으로 롤백
+atio.rollback("products", "v1")
+print("버전 v1으로 롤백 완료")
+
+# 롤백 후 데이터 확인
+rolled_back_data = atio.read_table("products")
+print("롤백된 데이터:")
+print(rolled_back_data)</pre>
+            </div>
+        </div>
+    </div>
+    
+    <a href="index.html" class="back-link">← 메인 문서로 돌아가기</a>
+</body>
+</html>

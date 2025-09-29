@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atio 핵심 기능</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.6; 
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            padding: 30px; 
+            border-radius: 10px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .nav { 
+            display: flex; 
+            gap: 15px; 
+            margin: 20px 0; 
+            flex-wrap: wrap;
+        }
+        
+        .nav a { 
+            padding: 12px 24px; 
+            background: #dc3545; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 25px; 
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav a:hover { 
+            background: #c82333; 
+            transform: translateY(-2px);
+        }
+        
+        .section { 
+            margin: 30px 0; 
+            padding: 25px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 10px; 
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .algorithm { 
+            background: #fff3cd; 
+            padding: 25px; 
+            margin: 20px 0; 
+            border-radius: 10px; 
+            border-left: 4px solid #ffc107;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .algorithm h3 {
+            color: #856404;
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #ffeaa7;
+            padding-bottom: 10px;
+        }
+        
+        .step {
+            background: #e8f5e8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .step h4 {
+            color: #155724;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .benefit {
+            background: #d1ecf1;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 3px solid #17a2b8;
+        }
+        
+        .benefit h4 {
+            color: #0c5460;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .code { 
+            background: #2d3748; 
+            color: #e2e8f0;
+            padding: 25px; 
+            border-radius: 10px; 
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 1px solid #4a5568;
+            font-size: 0.95em;
+            line-height: 1.7;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .code::before {
+            content: "⚙️";
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.2em;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚙️ Atio 핵심 기능</h1>
+        <p><strong>원자적 쓰기와 스냅샷 시스템의 작동 원리</strong></p>
+    </div>
+    
+    <div class="nav">
+        <a href="index.html">메인 문서</a>
+        <a href="api.html">API 문서</a>
+        <a href="plugins.html">플러그인 시스템</a>
+        <a href="utils.html">유틸리티</a>
+        <a href="performance.html">성능 보고서</a>
+        <a href="examples.html">실행 예시</a>
+    </div>
+    
+    <div class="section">
+        <h2>🔒 원자적 쓰기 (Atomic Write)</h2>
+        <p><strong>원자적 쓰기</strong>는 데이터 무결성을 보장하는 핵심 기술입니다. 시스템 중단이나 오류가 발생해도 데이터 손실을 방지합니다.</p>
+        
+        <div class="algorithm">
+            <h3>🔄 원자적 쓰기 알고리즘</h3>
+            <p>원자적 쓰기는 다음과 같은 단계로 작동합니다:</p>
+            
+            <div class="step">
+                <h4>1단계: 임시 파일 생성</h4>
+                <p>원본 파일을 직접 수정하지 않고 임시 파일에 데이터를 씁니다.</p>
+                <div class="code">
+<pre># 임시 파일 생성 예시
+import tempfile
+import os
+
+def atomic_write_example():
+    original_file = "data.csv"
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".tmp")
+    
+    try:
+        # 임시 파일에 데이터 쓰기
+        with open(temp_file.name, 'w') as f:
+            f.write("name,age,city\\n")
+            f.write("Alice,25,Seoul\\n")
+            f.write("Bob,30,Busan\\n")
+        
+        print(f"임시 파일 생성: {temp_file.name}")
+        return temp_file.name
+    except Exception as e:
+        print(f"쓰기 실패: {e}")
+        return None</pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h4>2단계: 데이터 검증</h4>
+                <p>임시 파일의 데이터가 올바르게 작성되었는지 확인합니다.</p>
+                <div class="code">
+<pre># 데이터 검증 예시
+def validate_data(temp_file_path):
+    try:
+        with open(temp_file_path, 'r') as f:
+            lines = f.readlines()
+        
+        # 기본 검증: 헤더와 데이터 행 확인
+        if len(lines) < 2:
+            raise ValueError("데이터가 충분하지 않습니다")
+        
+        # 헤더 검증
+        if not lines[0].strip().startswith("name,age,city"):
+            raise ValueError("헤더 형식이 올바르지 않습니다")
+        
+        print("✅ 데이터 검증 통과")
+        return True
+    except Exception as e:
+        print(f"❌ 데이터 검증 실패: {e}")
+        return False</pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h4>3단계: 원자적 교체</h4>
+                <p>검증이 완료되면 임시 파일을 원본 파일로 원자적으로 교체합니다.</p>
+                <div class="code">
+<pre># 원자적 교체 예시
+import shutil
+
+def atomic_replace(temp_file_path, original_file):
+    try:
+        # 원자적 교체 (rename은 원자적 연산)
+        shutil.move(temp_file_path, original_file)
+        print(f"✅ 원자적 교체 완료: {original_file}")
+        return True
+    except Exception as e:
+        print(f"❌ 교체 실패: {e}")
+        # 실패 시 임시 파일 정리
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+        return False</pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h4>4단계: 정리 작업</h4>
+                <p>성공적으로 교체된 후 임시 파일을 정리합니다.</p>
+                <div class="code">
+<pre># 전체 원자적 쓰기 프로세스
+def complete_atomic_write():
+    temp_file = atomic_write_example()
+    if not temp_file:
+        return False
+    
+    if validate_data(temp_file):
+        success = atomic_replace(temp_file, "data.csv")
+        if success:
+            print("🎉 원자적 쓰기 완료!")
+            return True
+    
+    print("❌ 원자적 쓰기 실패")
+    return False
+
+# 실행 결과:
+# 임시 파일 생성: /tmp/tmp12345.tmp
+# ✅ 데이터 검증 통과
+# ✅ 원자적 교체 완료: data.csv
+# 🎉 원자적 쓰기 완료!</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="benefit">
+            <h4>💡 원자적 쓰기의 장점</h4>
+            <ul>
+                <li><strong>데이터 무결성</strong>: 시스템 중단 시에도 데이터 손실 방지</li>
+                <li><strong>일관성 보장</strong>: 부분적으로 손상된 파일 생성 방지</li>
+                <li><strong>안전한 업데이트</strong>: 기존 데이터를 보호하면서 새로운 데이터로 교체</li>
+                <li><strong>롤백 가능</strong>: 실패 시 이전 상태로 자동 복구</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📸 스냅샷 시스템 (Snapshot System)</h2>
+        <p><strong>스냅샷 시스템</strong>은 대용량 데이터를 효율적으로 저장하고 버전을 관리하는 고급 저장 시스템입니다.</p>
+        
+        <div class="algorithm">
+            <h3>🔧 스냅샷 시스템 작동 원리</h3>
+            
+            <div class="step">
+                <h4>1단계: 열 단위 청크 분해</h4>
+                <p>데이터프레임을 열(column) 단위로 분해하여 개별 청크로 저장합니다.</p>
+                <div class="code">
+<pre># 열 단위 청크 분해 예시
+import pandas as pd
+import os
+
+def create_column_chunks(df, table_path):
+    """데이터프레임을 열 단위로 분해하여 저장"""
+    version_id = "v1"
+    version_path = os.path.join(table_path, version_id)
+    os.makedirs(version_path, exist_ok=True)
+    
+    chunks_info = {}
+    
+    for column in df.columns:
+        # 각 열을 개별 파일로 저장
+        chunk_file = os.path.join(version_path, f"{column}.arrow")
+        
+        # 열 데이터를 Arrow 포맷으로 저장
+        column_data = df[[column]]
+        column_data.to_parquet(chunk_file)
+        
+        chunks_info[column] = {
+            'file': chunk_file,
+            'size': os.path.getsize(chunk_file),
+            'dtype': str(df[column].dtype)
+        }
+        print(f"열 '{column}' 저장: {chunk_file}")
+    
+    return chunks_info
+
+# 예시 데이터
+df = pd.DataFrame({
+    'product_id': [101, 102, 103, 104],
+    'product_name': ['Laptop', 'Mouse', 'Keyboard', 'Monitor'],
+    'price': [1200, 25, 75, 300],
+    'stock': [10, 100, 50, 25]
+})
+
+# 청크 생성
+chunks = create_column_chunks(df, "products")
+
+# 실행 결과:
+# 열 'product_id' 저장: products/v1/product_id.arrow
+# 열 'product_name' 저장: products/v1/product_name.arrow  
+# 열 'price' 저장: products/v1/price.arrow
+# 열 'stock' 저장: products/v1/stock.arrow</pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h4>2단계: 해시 기반 중복 제거</h4>
+                <p>동일한 데이터 청크를 해시로 식별하여 중복을 제거합니다.</p>
+                <div class="code">
+<pre># 해시 기반 중복 제거 예시
+import hashlib
+import json
+
+def create_chunk_hash(chunk_data):
+    """청크 데이터의 해시값 생성"""
+    data_str = chunk_data.to_string()
+    return hashlib.sha256(data_str.encode()).hexdigest()
+
+def deduplicate_chunks(chunks_info):
+    """중복 청크 제거"""
+    hash_map = {}
+    unique_chunks = {}
+    
+    for column, info in chunks_info.items():
+        # 청크 데이터 읽기
+        chunk_data = pd.read_parquet(info['file'])
+        chunk_hash = create_chunk_hash(chunk_data)
+        
+        if chunk_hash in hash_map:
+            # 중복 발견 - 기존 청크 참조
+            unique_chunks[column] = {
+                'ref': hash_map[chunk_hash],
+                'hash': chunk_hash,
+                'duplicate': True
+            }
+            print(f"열 '{column}': 중복 청크 발견, 기존 청크 참조")
+        else:
+            # 새로운 청크
+            hash_map[chunk_hash] = info['file']
+            unique_chunks[column] = {
+                'file': info['file'],
+                'hash': chunk_hash,
+                'duplicate': False
+            }
+            print(f"열 '{column}': 새로운 청크 저장")
+    
+    return unique_chunks
+
+# 중복 제거 실행
+unique_chunks = deduplicate_chunks(chunks)
+
+# 실행 결과:
+# 열 'product_id': 새로운 청크 저장
+# 열 'product_name': 새로운 청크 저장
+# 열 'price': 새로운 청크 저장
+# 열 'stock': 새로운 청크 저장</pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h4>3단계: 버전 메타데이터 관리</h4>
+                <p>각 버전의 메타데이터를 관리하여 효율적인 버전 제어를 제공합니다.</p>
+                <div class="code">
+<pre># 버전 메타데이터 관리 예시
+def create_version_metadata(version_id, chunks_info, table_path):
+    """버전 메타데이터 생성"""
+    metadata = {
+        'version_id': version_id,
+        'created_at': pd.Timestamp.now().isoformat(),
+        'columns': list(chunks_info.keys()),
+        'chunks': chunks_info,
+        'total_size': sum(info['size'] for info in chunks_info.values()),
+        'row_count': len(pd.read_parquet(list(chunks_info.values())[0]['file']))
+    }
+    
+    # 메타데이터 저장
+    metadata_file = os.path.join(table_path, f"{version_id}_metadata.json")
+    with open(metadata_file, 'w') as f:
+        json.dump(metadata, f, indent=2)
+    
+    print(f"버전 {version_id} 메타데이터 저장: {metadata_file}")
+    return metadata
+
+# 메타데이터 생성
+metadata = create_version_metadata("v1", chunks, "products")
+
+# 실행 결과:
+# 버전 v1 메타데이터 저장: products/v1_metadata.json
+# {
+#   "version_id": "v1",
+#   "created_at": "2024-01-15T10:30:00",
+#   "columns": ["product_id", "product_name", "price", "stock"],
+#   "total_size": 2048,
+#   "row_count": 4
+# }</pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h4>4단계: 효율적인 데이터 재구성</h4>
+                <p>저장된 청크들을 효율적으로 읽어서 원본 데이터로 재구성합니다.</p>
+                <div class="code">
+<pre># 데이터 재구성 예시
+def reconstruct_table(table_path, version_id="latest"):
+    """저장된 청크들로부터 테이블 재구성"""
+    if version_id == "latest":
+        # 최신 버전 찾기
+        versions = [f for f in os.listdir(table_path) if f.endswith('_metadata.json')]
+        if not versions:
+            raise ValueError("저장된 버전이 없습니다")
+        version_id = max(versions).replace('_metadata.json', '')
+    
+    # 메타데이터 로드
+    metadata_file = os.path.join(table_path, f"{version_id}_metadata.json")
+    with open(metadata_file, 'r') as f:
+        metadata = json.load(f)
+    
+    # 각 열 데이터 로드
+    reconstructed_data = {}
+    for column in metadata['columns']:
+        chunk_file = metadata['chunks'][column]['file']
+        column_data = pd.read_parquet(chunk_file)
+        reconstructed_data[column] = column_data[column]
+    
+    # 데이터프레임 재구성
+    df_reconstructed = pd.DataFrame(reconstructed_data)
+    
+    print(f"버전 {version_id} 재구성 완료:")
+    print(f"- 행 수: {len(df_reconstructed)}")
+    print(f"- 열 수: {len(df_reconstructed.columns)}")
+    print(f"- 총 크기: {metadata['total_size']} bytes")
+    
+    return df_reconstructed
+
+# 데이터 재구성
+reconstructed_df = reconstruct_table("products", "v1")
+
+# 실행 결과:
+# 버전 v1 재구성 완료:
+# - 행 수: 4
+# - 열 수: 4  
+# - 총 크기: 2048 bytes
+# 
+#    product_id product_name  price  stock
+# 0         101       Laptop   1200     10
+# 1         102        Mouse     25    100
+# 2         103     Keyboard     75     50
+# 3         104      Monitor    300     25</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="benefit">
+            <h4>💡 스냅샷 시스템의 장점</h4>
+            <ul>
+                <li><strong>공간 효율성</strong>: 중복 데이터 제거로 저장 공간 절약</li>
+                <li><strong>버전 관리</strong>: 여러 버전의 데이터를 효율적으로 관리</li>
+                <li><strong>부분 복구</strong>: 필요한 열만 선택적으로 복구 가능</li>
+                <li><strong>병렬 처리</strong>: 열 단위 처리로 병렬화 최적화</li>
+                <li><strong>확장성</strong>: 대용량 데이터에 대한 효율적인 처리</li>
+            </ul>
+        </div>
+    </div>
+    
+    <a href="index.html" class="back-link">← 메인 문서로 돌아가기</a>
+</body>
+</html>

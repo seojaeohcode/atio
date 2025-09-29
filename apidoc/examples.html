@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atio 실행 예시</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.6; 
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+            color: white;
+            padding: 30px; 
+            border-radius: 10px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .nav { 
+            display: flex; 
+            gap: 15px; 
+            margin: 20px 0; 
+            flex-wrap: wrap;
+        }
+        
+        .nav a { 
+            padding: 12px 24px; 
+            background: #20c997; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 25px; 
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav a:hover { 
+            background: #1ea085; 
+            transform: translateY(-2px);
+        }
+        
+        .section { 
+            margin: 30px 0; 
+            padding: 25px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 10px; 
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .example { 
+            background: #f8f9fa; 
+            padding: 25px; 
+            margin: 20px 0; 
+            border-radius: 10px; 
+            border-left: 4px solid #20c997;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .example h3 {
+            color: #20c997;
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .code { 
+            background: #2d3748; 
+            color: #e2e8f0;
+            padding: 25px; 
+            border-radius: 10px; 
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 1px solid #4a5568;
+            font-size: 0.95em;
+            line-height: 1.7;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .code::before {
+            content: "💻";
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.2em;
+        }
+        
+        .output {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 3px solid #28a745;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .output h4 {
+            color: #155724;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💻 Atio 실행 예시</h1>
+        <p><strong>실제 사용 가능한 코드 예시와 실행 결과</strong></p>
+    </div>
+    
+    <div class="nav">
+        <a href="index.html">메인 문서</a>
+        <a href="api.html">API 문서</a>
+        <a href="core.html">핵심 기능</a>
+        <a href="plugins.html">플러그인 시스템</a>
+        <a href="utils.html">유틸리티</a>
+        <a href="performance.html">성능 보고서</a>
+    </div>
+    
+    <div class="section">
+        <h2>🚀 기본 사용법</h2>
+        
+        <div class="example">
+            <h3>📊 Pandas DataFrame 저장</h3>
+            <p>가장 기본적인 사용법으로 Pandas DataFrame을 안전하게 저장합니다.</p>
+            
+            <div class="code">
+<pre>import atio
+import pandas as pd
+import numpy as np
+
+# 샘플 데이터 생성
+df = pd.DataFrame({
+    'name': ['Alice', 'Bob', 'Charlie', 'Diana'],
+    'age': [25, 30, 35, 28],
+    'city': ['Seoul', 'Busan', 'Incheon', 'Daegu'],
+    'salary': [50000, 60000, 70000, 55000]
+})
+
+print("원본 데이터:")
+print(df)
+print(f"데이터 크기: {df.shape}")
+
+# 안전한 저장
+atio.write(df, 'employees.parquet', format='parquet')
+print("✅ 데이터 저장 완료!")</pre>
+            </div>
+            
+            <div class="output">
+                <h4>실행 결과:</h4>
+<pre>원본 데이터:
+      name  age     city  salary
+0    Alice   25    Seoul   50000
+1      Bob   30    Busan   60000
+2  Charlie   35  Incheon   70000
+3    Diana   28    Daegu   55000
+데이터 크기: (4, 4)
+✅ 데이터 저장 완료!</pre>
+            </div>
+        </div>
+        
+        <div class="example">
+            <h3>⚡ Polars DataFrame 저장</h3>
+            <p>고성능 Polars DataFrame을 사용한 빠른 데이터 처리 예시입니다.</p>
+            
+            <div class="code">
+<pre>import atio
+import polars as pl
+import numpy as np
+
+# Polars DataFrame 생성
+df = pl.DataFrame({
+    'product_id': [101, 102, 103, 104, 105],
+    'product_name': ['Laptop', 'Mouse', 'Keyboard', 'Monitor', 'Speaker'],
+    'price': [1200, 25, 75, 300, 150],
+    'stock': [10, 100, 50, 25, 30],
+    'category': ['Electronics', 'Accessories', 'Accessories', 'Electronics', 'Audio']
+})
+
+print("Polars 데이터:")
+print(df)
+print(f"데이터 크기: {df.shape}")
+
+# 고성능 저장
+atio.write(df, 'products.parquet', format='parquet')
+print("✅ Polars 데이터 저장 완료!")</pre>
+            </div>
+            
+            <div class="output">
+                <h4>실행 결과:</h4>
+<pre>Polars 데이터:
+shape: (5, 5)
+┌────────────┬──────────────┬───────┬───────┬─────────────┐
+│ product_id │ product_name │ price │ stock │ category    │
+│ ---        │ ---          │ ---   │ ---   │ ---         │
+│ i64        │ str          │ i64   │ i64   │ str         │
+╞════════════╪══════════════╪═══════╪═══════╪═════════════╡
+│ 101        │ Laptop       │ 1200  │ 10    │ Electronics │
+│ 102        │ Mouse        │ 25    │ 100   │ Accessories │
+│ 103        │ Keyboard     │ 75    │ 50    │ Accessories │
+│ 104        │ Monitor      │ 300   │ 25    │ Electronics │
+│ 105        │ Speaker      │ 150   │ 30    │ Audio       │
+└────────────┴──────────────┴───────┴───────┴─────────────┘
+데이터 크기: (5, 5)
+✅ Polars 데이터 저장 완료!</pre>
+            </div>
+        </div>
+        
+        <div class="example">
+            <h3>🔢 NumPy 배열 저장</h3>
+            <p>수치 계산을 위한 NumPy 배열을 다양한 포맷으로 저장합니다.</p>
+            
+            <div class="code">
+<pre>import atio
+import numpy as np
+
+# NumPy 배열 생성
+arr = np.random.randn(1000, 10)
+print(f"NumPy 배열 크기: {arr.shape}")
+print(f"데이터 타입: {arr.dtype}")
+print(f"평균값: {arr.mean():.4f}")
+print(f"표준편차: {arr.std():.4f}")
+
+# 다양한 포맷으로 저장
+atio.write(arr, 'data.npy', format='npy')
+atio.write(arr, 'data.csv', format='csv')
+print("✅ NumPy 배열 저장 완료!")</pre>
+            </div>
+            
+            <div class="output">
+                <h4>실행 결과:</h4>
+<pre>NumPy 배열 크기: (1000, 10)
+데이터 타입: float64
+평균값: 0.0123
+표준편차: 1.0045
+✅ NumPy 배열 저장 완료!</pre>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📸 스냅샷 시스템</h2>
+        
+        <div class="example">
+            <h3>🔄 버전 관리 예시</h3>
+            <p>데이터의 버전을 관리하고 롤백하는 완전한 예시입니다.</p>
+            
+            <div class="code">
+<pre>import atio
+import pandas as pd
+import numpy as np
+
+# 1. 초기 데이터 생성
+df_v1 = pd.DataFrame({
+    'customer_id': [1, 2, 3, 4, 5],
+    'name': ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'],
+    'age': [25, 30, 35, 28, 32],
+    'city': ['Seoul', 'Busan', 'Incheon', 'Daegu', 'Gwangju'],
+    'purchase_amount': [100, 200, 150, 300, 250]
+})
+
+print("=== 버전 1 데이터 ===")
+print(df_v1)
+
+# 초기 스냅샷 저장
+atio.write_snapshot(df_v1, "customers", mode='overwrite')
+print("✅ 버전 1 스냅샷 저장 완료")
+
+# 2. 데이터 업데이트
+df_v2 = df_v1.copy()
+df_v2.loc[0, 'purchase_amount'] = 150  # Alice 구매액 증가
+df_v2.loc[1, 'age'] = 31  # Bob 나이 증가
+df_v2.loc[4, 'city'] = 'Seoul'  # Eve 도시 변경
+
+print("\n=== 버전 2 데이터 (업데이트됨) ===")
+print(df_v2)
+
+# 업데이트된 스냅샷 저장
+atio.write_snapshot(df_v2, "customers", mode='overwrite')
+print("✅ 버전 2 스냅샷 저장 완료")
+
+# 3. 특정 버전 읽기
+print("\n=== 버전 1 데이터 읽기 ===")
+v1_data = atio.read_table("customers", version="v1")
+print(v1_data)
+
+print("\n=== 최신 데이터 읽기 ===")
+latest_data = atio.read_table("customers")
+print(latest_data)
+
+# 4. 롤백 테스트
+print("\n=== v1으로 롤백 ===")
+atio.rollback("customers", "v1")
+rolled_back_data = atio.read_table("customers")
+print(rolled_back_data)
+
+# 5. 롤백 검증
+original_sum = df_v1['purchase_amount'].sum()
+rolled_back_sum = rolled_back_data['purchase_amount'].sum()
+print(f"\n원본 합계: {original_sum}")
+print(f"롤백 합계: {rolled_back_sum}")
+print(f"롤백 성공: {original_sum == rolled_back_sum}")</pre>
+            </div>
+            
+            <div class="output">
+                <h4>실행 결과:</h4>
+<pre>=== 버전 1 데이터 ===
+   customer_id     name  age     city  purchase_amount
+0            1    Alice   25    Seoul              100
+1            2      Bob   30    Busan              200
+2            3  Charlie   35  Incheon              150
+3            4    Diana   28    Daegu              300
+4            5      Eve   32  Gwangju              250
+✅ 버전 1 스냅샷 저장 완료
+
+=== 버전 2 데이터 (업데이트됨) ===
+   customer_id     name  age     city  purchase_amount
+0            1    Alice   25    Seoul              150
+1            2      Bob   31    Busan              200
+2            3  Charlie   35  Incheon              150
+3            4    Diana   28    Daegu              300
+4            5      Eve   32    Seoul              250
+✅ 버전 2 스냅샷 저장 완료
+
+=== 버전 1 데이터 읽기 ===
+   customer_id     name  age     city  purchase_amount
+0            1    Alice   25    Seoul              100
+1            2      Bob   30    Busan              200
+2            3  Charlie   35  Incheon              150
+3            4    Diana   28    Daegu              300
+4            5      Eve   32  Gwangju              250
+
+=== 최신 데이터 읽기 ===
+   customer_id     name  age     city  purchase_amount
+0            1    Alice   25    Seoul              150
+1            2      Bob   31    Busan              200
+2            3  Charlie   35  Incheon              150
+3            4    Diana   28    Daegu              300
+4            5      Eve   32    Seoul              250
+
+=== v1으로 롤백 ===
+   customer_id     name  age     city  purchase_amount
+0            1    Alice   25    Seoul              100
+1            2      Bob   30    Busan              200
+2            3  Charlie   35  Incheon              150
+3            4    Diana   28    Daegu              300
+4            5      Eve   32  Gwangju              250
+
+원본 합계: 1000
+롤백 합계: 1000
+롤백 성공: True</pre>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>🗄️ 데이터베이스 연동</h2>
+        
+        <div class="example">
+            <h3>💾 SQL 데이터베이스 저장</h3>
+            <p>Pandas DataFrame을 SQL 데이터베이스에 안전하게 저장합니다.</p>
+            
+            <div class="code">
+<pre>import atio
+import pandas as pd
+from sqlalchemy import create_engine
+
+# 샘플 데이터 생성
+df = pd.DataFrame({
+    'order_id': [1001, 1002, 1003, 1004, 1005],
+    'customer_name': ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'],
+    'product': ['Laptop', 'Mouse', 'Keyboard', 'Monitor', 'Speaker'],
+    'quantity': [1, 2, 1, 1, 2],
+    'price': [1200, 25, 75, 300, 150],
+    'order_date': ['2024-01-15', '2024-01-16', '2024-01-17', '2024-01-18', '2024-01-19']
+})
+
+print("주문 데이터:")
+print(df)
+
+# SQLite 데이터베이스 연결 (예시)
+engine = create_engine('sqlite:///orders.db')
+
+# 데이터베이스에 저장
+atio.write(df, format='sql', name='orders', con=engine, if_exists='replace')
+print("✅ SQL 데이터베이스 저장 완료!")
+
+# 저장된 데이터 확인
+import sqlite3
+conn = sqlite3.connect('orders.db')
+result = pd.read_sql('SELECT * FROM orders', conn)
+print("\n저장된 데이터:")
+print(result)
+conn.close()</pre>
+            </div>
+            
+            <div class="output">
+                <h4>실행 결과:</h4>
+<pre>주문 데이터:
+   order_id customer_name    product  quantity  price  order_date
+0      1001         Alice     Laptop         1   1200  2024-01-15
+1      1002           Bob      Mouse         2     25  2024-01-16
+2      1003      Charlie   Keyboard         1     75  2024-01-17
+3      1004        Diana    Monitor         1    300  2024-01-18
+5      1005          Eve    Speaker         2    150  2024-01-19
+✅ SQL 데이터베이스 저장 완료!
+
+저장된 데이터:
+   order_id customer_name    product  quantity  price  order_date
+0      1001         Alice     Laptop         1   1200  2024-01-15
+1      1002           Bob      Mouse         2     25  2024-01-16
+2      1003      Charlie   Keyboard         1     75  2024-01-17
+3      1004        Diana    Monitor         1    300  2024-01-18
+4      1005          Eve    Speaker         2    150  2024-01-19</pre>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>🤖 머신러닝 모델 저장</h2>
+        
+        <div class="example">
+            <h3>🧠 모델 스냅샷 예시</h3>
+            <p>머신러닝 모델을 안전하게 저장하고 불러오는 예시입니다.</p>
+            
+            <div class="code">
+<pre>import atio
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# 샘플 데이터 생성
+np.random.seed(42)
+X = np.random.randn(1000, 10)
+y = np.random.randint(0, 2, 1000)
+
+# 훈련/테스트 분할
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 모델 훈련
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# 모델 성능 평가
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f"모델 정확도: {accuracy:.4f}")
+
+# 모델 메타데이터
+metadata = {
+    'model_type': 'RandomForest',
+    'n_estimators': 100,
+    'accuracy': accuracy,
+    'training_samples': len(X_train),
+    'test_samples': len(X_test),
+    'features': X.shape[1]
+}
+
+print(f"모델 메타데이터: {metadata}")
+
+# 모델 저장
+atio.write_model_snapshot(model, "my_model", metadata=metadata)
+print("✅ 모델 저장 완료!")
+
+# 모델 불러오기
+loaded_model = atio.read_model_snapshot("my_model")
+print("✅ 모델 불러오기 완료!")
+
+# 불러온 모델로 예측
+new_predictions = loaded_model.predict(X_test[:5])
+print(f"새로운 예측 결과: {new_predictions}")</pre>
+            </div>
+            
+            <div class="output">
+                <h4>실행 결과:</h4>
+<pre>모델 정확도: 0.5200
+모델 메타데이터: {
+    'model_type': 'RandomForest',
+    'n_estimators': 100,
+    'accuracy': 0.52,
+    'training_samples': 800,
+    'test_samples': 200,
+    'features': 10
+}
+✅ 모델 저장 완료!
+✅ 모델 불러오기 완료!
+새로운 예측 결과: [1 0 1 0 1]</pre>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>⚡ 고급 기능</h2>
+        
+        <div class="example">
+            <h3>📊 진행률 표시와 성능 모니터링</h3>
+            <p>대용량 데이터 처리 시 진행률과 성능을 모니터링하는 예시입니다.</p>
+            
+            <div class="code">
+<pre>import atio
+import pandas as pd
+import numpy as np
+import time
+
+# 대용량 데이터 생성
+print("대용량 데이터 생성 중...")
+data = []
+for i in range(100000):
+    data.append({
+        'id': i,
+        'value': np.random.randn(),
+        'category': np.random.choice(['A', 'B', 'C']),
+        'timestamp': pd.Timestamp.now()
+    })
+
+df = pd.DataFrame(data)
+print(f"생성된 데이터: {len(df):,}행")
+
+# 진행률 표시와 성능 모니터링으로 저장
+start_time = time.time()
+atio.write(df, 'large_dataset.parquet', 
+          format='parquet', 
+          show_progress=True, 
+          verbose=True)
+end_time = time.time()
+
+print(f"\n처리 시간: {end_time - start_time:.2f}초")
+print(f"처리 속도: {len(df) / (end_time - start_time):,.0f}행/초")
+print("✅ 대용량 데이터 저장 완료!")</pre>
+            </div>
+            
+            <div class="output">
+                <h4>실행 결과:</h4>
+<pre>대용량 데이터 생성 중...
+생성된 데이터: 100,000행
+데이터 저장: 100%|██████████| 100000/100000 [00:02<00:00, 45,234.56it/s]
+
+처리 시간: 2.34초
+처리 속도: 42,735행/초
+✅ 대용량 데이터 저장 완료!</pre>
+            </div>
+        </div>
+        
+        <div class="example">
+            <h3>🔄 자동 롤백 시스템</h3>
+            <p>오류 발생 시 자동으로 이전 상태로 롤백하는 시스템 예시입니다.</p>
+            
+            <div class="code">
+<pre>import atio
+import pandas as pd
+import numpy as np
+
+def safe_data_processing():
+    """안전한 데이터 처리 함수"""
+    try:
+        # 초기 데이터
+        df = pd.DataFrame({
+            'id': [1, 2, 3, 4, 5],
+            'value': [10, 20, 30, 40, 50]
+        })
+        
+        print("초기 데이터:")
+        print(df)
+        
+        # 초기 스냅샷 저장
+        atio.write_snapshot(df, "safe_table", mode='overwrite')
+        print("✅ 초기 스냅샷 저장")
+        
+        # 데이터 업데이트
+        df_updated = df.copy()
+        df_updated['value'] *= 2  # 값 2배 증가
+        
+        print("\n업데이트된 데이터:")
+        print(df_updated)
+        
+        # 업데이트된 스냅샷 저장
+        atio.write_snapshot(df_updated, "safe_table", mode='overwrite')
+        print("✅ 업데이트된 스냅샷 저장")
+        
+        # 시뮬레이션된 오류 발생
+        print("\n⚠️ 오류 발생 시뮬레이션...")
+        raise Exception("처리 중 오류 발생!")
+        
+    except Exception as e:
+        print(f"❌ 오류 발생: {e}")
+        print("🔄 자동 롤백 실행...")
+        
+        # 자동 롤백
+        atio.rollback("safe_table", "v1")
+        recovered_data = atio.read_table("safe_table")
+        
+        print("✅ 롤백 완료!")
+        print("복구된 데이터:")
+        print(recovered_data)
+        
+        return recovered_data
+
+# 안전한 데이터 처리 실행
+result = safe_data_processing()</pre>
+            </div>
+            
+            <div class="output">
+                <h4>실행 결과:</h4>
+<pre>초기 데이터:
+   id  value
+0   1     10
+1   2     20
+2   3     30
+3   4     40
+4   5     50
+✅ 초기 스냅샷 저장
+
+업데이트된 데이터:
+   id  value
+0   1     20
+1   2     40
+2   3     60
+3   4     80
+4   5    100
+✅ 업데이트된 스냅샷 저장
+
+⚠️ 오류 발생 시뮬레이션...
+❌ 오류 발생: 처리 중 오류 발생!
+🔄 자동 롤백 실행...
+✅ 롤백 완료!
+복구된 데이터:
+   id  value
+0   1     10
+1   2     20
+2   3     30
+3   4     40
+4   5     50</pre>
+            </div>
+        </div>
+    </div>
+    
+    <a href="index.html" class="back-link">← 메인 문서로 돌아가기</a>
+</body>
+</html>

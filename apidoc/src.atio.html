@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: package src.atio</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.atio</strong> (version 2.1.0)</td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/jujangchoi/atio/atio/src/atio/__init__.py">/Users/jujangchoi/atio/atio/src/atio/__init__.py</a></td></tr></table>
+    <p><span class="code">Atio:&nbsp;안전한&nbsp;원자적&nbsp;파일&nbsp;쓰기&nbsp;라이브러리</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Package Contents</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="src.atio.core.html">core</a><br>
+</td><td class="multicolumn"><a href="src.atio.plugins.html">plugins</a><br>
+</td><td class="multicolumn"><a href="src.atio.utils.html">utils</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-delete_version"><strong>delete_version</strong></a>(table_path, version_id, dry_run=False, logger=None)</dt><dd><span class="code">특정&nbsp;버전을&nbsp;삭제하고,&nbsp;더&nbsp;이상&nbsp;참조되지&nbsp;않는&nbsp;데이터&nbsp;파일(가비지)을&nbsp;정리합니다.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;table_path&nbsp;(str):&nbsp;테이블&nbsp;데이터가&nbsp;저장된&nbsp;최상위&nbsp;디렉토리&nbsp;경로.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;version_id&nbsp;(int):&nbsp;삭제할&nbsp;버전의&nbsp;ID.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;dry_run&nbsp;(bool):&nbsp;True이면&nbsp;실제로&nbsp;삭제하지&nbsp;않고&nbsp;대상&nbsp;목록만&nbsp;출력합니다.</span></dd></dl>
+ <dl><dt><a name="-read_model_snapshot"><strong>read_model_snapshot</strong></a>(table_path, version=None, mode='auto', destination_path=None, max_workers=None, show_progress=False)</dt><dd><span class="code">모델&nbsp;스냅샷을&nbsp;읽어옵니다.&nbsp;내부적으로&nbsp;멀티스레딩을&nbsp;사용하여&nbsp;I/O를&nbsp;병렬&nbsp;처리합니다.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_workers&nbsp;(int,&nbsp;optional):&nbsp;병렬&nbsp;I/O에&nbsp;사용할&nbsp;스레드&nbsp;개수.&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;None이면&nbsp;파이썬&nbsp;기본값(보통&nbsp;CPU&nbsp;코어&nbsp;수&nbsp;*&nbsp;5)을&nbsp;사용합니다.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;show_progress&nbsp;(bool):&nbsp;진행률&nbsp;표시&nbsp;여부.&nbsp;Defaults&nbsp;to&nbsp;False.</span></dd></dl>
+ <dl><dt><a name="-read_table"><strong>read_table</strong></a>(table_path, version=None, output_as='pandas')</dt><dd><span class="code">지정된&nbsp;버전의&nbsp;스냅샷을&nbsp;읽어&nbsp;데이터&nbsp;객체로&nbsp;재구성합니다.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;table_path&nbsp;(str):&nbsp;테이블&nbsp;데이터가&nbsp;저장된&nbsp;최상위&nbsp;디렉토리&nbsp;경로.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;version&nbsp;(int,&nbsp;optional):&nbsp;불러올&nbsp;버전&nbsp;ID.&nbsp;None이면&nbsp;최신&nbsp;버전을&nbsp;불러옵니다.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;output_as&nbsp;(str):&nbsp;반환할&nbsp;데이터&nbsp;객체&nbsp;타입&nbsp;('pandas',&nbsp;'polars',&nbsp;'arrow',&nbsp;'numpy').<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Defaults&nbsp;to&nbsp;'pandas'.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;지정된&nbsp;포맷의&nbsp;데이터&nbsp;객체&nbsp;(e.g.,&nbsp;pandas.DataFrame).</span></dd></dl>
+ <dl><dt><a name="-rollback"><strong>rollback</strong></a>(table_path, version_id, logger=None)</dt><dd><span class="code">테이블의&nbsp;현재&nbsp;버전을&nbsp;지정된&nbsp;버전&nbsp;ID로&nbsp;롤백합니다.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;table_path&nbsp;(str):&nbsp;테이블&nbsp;데이터가&nbsp;저장된&nbsp;최상위&nbsp;디렉토리&nbsp;경로.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;version_id&nbsp;(int):&nbsp;롤백할&nbsp;목표&nbsp;버전의&nbsp;ID.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool:&nbsp;성공&nbsp;시&nbsp;True,&nbsp;실패&nbsp;시&nbsp;False를&nbsp;반환합니다.</span></dd></dl>
+ <dl><dt><a name="-write"><strong>write</strong></a>(obj, target_path=None, format=None, show_progress=False, verbose=False, **kwargs)</dt><dd><span class="code">데이터&nbsp;객체(obj)를&nbsp;안전하게&nbsp;target_path&nbsp;또는&nbsp;데이터베이스에&nbsp;저장합니다.<br>
+&nbsp;<br>
+-&nbsp;파일&nbsp;기반&nbsp;쓰기&nbsp;(format:&nbsp;'csv',&nbsp;'parquet',&nbsp;'excel'&nbsp;등):<br>
+&nbsp;&nbsp;-&nbsp;target_path&nbsp;(str):&nbsp;필수.&nbsp;데이터가&nbsp;저장될&nbsp;파일&nbsp;경로입니다.<br>
+&nbsp;&nbsp;-&nbsp;롤백&nbsp;기능이&nbsp;있는&nbsp;원자적&nbsp;쓰기를&nbsp;수행합니다.<br>
+&nbsp;<br>
+-&nbsp;데이터베이스&nbsp;기반&nbsp;쓰기&nbsp;(format:&nbsp;'sql',&nbsp;'database'):<br>
+&nbsp;&nbsp;-&nbsp;target_path:&nbsp;사용되지&nbsp;않습니다.<br>
+&nbsp;&nbsp;-&nbsp;kwargs&nbsp;(dict):&nbsp;데이터베이스&nbsp;쓰기에&nbsp;필요한&nbsp;추가&nbsp;인자들입니다.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;pandas.to_sql:&nbsp;'name'(테이블명),&nbsp;'con'(커넥션&nbsp;객체)가&nbsp;필수입니다.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;polars.write_database:&nbsp;'table_name',&nbsp;'connection_uri'가&nbsp;필수입니다.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;obj:&nbsp;저장할&nbsp;데이터&nbsp;객체&nbsp;(e.g.,&nbsp;pandas.DataFrame,&nbsp;polars.DataFrame,&nbsp;np.ndarray).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;target_path&nbsp;(str,&nbsp;optional):&nbsp;파일&nbsp;저장&nbsp;경로.&nbsp;파일&nbsp;기반&nbsp;쓰기&nbsp;시&nbsp;필수.&nbsp;Defaults&nbsp;to&nbsp;None.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;format&nbsp;(str,&nbsp;optional):&nbsp;저장할&nbsp;포맷.&nbsp;Defaults&nbsp;to&nbsp;None.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;show_progress&nbsp;(bool):&nbsp;진행도&nbsp;표시&nbsp;여부.&nbsp;Defaults&nbsp;to&nbsp;False.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;(bool):&nbsp;상세한&nbsp;성능&nbsp;진단&nbsp;정보&nbsp;출력&nbsp;여부.&nbsp;Defaults&nbsp;to&nbsp;False.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;**kwargs:&nbsp;각&nbsp;쓰기&nbsp;함수에&nbsp;전달될&nbsp;추가&nbsp;키워드&nbsp;인자.</span></dd></dl>
+ <dl><dt><a name="-write_model_snapshot"><strong>write_model_snapshot</strong></a>(model_path: str, table_path: str, show_progress: bool = False)</dt><dd><span class="code">-&nbsp;PyTorch&nbsp;또는&nbsp;TensorFlow&nbsp;모델의&nbsp;스냅샷을&nbsp;저장합니다.<br>
+-&nbsp;생산자-소비자&nbsp;패턴으로&nbsp;메모리&nbsp;사용량을&nbsp;최적화합니다.<br>
+-&nbsp;다중&nbsp;파일&nbsp;모델(TensorFlow)&nbsp;처리를&nbsp;지원합니다.</span></dd></dl>
+ <dl><dt><a name="-write_snapshot"><strong>write_snapshot</strong></a>(obj, table_path, mode='overwrite', format='arrow', show_progress=False, **kwargs)</dt><dd><span class="code">데이터&nbsp;객체를&nbsp;열&nbsp;단위&nbsp;청크로&nbsp;분해하여&nbsp;버전&nbsp;관리(스냅샷)&nbsp;방식으로&nbsp;저장합니다.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;obj:&nbsp;저장할&nbsp;데이터&nbsp;객체&nbsp;(pandas,&nbsp;polars,&nbsp;numpy,&nbsp;pyarrow.Table).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;table_path&nbsp;(str):&nbsp;테이블&nbsp;데이터가&nbsp;저장될&nbsp;최상위&nbsp;디렉토리&nbsp;경로.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mode&nbsp;(str):&nbsp;'overwrite'&nbsp;(기본값)&nbsp;또는&nbsp;'append'.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;'overwrite':&nbsp;테이블을&nbsp;현재&nbsp;데이터로&nbsp;완전히&nbsp;대체합니다.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;'append':&nbsp;기존&nbsp;버전의&nbsp;데이터에&nbsp;현재&nbsp;데이터를&nbsp;추가(열&nbsp;기준)합니다.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;format&nbsp;(str):&nbsp;내부&nbsp;청크&nbsp;파일&nbsp;포맷.&nbsp;현재는&nbsp;'arrow'만&nbsp;지원.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;show_progress&nbsp;(bool):&nbsp;진행률&nbsp;표시&nbsp;여부.&nbsp;Defaults&nbsp;to&nbsp;False.</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>__all__</strong> = ['write', 'write_snapshot', 'read_table', 'delete_version', 'rollback', 'write_model_snapshot', 'read_model_snapshot']</td></tr></table>
+</body></html>
