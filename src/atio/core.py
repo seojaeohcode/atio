@@ -246,7 +246,7 @@ import io
 import pyarrow.parquet as pq
 from tqdm import tqdm
 
-def write_snapshot(obj, table_path, mode='overwrite', show_progress=False, **kwargs):
+def write_snapshot(obj, table_path, mode='overwrite', message=None, show_progress=False, **kwargs):
     """
     데이터 객체를 열 단위 청크로 분해하여 버전 관리(스냅샷) 방식으로 저장합니다.
 
@@ -349,6 +349,7 @@ def write_snapshot(obj, table_path, mode='overwrite', show_progress=False, **kwa
         new_snapshot = {
             'snapshot_id': snapshot_id,
             'timestamp': time.time(),
+            'message': message or f"Version {new_version} created.",
             'columns': final_columns_for_snapshot
         }
         write_json(new_snapshot, os.path.join(tmpdir, snapshot_filename))
@@ -386,32 +387,60 @@ def read_table(table_path, version=None, output_as='pandas'):
     지정된 버전의 스냅샷을 읽어 데이터 객체로 재구성합니다.
 
     Args:
-        table_path (str): 테이블 데이터가 저장된 최상위 디렉토리 경로.
-        version (int, optional): 불러올 버전 ID. None이면 최신 버전을 불러옵니다.
+        table_path (str): 테이블 데이터가 저장될 최상위 디렉토리 경로.
+        version (int or str, optional): 
+            - int: 불러올 버전 ID (e.g., 5).
+            - str: 불러올 버전의 태그 이름 (e.g., 'best-model').
+            - None: 최신 버전을 불러옵니다. Defaults to None.
         output_as (str): 반환할 데이터 객체 타입 ('pandas', 'polars', 'arrow', 'numpy').
-                         Defaults to 'pandas'.
     
     Returns:
         지정된 포맷의 데이터 객체 (e.g., pandas.DataFrame).
     """
-    logger = setup_logger(debug_level=False)
+    logger = setup_logger()
 
     # --- 1. 읽을 버전의 스냅샷 파일 경로 찾기 ---
     try:
+        version_id = None
+        
+        # 💡 [핵심 변경] version 파라미터의 타입에 따라 분기 처리
         if version is None:
+            # Case 1: 최신 버전 읽기 (기존과 동일)
             pointer_path = os.path.join(table_path, '_current_version.json')
             version_id = read_json(pointer_path)['version_id']
             logger.info(f"최신 버전(v{version_id})을 읽습니다.")
-        else:
+        
+        elif isinstance(version, int):
+            # Case 2: 버전 ID(숫자)로 읽기
             version_id = version
-            logger.info(f"지정된 버전(v{version_id})을 읽습니다.")
+            logger.info(f"지정된 버전 ID(v{version_id})를 읽습니다.")
+
+        elif isinstance(version, str):
+            # Case 3: 태그(문자열)로 읽기
+            tags_path = os.path.join(table_path, 'tags.json')
+            if not os.path.exists(tags_path):
+                raise FileNotFoundError("태그 파일(tags.json)을 찾을 수 없습니다.")
+            
+            tags = read_json(tags_path)
+            version_id = tags.get(version) # .get()을 사용해 태그가 없을 경우 None 반환
+            
+            if version_id is None:
+                raise KeyError(f"태그 '{version}'을(를) 찾을 수 없습니다.")
+            logger.info(f"태그 '{version}'에 해당하는 버전(v{version_id})을 읽습니다.")
+        
+        if version_id is None:
+            raise ValueError("유효한 버전을 찾거나 지정할 수 없습니다.")
+            
         
         metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
         metadata = read_json(metadata_path)
         snapshot_filename = metadata['snapshot_filename']
         snapshot_path = os.path.join(table_path, snapshot_filename)
         snapshot = read_json(snapshot_path)
-    
+
+    except (ValueError) as e:
+        logger.error(f"읽기 실패: {e}")
+        raise e
     except FileNotFoundError as e:
         logger.error(f"읽기 실패: 필요한 메타데이터 또는 스냅샷 파일을 찾을 수 없습니다. 경로: {e.filename}")
         raise e
@@ -473,6 +502,143 @@ def read_table(table_path, version=None, output_as='pandas'):
             return final_arrow_table
     
     raise ValueError(f"지원하지 않는 출력 형식입니다: {output_as}")
+
+
+def tag_version(table_path: str, version_id: int, tag_name: str, logger=None):
+    """
+    특정 버전 ID에 태그를 지정하거나 업데이트합니다.
+
+    - 'tags.json' 파일에 태그와 버전 ID의 매핑을 저장합니다.
+    - 태그 이름이 이미 존재하면 가리키는 버전 ID를 업데이트합니다.
+
+    Args:
+        table_path (str): 테이블 데이터가 저장된 최상위 디렉토리 경로.
+        version_id (int): 태그를 붙일 버전의 ID.
+        tag_name (str): 지정할 태그 이름 (e.g., "best-model", "archive-stable").
+        logger: 로깅을 위한 로거 객체.
+    
+    Returns:
+        bool: 성공 시 True, 실패 시 False를 반환합니다.
+    """
+    if logger is None:
+        logger = setup_logger()
+
+    # 1. 태그를 붙이려는 버전이 실제로 존재하는지 확인
+    metadata_path = os.path.join(table_path, 'metadata', f'v{version_id}.metadata.json')
+    if not os.path.exists(metadata_path):
+        logger.error(f"태그 지정 실패: 버전 {version_id}이(가) 존재하지 않습니다.")
+        return False
+
+    # 2. 기존 태그 파일 읽기 (없으면 새로 생성)
+    tags_path = os.path.join(table_path, 'tags.json')
+    tags = {}
+    if os.path.exists(tags_path):
+        try:
+            tags = read_json(tags_path)
+            if not isinstance(tags, dict):
+                logger.warning(f"'tags.json' 파일이 손상된 것 같습니다. 새로 생성합니다.")
+                tags = {}
+        except json.JSONDecodeError:
+            logger.warning(f"'tags.json' 파일을 읽는 데 실패했습니다. 새로 생성합니다.")
+            tags = {}
+    
+    # 3. 태그 정보 업데이트
+    old_version = tags.get(tag_name)
+    if old_version == version_id:
+        logger.info(f"태그 '{tag_name}'은(는) 이미 버전 {version_id}을(를) 가리키고 있습니다. 변경사항이 없습니다.")
+        return True
+    
+    tags[tag_name] = version_id
+
+    # 4. 업데이트된 태그 정보 저장
+    try:
+        # 안전한 쓰기를 위해 임시 파일 사용 후 원자적 교체
+        tmp_tags_path = tags_path + f".{uuid.uuid4()}.tmp"
+        write_json(tags, tmp_tags_path)
+        os.replace(tmp_tags_path, tags_path)
+
+        if old_version is not None:
+            logger.info(f"✅ 태그 업데이트 성공: '{tag_name}' -> v{version_id} (이전: v{old_version})")
+        else:
+            logger.info(f"✅ 태그 생성 성공: '{tag_name}' -> v{version_id}")
+        return True
+    except Exception as e:
+        logger.error(f"태그 파일('{tags_path}')을 쓰는 중 오류가 발생했습니다: {e}")
+        # 임시 파일이 남아있을 경우 정리
+        if os.path.exists(tmp_tags_path):
+            os.remove(tmp_tags_path)
+        return False
+
+def list_snapshots(table_path: str, logger=None):
+    """
+    저장된 모든 스냅샷의 버전 정보를 조회하여 리스트로 반환합니다.
+
+    - 각 버전의 메타데이터를 읽어 ID, 생성 시간, 메시지 등의 정보를 수집합니다.
+    - 'tags.json' 파일을 읽어 각 버전에 어떤 태그가 붙어있는지 표시합니다.
+    - 최신 버전을 특별히 표시해줍니다.
+
+    Args:
+        table_path (str): 조회할 테이블의 최상위 디렉토리 경로.
+        logger: 로깅을 위한 로거 객체.
+        
+    Returns:
+        list[dict]: 각 버전의 상세 정보가 담긴 딕셔너리 리스트.
+                     리스트는 버전 ID 순서로 정렬됩니다.
+                     정보가 없는 경우 빈 리스트를 반환합니다.
+    """
+    if logger is None:
+        logger = setup_logger()
+
+    metadata_dir = os.path.join(table_path, 'metadata')
+    if not os.path.isdir(metadata_dir):
+        logger.warning(f"테이블 경로를 찾을 수 없습니다: '{table_path}'")
+        return []
+
+    # 1. 태그 정보 로드
+    tags_path = os.path.join(table_path, 'tags.json')
+    version_to_tags = {}
+    if os.path.exists(tags_path):
+        try:
+            tags_data = read_json(tags_path)
+            # {tag: version_id} -> {version_id: [tag1, tag2]} 형태로 변환
+            for tag, version_id in tags_data.items():
+                if version_id not in version_to_tags:
+                    version_to_tags[version_id] = []
+                version_to_tags[version_id].append(tag)
+        except Exception:
+            logger.warning("'tags.json' 파일을 읽는 데 실패하여 태그 정보를 생략합니다.")
+
+    # 2. 현재 버전 정보 로드
+    current_version_id = -1
+    pointer_path = os.path.join(table_path, '_current_version.json')
+    if os.path.exists(pointer_path):
+        current_version_id = read_json(pointer_path).get('version_id', -1)
+
+    # 3. 모든 버전 메타데이터 순회 및 정보 수집
+    snapshots_info = []
+    for filename in os.listdir(metadata_dir):
+        if not (filename.startswith('v') and filename.endswith('.metadata.json')):
+            continue
+        
+        try:
+            metadata = read_json(os.path.join(metadata_dir, filename))
+            version_id = metadata['version_id']
+            snapshot_path = os.path.join(table_path, metadata['snapshot_filename'])
+            snapshot_data = read_json(snapshot_path)
+            
+            info = {
+                "version_id": version_id,
+                "is_latest": version_id == current_version_id,
+                "tags": sorted(version_to_tags.get(version_id, [])),
+                "message": snapshot_data.get('message', '')
+            }
+            snapshots_info.append(info)
+        except (KeyError, FileNotFoundError, json.JSONDecodeError):
+            logger.warning(f"메타데이터 파일 '{filename}' 처리 중 오류가 발생하여 건너뜁니다.")
+            continue
+    
+    # 4. 버전 ID 기준으로 오름차순 정렬하여 반환
+    return sorted(snapshots_info, key=lambda x: x['version_id'])
 
 
 import shutil
