@@ -5,10 +5,10 @@ from rich.console import Console
 from rich.table import Table
 
 from .core import (
-    list_snapshots,
-    tag_version,
-    revert,
-    delete_version
+    list_snapshots as core_list_snapshots,
+    tag_version as core_tag_version,
+    revert as core_revert,
+    delete_version as core_delete_version
 )
 
 # Typer 앱과 Rich 콘솔 객체를 생성합니다.
@@ -16,14 +16,14 @@ app = typer.Typer(help="Atio: A simple, efficient, and robust data versioning to
 console = Console()
 
 @app.command()
-def list(
+def list_snapshots(
     table_path: str = typer.Argument(..., help="스냅샷 목록을 조회할 테이블의 경로")
 ):
     """
     테이블에 저장된 모든 스냅샷의 로그를 조회합니다.
     """
     try:
-        snapshots = list_snapshots(table_path)
+        snapshots = core_list_snapshots(table_path)
         if not snapshots:
             console.print(f"'{table_path}'에서 스냅샷을 찾을 수 없습니다.")
             raise typer.Exit()
@@ -58,7 +58,7 @@ def list(
         raise typer.Exit(code=1)
 
 @app.command()
-def tag(
+def tag_version(
     table_path: str = typer.Argument(..., help="태그를 지정할 테이블의 경로"),
     version_id: int = typer.Argument(..., help="태그를 붙일 버전 ID"),
     tag_name: str = typer.Argument(..., help="지정할 태그 이름"),
@@ -67,7 +67,7 @@ def tag(
     특정 버전에 태그를 지정하거나 업데이트합니다.
     """
     try:
-        success = tag_version(table_path, version_id, tag_name)
+        success = core_tag_version(table_path, version_id, tag_name)
         if success:
             console.print(f"✅ [green]성공:[/green] 버전 {version_id}에 '{tag_name}' 태그를 지정했습니다.")
         else:
@@ -88,7 +88,7 @@ def revert(
     과거 버전의 상태를 가져와 새로운 버전으로 생성합니다.
     """
     try:
-        success = revert(table_path, version_id, message=message)
+        success = core_revert(table_path, version_id, message=message)
         if success:
             console.print(f"✅ [green]성공:[/green] v{version_id}의 상태로 리버트하여 새로운 버전을 생성했습니다.")
         else:
@@ -99,7 +99,7 @@ def revert(
         raise typer.Exit(code=1)
 
 @app.command()
-def delete(
+def delete_version(
     table_path: str = typer.Argument(..., help="버전을 삭제할 테이블의 경로"),
     version_id: int = typer.Argument(..., help="삭제할 버전 ID"),
     dry_run: bool = typer.Option(False, "--dry-run", help="실제로 삭제하지 않고, 삭제될 파일 목록만 출력합니다."),
@@ -109,7 +109,7 @@ def delete(
     """
     try:
         # delete_version 함수가 dry_run을 이미 지원하므로 그대로 전달
-        success = delete_version(table_path, version_id, dry_run=dry_run)
+        success = core_delete_version(table_path, version_id, dry_run=dry_run)
         if success and not dry_run:
             console.print(f"✅ [green]성공:[/green] 버전 {version_id}을(를) 삭제하고 관련 데이터를 정리했습니다.")
         elif success and dry_run:

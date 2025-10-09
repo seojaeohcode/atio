@@ -24,4 +24,6 @@ __all__ = [
     "rollback",
     "write_model_snapshot",
     "read_model_snapshot",
+    "tag_version",
+    "list_snapshots"
 ]

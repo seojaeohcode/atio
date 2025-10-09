@@ -120,9 +120,22 @@ import os
 from concurrent.futures import ProcessPoolExecutor
 import atexit
 
-_MAX_WORKERS = os.cpu_count() or 4
-_PROCESS_POOL = ProcessPoolExecutor(max_workers=_MAX_WORKERS)
-print(f"--- ATIO Global Process Pool created (workers: {_MAX_WORKERS}) ---")
+_PROCESS_POOL = None
+
+def get_process_pool():
+    """
+    전역 프로세스 풀을 생성하고 반환합니다. (지연 초기화)
+    풀이 이미 생성되었다면 기존 객체를 반환합니다.
+    """
+    global _PROCESS_POOL
+
+    # 풀이 아직 생성되지 않았을 때만 새로 생성합니다.
+    if _PROCESS_POOL is None:
+        _MAX_WORKERS = os.cpu_count() or 4
+        print(f"--- ATIO Global Process Pool created (workers: {_MAX_WORKERS}) ---")
+        _PROCESS_POOL = ProcessPoolExecutor(max_workers=_MAX_WORKERS)
+    
+    return _PROCESS_POOL
 
 def _shutdown_pool():
     """프로그램 종료 시 풀을 안전하게 종료하는 함수"""
@@ -133,10 +146,6 @@ def _shutdown_pool():
         _PROCESS_POOL = None
 
 atexit.register(_shutdown_pool)
-
-def get_process_pool():
-    """단순히 생성된 전역 풀을 반환하는 함수"""
-    return _PROCESS_POOL
 
 class FileLock:
     """
