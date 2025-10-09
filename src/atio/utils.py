@@ -137,3 +137,43 @@ atexit.register(_shutdown_pool)
 def get_process_pool():
     """단순히 생성된 전역 풀을 반환하는 함수"""
     return _PROCESS_POOL
+
+class FileLock:
+    """
+    간단한 파일 기반 락(Lock)을 구현하는 컨텍스트 매니저.
+    
+    with FileLock(path):
+        ... # 락이 필요한 위험한 작업 수행
+    """
+    def __init__(self, lock_dir, timeout=10):
+        """
+        Args:
+            lock_dir (str): .lock 파일이 생성될 디렉토리.
+            timeout (int): 락을 얻기 위해 대기할 최대 시간 (초).
+        """
+        os.makedirs(lock_dir, exist_ok=True)
+        self.lock_path = os.path.join(lock_dir, '.lock')
+        self.timeout = timeout
+        self._lock_file_descriptor = None
+
+    def __enter__(self):
+        start_time = time.time()
+        while True:
+            try:
+                # O_CREAT: 파일이 없으면 생성
+                # O_EXCL: 파일이 이미 있으면 에러 발생 (원자적 연산)
+                # O_WRONLY: 쓰기 전용으로 열기
+                self._lock_file_descriptor = os.open(self.lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                # 락 획득 성공
+                return self
+            except FileExistsError:
+                if time.time() - start_time >= self.timeout:
+                    raise TimeoutError(f"'{self.lock_path}'에 대한 락을 {self.timeout}초 내에 얻지 못했습니다.")
+                time.sleep(0.1) # 짧은 시간 대기 후 재시도
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._lock_file_descriptor is not None:
+            # 파일 디스크립터를 닫고 .lock 파일을 삭제
+            os.close(self._lock_file_descriptor)
+            os.remove(self.lock_path)
+            self._lock_file_descriptor = None
