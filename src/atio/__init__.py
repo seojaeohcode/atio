@@ -13,7 +13,8 @@ from .core import (
     write_model_snapshot,
     read_model_snapshot,
     tag_version,
-    list_snapshots
+    list_snapshots,
+    revert
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "read_model_snapshot",
     "tag_version",
     "list_snapshots"
+    "revert"
 ]
