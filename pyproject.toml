@@ -49,3 +49,6 @@ ml = [
 # `find_packages()` 역할을 하는 부분 (src 레이아웃 사용 시)
 [tool.setuptools]
 packages = { find = { where = ["src"] } }
+
+[project.scripts]
+atio = "atio.cli:app"
