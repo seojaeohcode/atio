@@ -75,4 +75,7 @@ Thumbs.db
 # Demo outputs (직접 추가)
 *.csv
 *.parquet
-*._SUCCESSdocs/build/
+*._SUCCESS
+
+# Documentation build output
+docs/build/
