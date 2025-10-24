@@ -4,19 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "atio"
-version = "2.1.0"
+version = "3.0.0"
 authors = [
     { name="Seo Jae Oh", email="seojaeohcoder@gmail.com" },
 ]
 keywords = ["atomic", "file", "writer", "pandas", "polars", "numpy", "data"]
 urls = { Homepage = "https://github.com/seojaeohcode/atomic-writer" }
 description = "Safe atomic file writer for Pandas, Polars, NumPy, and other data objects"
-readme = "README.md"
-license = { text = "Apache-2.0" }
+readme = { file = "README.md", content-type = "text/markdown" }
+license = "Apache-2.0"
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
 

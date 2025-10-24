@@ -16,7 +16,7 @@
 Atio: 안전한 원자적 파일 쓰기 라이브러리
 """
 
-__version__ = "2.1.0"
+__version__ = "3.0.0"
 
 from .core import (
     write, 
@@ -40,6 +40,6 @@ __all__ = [
     "write_model_snapshot",
     "read_model_snapshot",
     "tag_version",
-    "list_snapshots"
+    "list_snapshots",
     "revert"
 ]
