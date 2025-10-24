@@ -67,6 +67,9 @@ def write(obj, target_path=None, format=None, show_progress=False, verbose=False
             elif format == 'database': # Polars
                 if 'table_name' not in kwargs or 'connection_uri' not in kwargs:
                     raise ValueError("'table_name'과 'connection_uri' 인자는 'database' 포맷에 필수입니다.")
+                
+                # Polars write_database는 'connection' 파라미터를 사용하므로 변환
+                kwargs['connection'] = kwargs.pop('connection_uri')
             
             # target_path는 무시하고 **kwargs로 받은 인자들을 사용하여 DB에 직접 씁니다.
             writer_func(**kwargs)
