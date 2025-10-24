@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "atio"
-version = "3.0.0"
+version = "3.1.0"
 authors = [
     { name="Seo Jae Oh", email="seojaeohcoder@gmail.com" },
 ]
@@ -32,7 +32,8 @@ dependencies = [
     "fastcdc>=1.7.0",
     "typer[all]>=0.12.0",
     "rich>=13.0",
-    "pytz>=2024.1"
+    "pytz>=2024.1",
+    "xxhash>=3.4.1"
 ]
 
 [project.optional-dependencies]
