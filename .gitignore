@@ -76,3 +76,6 @@ Thumbs.db
 *.csv
 *.parquet
 *._SUCCESS
+
+# Documentation build output
+docs/build/
