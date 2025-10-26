@@ -33,11 +33,12 @@ if src_path not in sys.path:
 import atio
 import pandas as pd
 import numpy as np
+import polars as pl
 import time
 from sqlalchemy import create_engine
 import shutil
 import json
-
+# from .src.atio.core import export_to_datalake
 def demo_basic_usage():
     """
     기본 파일 기반 쓰기 사용법 데모
@@ -47,36 +48,37 @@ def demo_basic_usage():
     print("1. 기본 사용법 (파일 쓰기)")
     print("=" * 50)
     
-    # 간단한 DataFrame 생성
-    df = pd.DataFrame({
-        "name": ["Alice", "Bob", "Charlie", "Diana"],
-        "age": [25, 30, 35, 28],
-        "city": ["Seoul", "Busan", "Incheon", "Daegu"],
-        "salary": [50000, 60000, 70000, 55000]
-    })
+
+    data_array = np.array([1, 2, 3, 4, 5])
+
+    data_array2 = np.array([[1, 2, 3], 
+                            [4, 5, 6]])
     
-    print("📊 생성된 데이터:")
-    print(df)
-    print()
+    atio.write(data_array, "data.npy", "npy")
+    # atio.write(data_array2, "data.npz", "npz")
+    # atio.write(data_array2, "data.npz_compressed", "npz_compressed")
+    atio.write(data_array, "data.csv", "csv")
+    atio.write(data_array, "data.bin", "bin")
+
+
+    # atio.write(df, "users.sql", format="sql")
+
+
+
+
+    # # to_csv에 추가 인자(index=False)를 전달하는 예시
+    # atio.write(df, "users.csv", format="csv", index=False)
+    # print("✅ users.csv 저장 완료 (인덱스 제외)")
     
-    # 다양한 형식으로 저장
-    print("💾 파일 저장 중...")
-    atio.write(df, "users.parquet", format="parquet")
-    print("✅ users.parquet 저장 완료")
-    
-    # to_csv에 추가 인자(index=False)를 전달하는 예시
-    atio.write(df, "users.csv", format="csv", index=False)
-    print("✅ users.csv 저장 완료 (인덱스 제외)")
-    
-    print("\n📁 생성된 파일들:")
-    for file in ["users.parquet", "users.csv"]:
-        if os.path.exists(file):
-            size = os.path.getsize(file)
-            print(f"  - {file} ({size} bytes)")
-            # _SUCCESS 파일 확인
-            success_file = os.path.join(os.path.dirname(file), f".{os.path.basename(file)}._SUCCESS")
-            if os.path.exists(success_file):
-                print(f"    └─ {os.path.basename(success_file)} (저장 완료 플래그)")
+    # print("\n📁 생성된 파일들:")
+    # for file in ["users.parquet", "users.csv"]:
+    #     if os.path.exists(file):
+    #         size = os.path.getsize(file)
+    #         print(f"  - {file} ({size} bytes)")
+    #         # _SUCCESS 파일 확인
+    #         success_file = os.path.join(os.path.dirname(file), f".{os.path.basename(file)}._SUCCESS")
+    #         if os.path.exists(success_file):
+    #             print(f"    └─ {os.path.basename(success_file)} (저장 완료 플래그)")
 
 def demo_excel_and_sql():
     """
@@ -144,7 +146,7 @@ def demo_large_data():
     print("=" * 50)
     
     print("📊 대용량 데이터 생성 중...")
-    large_df = pd.DataFrame(np.random.randn(200000, 5), columns=list("ABCDE"))
+    large_df = pd.DataFrame(np.random.randn(2000000, 5), columns=list("ABCDE"))
     
     print(f"생성된 데이터 크기: {large_df.shape}")
     print(f"메모리 사용량: {large_df.memory_usage(deep=True).sum() / 1024 / 1024:.1f} MB")
@@ -236,6 +238,14 @@ def demo_polars_integration():
         
     except ImportError:
         print("⚠️ Polars가 설치되지 않았습니다. (pip install polars)")
+
+def dataLake():
+    TABLE_DIR = "snapshot_demo_table"
+    df1 = pd.DataFrame({'id': [1], 'value_a': ['A1']})
+    atio.write_snapshot(df1, TABLE_DIR) # v1 생성
+    atio.export_to_datalake(TABLE_DIR, version=1, output_path="datalake/v1.parquet")
+
+
 
 def demo_snapshots():
     """
@@ -379,6 +389,17 @@ def cleanup_demo_files():
     else:
         print("\n📁 데모 파일들이 보존되었습니다.")
 
+def modelSnapshot():
+    TABLE_DIR = "snapshot_demo_table"
+    # atio.write_model_snapshot("C:/Users/reals/Desktop/OSS/weight/output_weights/distilroberta_weights.pth", TABLE_DIR, show_progress=True)
+    # atio.write_model_snapshot("C:/Users/reals/Desktop/OSS/weight/output_weights/mnli_weights.pth", TABLE_DIR)
+    # atio.read_model_snapshot(TABLE_DIR, version=None, mode='auto', weights_only=True)
+    # atio.read_model_snapshot(TABLE_DIR, version=None, mode='restore', destination_path='destination', weights_only=True)
+    atio.rollback(TABLE_DIR, version_id=1)
+    atio.delete_version(TABLE_DIR, version_id=2)
+    # atio.read_model_snapshot(TABLE_DIR, version=None, mode='auto', weights_only=True)
+
+
 def main():
     """
     메인 데모 실행 함수
@@ -388,15 +409,16 @@ def main():
     print("안전한 원자적 파일 쓰기와 데이터베이스 쓰기의 다양한 기능을 보여줍니다.")
     
     # 각 데모 실행
-    demo_basic_usage()
-    demo_excel_and_sql()
-    demo_large_data()
-    demo_performance_analysis()
-    demo_numpy_arrays()
-    demo_error_handling()
-    demo_polars_integration()
-    demo_snapshots()
-    
+    # demo_basic_usage()
+    # demo_excel_and_sql() 
+    # demo_large_data()
+    # demo_performance_analysis()
+    # demo_numpy_arrays()
+    # demo_error_handling()
+    # demo_polars_integration()
+    # demo_snapshots()
+    # dataLake()
+    modelSnapshot()
     # 파일 정리
     cleanup_demo_files()
     

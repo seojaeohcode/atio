@@ -67,6 +67,9 @@ def write(obj, target_path=None, format=None, show_progress=False, verbose=False
             elif format == 'database': # Polars
                 if 'table_name' not in kwargs or 'connection_uri' not in kwargs:
                     raise ValueError("'table_name'과 'connection_uri' 인자는 'database' 포맷에 필수입니다.")
+                
+                # [버그 수정] Polars는 'connection' 인자를 사용하므로 'connection_uri'를 변경합니다.
+                kwargs['connection'] = kwargs.pop('connection_uri')
             
             # target_path는 무시하고 **kwargs로 받은 인자들을 사용하여 DB에 직접 씁니다.
             writer_func(**kwargs)
@@ -976,6 +979,7 @@ def write_model_snapshot(model_path: str, table_path: str, show_progress: bool =
             raise ValueError(f"지원하지 않는 모델 형식입니다: {model_path}")
 
         # --- 3. 생산자-소비자 패턴으로 병렬 처리 ---
+        # ▼▼▼ [핵심 수정] all_files_info 초기화를 루프 밖으로 이동 ▼▼▼
         all_files_info = []
         new_chunks_to_write = {}
         executor = get_process_pool()
@@ -985,32 +989,33 @@ def write_model_snapshot(model_path: str, table_path: str, show_progress: bool =
             relative_path = os.path.relpath(file_path, model_path_base).replace('\\', '/')
             file_info = {"path": relative_path, "chunks": []}
         
-        with open(file_path, 'rb') as f:
-            # 생산자: fastcdc가 청크 '정보'를 하나씩 생성하는 제너레이터
-            cdc = fastcdc.fastcdc(f, avg_size=65536, fat=True)
-            
-            # [핵심] 청크 정보를 만들면서 '동시에' 작업을 제출하는 future 제너레이터를 생성
-            def submit_tasks_generator():
-                for chunk in cdc:
-                    job_ticket = (file_path, chunk.offset, chunk.length, data_dir)
-                    yield executor.submit(_process_chunk_from_file_task, job_ticket)
+            with open(file_path, 'rb') as f:
+                # 생산자: fastcdc가 청크 '정보'를 하나씩 생성하는 제너레이터
+                cdc = fastcdc.fastcdc(f, avg_size=65536, fat=True)
+                
+                # [핵심] 청크 정보를 만들면서 '동시에' 작업을 제출하는 future 제너레이터를 생성
+                def submit_tasks_generator():
+                    for chunk in cdc:
+                        job_ticket = (file_path, chunk.offset, chunk.length, data_dir)
+                        yield executor.submit(_process_chunk_from_file_task, job_ticket)
 
-            # 총 청크 수를 알 수 없으므로 파일 크기를 기준으로 진행률 표시
-            file_size = os.path.getsize(file_path)
-            progress_desc = os.path.basename(file_path)
-            
-            with tqdm(total=file_size, desc=f"Processing {progress_desc}", unit='B', unit_scale=True, disable=not show_progress, leave=False) as pbar:
-                # as_completed는 future가 완료되는 대로 결과를 반환
-                for future in as_completed(submit_tasks_generator()):
-                    chunk_hash, chunk_content = future.result()
-                    file_info["chunks"].append(chunk_hash)
-                    if chunk_content is not None:
-                        new_chunks_to_write[chunk_hash] = chunk_content
-                    
-                    # 대략적인 청크 크기만큼 진행률 업데이트
-                    pbar.update(65536)
+                # 총 청크 수를 알 수 없으므로 파일 크기를 기준으로 진행률 표시
+                file_size = os.path.getsize(file_path)
+                progress_desc = os.path.basename(file_path)
+                
+                with tqdm(total=file_size, desc=f"Processing {progress_desc}", unit='B', unit_scale=True, disable=not show_progress, leave=False) as pbar:
+                    # as_completed는 future가 완료되는 대로 결과를 반환
+                    for future in as_completed(submit_tasks_generator()):
+                        chunk_hash, chunk_content = future.result()
+                        file_info["chunks"].append(chunk_hash)
+                        if chunk_content is not None:
+                            new_chunks_to_write[chunk_hash] = chunk_content
+                        
+                        # 대략적인 청크 크기만큼 진행률 업데이트
+                        pbar.update(65536)
 
-        all_files_info.append(file_info)
+            # ▼▼▼ 루프 안에서는 append만 수행 ▼▼▼
+            all_files_info.append(file_info)
 
         logger.info(f"데이터 병렬 처리 완료")
 
@@ -1022,6 +1027,7 @@ def write_model_snapshot(model_path: str, table_path: str, show_progress: bool =
         snapshot_id = int(time.time())
         snapshot_filename = f"snapshot-{snapshot_id}-{uuid.uuid4()}.json"
         
+        # 이제 all_files_info에는 모든 파일 정보가 누적되어 있을 것입니다.
         new_snapshot = {'snapshot_id': snapshot_id, 'timestamp': time.time(), 'files': sorted(all_files_info, key=lambda x: x['path'])}
         write_json(new_snapshot, os.path.join(metadata_dir, snapshot_filename))
         
@@ -1102,14 +1108,25 @@ def _reassemble_from_chunks_threaded(table_path, snapshot, destination_path=None
                 return output_path
                 
         # --- TensorFlow 디렉토리 구조 처리 ---
+        # --- TensorFlow 디렉토리 구조 처리 ---
         else:
             if destination_path is None:
                 destination_path = tempfile.mkdtemp()
             
             os.makedirs(destination_path, exist_ok=True)
 
+            # ▼▼▼ 디버깅 print 추가 ▼▼▼
+            print(f"DEBUG: Starting TensorFlow reassembly. Number of files in snapshot: {len(files_info)}")
+            if files_info:
+                print(f"DEBUG: First file info: {files_info[0]}") # 첫번째 파일 정보 확인
+
             iterable = tqdm(files_info, desc="Reassembling TensorFlow model", disable=not show_progress, unit=" file")
+            loop_count = 0 # 루프 실행 횟수 카운터
             for file_info in iterable:
+                loop_count += 1 # 카운터 증가
+                # ▼▼▼ 디버깅 print 추가 ▼▼▼
+                print(f"DEBUG: Reassembling loop iteration {loop_count}: Processing file '{file_info.get('path', 'N/A')}'")
+
                 dir_name = os.path.dirname(file_info['path'])
                 if dir_name:
                     os.makedirs(os.path.join(destination_path, dir_name), exist_ok=True)
@@ -1124,6 +1141,9 @@ def _reassemble_from_chunks_threaded(table_path, snapshot, destination_path=None
                     # 파일 쓰기 시에는 내부 tqdm 없이 바로 조합
                     f_out.write(b"".join(all_chunk_data))
             
+            # [수정] for 루프가 끝난 후에 return 하도록 들여쓰기 수정
+            # ▼▼▼ 디버깅 print 추가 ▼▼▼
+            print(f"DEBUG: Finished TensorFlow reassembly loop after {loop_count} iterations.")
             return destination_path
 
 def read_model_snapshot(table_path, version=None, mode='auto', destination_path=None, max_workers=None, show_progress=False):

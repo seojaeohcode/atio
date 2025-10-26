@@ -28,7 +28,8 @@ from .core import (
     read_model_snapshot,
     tag_version,
     list_snapshots,
-    revert
+    revert,
+    export_to_datalake
 )
 
 __all__ = [
@@ -41,5 +42,6 @@ __all__ = [
     "read_model_snapshot",
     "tag_version",
     "list_snapshots"
-    "revert"
+    "revert",
+    "export_to_datalake"
 ]
